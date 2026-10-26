@@ -21,18 +21,18 @@ jobs:
           arch: x64
 
       - name: Configure CMake
-        run: cmake -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release
+        run: cmake -B build -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl
 
       - name: Build Test Executables
         run: |
-          cmake --build build --config Release --target garuda_tco_tests garuda_control_flow_tests garuda_isolation_tests garuda_fault_tests
+          cmake --build build --target garuda_tco_tests garuda_control_flow_tests garuda_isolation_tests garuda_fault_tests
 
       - name: Verify Test Executables Exist
         shell: pwsh
         run: |
           $missing = @()
           foreach ($exe in @("garuda_tco_tests.exe", "garuda_control_flow_tests.exe", "garuda_isolation_tests.exe", "garuda_fault_tests.exe")) {
-              if (-not (Test-Path "build/Release/$exe")) { $missing += $exe }
+              if (-not (Test-Path "build/$exe")) { $missing += $exe }
           }
           if ($missing.Count -gt 0) {
               Write-Host "Missing executables: $($missing -join ', ')"
@@ -41,16 +41,16 @@ jobs:
 
       - name: Run Test - TCO Suite
         timeout-minutes: 5
-        run: build/Release/garuda_tco_tests.exe
+        run: build/garuda_tco_tests.exe
 
       - name: Run Test - Control Flow Suite
         timeout-minutes: 5
-        run: build/Release/garuda_control_flow_tests.exe
+        run: build/garuda_control_flow_tests.exe
 
       - name: Run Test - Process Isolation Suite
         timeout-minutes: 5
-        run: build/Release/garuda_isolation_tests.exe
+        run: build/garuda_isolation_tests.exe
 
       - name: Run Test - Fault Isolation Suite
         timeout-minutes: 10
-        run: build/Release/garuda_fault_tests.exe
+        run: build/garuda_fault_tests.exe
