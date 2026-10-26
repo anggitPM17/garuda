@@ -1,0 +1,17 @@
+modul View
+
+fungsi render(TemplatePath, Data) ->
+    yen TemplatePath != "" ->
+        "<h1>View Rendered</h1>"
+    lain ->
+        ""
+    rampung
+rampung
+
+fungsi layout(LayoutPath, Content) ->
+    yen LayoutPath != "" ->
+        "<html>" ++ Content ++ "</html>"
+    lain ->
+        Content
+    rampung
+rampung

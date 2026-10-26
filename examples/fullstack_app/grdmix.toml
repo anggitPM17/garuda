@@ -1,0 +1,7 @@
+[project]
+name = "fullstack_app"
+version = "1.0.0"
+author = "Garuda Community"
+description = "Full-Stack Web Application Demo (JSON + HTTP Server + HTTP Client + Database)"
+
+[dependencies]

@@ -1,0 +1,24 @@
+modul Supervisor
+
+fungsi client_budi() ->
+    tampa
+        {kirim_pesan, Pesan} ->
+            cetak(Pesan)
+    rampung
+rampung
+
+fungsi loop_supervisor() ->
+    tampa
+        {restart_client, Nama, Induk} ->
+            cetak("[supervisor] restart client")
+            ClientBaru = cakra(fungsi() -> client_budi() rampung)
+            Induk <- {selesai, "ok"}
+    rampung
+rampung
+
+fungsi utama() ->
+    Sup = cakra(fungsi() -> loop_supervisor() rampung)
+    Sup <- {restart_client, "Budi", diri}
+    tampa {selesai, _} -> :ok rampung
+    42
+rampung

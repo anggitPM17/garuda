@@ -1,0 +1,12 @@
+build/
+*.exe
+*.obj
+*.pdb
+*.ilk
+*.rar
+*.docx
+*.bak-*
+*.state
+*.gvm
+.vs/
+.vscode/

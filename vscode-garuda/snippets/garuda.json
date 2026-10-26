@@ -1,0 +1,59 @@
+{
+  "Module Declaration": {
+    "prefix": "modul",
+    "body": [
+      "modul ${1:NamaModul}",
+      "",
+      "fungsi ${2:utama}() ->",
+      "    ${0::ok}",
+      "rampung"
+    ],
+    "description": "Deklarasi Modul Garuda"
+  },
+  "Function Declaration": {
+    "prefix": "fungsi",
+    "body": [
+      "fungsi ${1:nama_fungsi}(${2:params}) ->",
+      "    ${0::ok}",
+      "rampung"
+    ],
+    "description": "Deklarasi Fungsi Garuda"
+  },
+  "Macro Declaration": {
+    "prefix": "makro",
+    "body": [
+      "makro ${1:nama_makro}(${2:params}) ->",
+      "    ${0:body}",
+      "rampung"
+    ],
+    "description": "Deklarasi Makro Garuda"
+  },
+  "Receive Block": {
+    "prefix": "tampa",
+    "body": [
+      "tampa",
+      "    {${1:pesan}, ${2:Data}} ->",
+      "        ${0:cetak(Data)}",
+      "rampung"
+    ],
+    "description": "Blok Receive Tampa Aktor"
+  },
+  "Spawn Actor": {
+    "prefix": "cakra",
+    "body": [
+      "${1:Pid} = cakra(fungsi() -> ${2:loop()} rampung)"
+    ],
+    "description": "Spawn Aktor Cakra"
+  },
+  "If Conditional": {
+    "prefix": "yen",
+    "body": [
+      "yen ${1:kondisi} ->",
+      "    ${2:hasil_true}",
+      "lain ->",
+      "    ${0:hasil_false}",
+      "rampung"
+    ],
+    "description": "Kondisi Yen Lain"
+  }
+}

@@ -1,0 +1,7 @@
+[project]
+name = "web_app"
+version = "1.0.0"
+author = "Garuda Web Framework Team"
+description = "Garuda Web Framework Core Web Application Demo (Phoenix Alternative)"
+
+[dependencies]

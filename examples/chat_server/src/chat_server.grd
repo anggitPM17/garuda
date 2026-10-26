@@ -1,0 +1,30 @@
+modul ChatServer
+
+fungsi loop_server(Klien) ->
+    tampa
+        {gabung, ClientPid, Nama} ->
+            cetak("[server] client bergabung")
+            KlienBaru = [{ClientPid, Nama}] ++ Klien
+            loop_server(KlienBaru)
+        {pesan, DariPid, Teks} ->
+            cetak("[server] broadcast: " ++ Teks)
+            sebar_ke_semua(Klien, DariPid, Teks)
+            loop_server(Klien)
+    rampung
+rampung
+
+fungsi sebar_ke_semua([], _Dari, _Teks) -> :ok
+fungsi sebar_ke_semua([{ClientPid, _Nama} | Sisa], Dari, Teks) ->
+    ClientPid <- {pesan_baru, Dari, Teks}
+    sebar_ke_semua(Sisa, Dari, Teks)
+rampung
+
+fungsi buat_chat_server() ->
+    cakra(fungsi() -> loop_server([]) rampung)
+rampung
+
+fungsi utama() ->
+    Srv = buat_chat_server()
+    Srv <- {pesan, diri, "Halo dari ChatServer"}
+    42
+rampung

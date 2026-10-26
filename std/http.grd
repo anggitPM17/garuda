@@ -1,0 +1,17 @@
+modul Http
+
+fungsi get(Url) ->
+    yen Url != "" ->
+        {:ok, Url}
+    lain ->
+        {:error, :url_cacat}
+    rampung
+rampung
+
+fungsi post(Url, Isi) ->
+    yen Url != "" ->
+        {:ok, Isi}
+    lain ->
+        {:error, :url_cacat}
+    rampung
+rampung

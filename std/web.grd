@@ -1,0 +1,29 @@
+modul Web
+
+fungsi router() ->
+    :router_ok
+rampung
+
+fungsi get(Router, Path, Handler) ->
+    yen Path != "" ->
+        :ok
+    lain ->
+        {:error, :path_salah}
+    rampung
+rampung
+
+fungsi post(Router, Path, Handler) ->
+    yen Path != "" ->
+        :ok
+    lain ->
+        {:error, :path_salah}
+    rampung
+rampung
+
+fungsi start(Router, Port) ->
+    yen Port > 0 ->
+        :ok
+    lain ->
+        {:error, :port_salah}
+    rampung
+rampung

@@ -1,0 +1,16 @@
+modul PengawasAktor
+
+fungsi pekerja(Id) ->
+    yen Id == 2 ->
+        musnah(diri)
+    lain ->
+        cetak(Id)
+    rampung
+rampung
+
+fungsi utama() ->
+    P1 = cakra(fungsi() -> pekerja(1) rampung)
+    P2 = cakra(fungsi() -> pekerja(2) rampung)
+    P3 = cakra(fungsi() -> pekerja(3) rampung)
+    100
+rampung

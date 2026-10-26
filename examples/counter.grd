@@ -1,0 +1,23 @@
+modul Counter
+
+fungsi loop_counter(Count) ->
+    tampa
+        {tambah, Nilai} ->
+            Next = Count + Nilai
+            loop_counter(Next)
+        {ambil, Dari} ->
+            Dari <- {nilai, Count}
+            loop_counter(Count)
+    rampung
+rampung
+
+fungsi utama() ->
+    diri <- {tambah, 10}
+    diri <- {tambah, 25}
+    diri <- {ambil, diri}
+    tampa
+        {nilai, Total} ->
+            cetak(Total)
+            Total
+    rampung
+rampung

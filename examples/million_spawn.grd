@@ -1,0 +1,19 @@
+modul MillionSpawn
+
+fungsi worker(Id) ->
+    Id
+rampung
+
+fungsi spawn_loop(N) ->
+    yen N > 0 ->
+        cakra(fungsi() -> worker(N) rampung)
+        spawn_loop(N - 1)
+    lain ->
+        cetak("1 juta proses selesai di-spawn!")
+        1000000
+    rampung
+rampung
+
+fungsi utama() ->
+    spawn_loop(1000000)
+rampung

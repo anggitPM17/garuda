@@ -1,0 +1,5 @@
+modul Halo
+
+fungsi utama() ->
+    cetak("Sugeng rawuh, dunia!")
+rampung

@@ -1,0 +1,45 @@
+modul Orm
+
+fungsi define_model(Nama, Field) ->
+    yen Nama != "" ->
+        :ok
+    lain ->
+        {:error, :nama_salah}
+    rampung
+rampung
+
+fungsi insert(NamaModel, Data) ->
+    yen NamaModel != "" ->
+        {:ok, "id_101"}
+    lain ->
+        {:error, :gagal_simpan}
+    rampung
+rampung
+
+fungsi find(NamaModel, Id) ->
+    yen Id != "" ->
+        {:ok, Id}
+    lain ->
+        {:error, :not_found}
+    rampung
+rampung
+
+fungsi update(NamaModel, Id, Data) ->
+    yen Id != "" ->
+        :ok
+    lain ->
+        {:error, :gagal_ubah}
+    rampung
+rampung
+
+fungsi delete(NamaModel, Id) ->
+    yen Id != "" ->
+        :ok
+    lain ->
+        {:error, :gagal_hapus}
+    rampung
+rampung
+
+fungsi where(NamaModel, Field, Nilai) ->
+    []
+rampung

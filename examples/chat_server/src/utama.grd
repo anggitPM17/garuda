@@ -1,0 +1,30 @@
+modul Utama
+
+fungsi client_budi() ->
+    tampa
+        {pesan_baru, Teks} ->
+            cetak("[Budi] dapat: " ++ Teks)
+    rampung
+rampung
+
+fungsi client_ani() ->
+    tampa
+        {pesan_baru, Teks} ->
+            cetak("[Ani] dapat: " ++ Teks)
+    rampung
+rampung
+
+fungsi utama() ->
+    cetak("=== DEMO CHAT SERVER GARUDA ===")
+
+    Budi = cakra(fungsi() -> client_budi() rampung)
+    Ani = cakra(fungsi() -> client_ani() rampung)
+
+    cetak("[server] Budi bergabung")
+    cetak("[server] Ani bergabung")
+    cetak("[server] broadcast: Halo semua!")
+
+    Budi <- {pesan_baru, "Halo semua!"}
+    Ani <- {pesan_baru, "Halo semua!"}
+    42
+rampung

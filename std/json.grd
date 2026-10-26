@@ -1,0 +1,13 @@
+modul Json
+
+fungsi encode(Data) ->
+    Data
+rampung
+
+fungsi decode(Teks) ->
+    yen Teks != "" ->
+        {:ok, Teks}
+    lain ->
+        :error
+    rampung
+rampung

@@ -1,0 +1,14 @@
+modul TcoLoop
+
+fungsi hitung_mundur(N) ->
+    yen N > 0 ->
+        hitung_mundur(N - 1)
+    lain ->
+        cetak("Selesai menghitung 1 juta!")
+        42
+    rampung
+rampung
+
+fungsi utama() ->
+    hitung_mundur(1000000)
+rampung

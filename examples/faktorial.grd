@@ -1,0 +1,15 @@
+modul Faktorial
+
+fungsi faktorial(N) ->
+    yen N <= 1 ->
+        1
+    lain ->
+        N * faktorial(N - 1)
+    rampung
+rampung
+
+fungsi utama() ->
+    Hasil = faktorial(5)
+    cetak(Hasil)
+    Hasil
+rampung

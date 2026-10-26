@@ -1,0 +1,13 @@
+modul Session
+
+fungsi set(Kunci, Nilai) ->
+    :ok
+rampung
+
+fungsi get(Kunci) ->
+    :nil
+rampung
+
+fungsi clear() ->
+    :ok
+rampung

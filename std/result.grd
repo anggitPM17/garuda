@@ -1,0 +1,38 @@
+modul Result
+
+fungsi is_ok(Res) ->
+    yen Res == {:ok, _} ->
+        benar
+    lain ->
+        salah
+    rampung
+rampung
+
+fungsi is_error(Res) ->
+    yen Res == {:error, _} ->
+        benar
+    lain ->
+        salah
+    rampung
+rampung
+
+fungsi unwrap(Res) ->
+    tinjau Res ing
+        {:ok, Val} -> Val
+        {:error, Reason} -> musnah(Reason)
+    rampung
+rampung
+
+fungsi unwrap_or(Res, Default) ->
+    tinjau Res ing
+        {:ok, Val} -> Val
+        {:error, _} -> Default
+    rampung
+rampung
+
+fungsi map(Res, Fun) ->
+    tinjau Res ing
+        {:ok, Val} -> {:ok, Fun(Val)}
+        {:error, Reason} -> {:error, Reason}
+    rampung
+rampung

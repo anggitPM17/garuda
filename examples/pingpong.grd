@@ -1,0 +1,18 @@
+modul PingPong
+
+fungsi server() ->
+    tampa
+        {ping, Dari} ->
+            Dari <- {pong, diri}
+    rampung
+rampung
+
+fungsi utama() ->
+    ServerPid = cakra(fungsi() -> server() rampung)
+    ServerPid <- {ping, diri}
+    tampa
+        {pong, Sender} ->
+            cetak("Diterima balasan PONG dari Server!")
+            42
+    rampung
+rampung

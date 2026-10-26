@@ -1,0 +1,25 @@
+modul LiveView
+
+fungsi mount(Rute, Handler) ->
+    yen Rute != "" ->
+        :ok
+    lain ->
+        {:error, :rute_salah}
+    rampung
+rampung
+
+fungsi render(Template, Data) ->
+    yen Template != "" ->
+        "<div>LiveView HTML</div>"
+    lain ->
+        ""
+    rampung
+rampung
+
+fungsi push_event(Peristiwa, Payload) ->
+    yen Peristiwa != "" ->
+        {:ok, Peristiwa}
+    lain ->
+        {:error, :peristiwa_salah}
+    rampung
+rampung

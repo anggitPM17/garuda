@@ -1,0 +1,27 @@
+modul Utama
+
+fungsi index_controller() ->
+    "{\"app\":\"Garuda Web Framework\",\"status\":\"online\"}"
+rampung
+
+fungsi show_user_controller(Id) ->
+    yen Id == "usr_101" ->
+        "{\"id\":\"usr_101\",\"nama\":\"Budi\",\"peran\":\"developer\"}"
+    lain ->
+        "{\"error\":\"not_found\"}"
+    rampung
+rampung
+
+fungsi create_user_controller(Body) ->
+    "{\"status\":\"created\",\"data\":Body}"
+rampung
+
+fungsi utama() ->
+    cetak("=== GARUDA PHOENIX-ALTERNATIVE WEB FRAMEWORK ===")
+    App = Web.router()
+    Web.get(App, "/", fungsi() -> index_controller() rampung)
+    Web.get(App, "/users/:id", fungsi(Id) -> show_user_controller(Id) rampung)
+    Web.post(App, "/users", fungsi(Body) -> create_user_controller(Body) rampung)
+    Web.start(App, 8090)
+    42
+rampung

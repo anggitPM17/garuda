@@ -1,0 +1,28 @@
+modul Utama
+
+fungsi handle_root() ->
+    "{\"app\":\"Garuda Fullstack\",\"status\":\"ok\"}"
+rampung
+
+fungsi handle_create_user(Nama, Umur) ->
+    yen Nama != "" ->
+        "{\"id\":\"usr_101\",\"status\":\"created\"}"
+    lain ->
+        "{\"error\":\"nama_kosong\"}"
+    rampung
+rampung
+
+fungsi handle_get_user(Id) ->
+    yen Id == "usr_101" ->
+        "{\"id\":\"usr_101\",\"nama\":\"Budi\",\"umur\":42}"
+    lain ->
+        "{\"error\":\"not_found\"}"
+    rampung
+rampung
+
+fungsi utama() ->
+    cetak("=== DEMO FULLSTACK WEB APP GARUDA ===")
+    Db.open("./garuda_fullstack.db")
+    HttpServer.serve(8085)
+    42
+rampung

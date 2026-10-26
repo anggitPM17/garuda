@@ -1,0 +1,41 @@
+modul Db
+
+fungsi open(Path) ->
+    yen Path != "" ->
+        {:ok, Path}
+    lain ->
+        {:error, :path_salah}
+    rampung
+rampung
+
+fungsi insert(Tabel, Kunci, Data) ->
+    yen Tabel != "" ->
+        :ok
+    lain ->
+        {:error, :gagal_simpan}
+    rampung
+rampung
+
+fungsi query(Tabel, Kunci) ->
+    yen Kunci != "" ->
+        {:ok, Kunci}
+    lain ->
+        {:error, :tidak_ditemukan}
+    rampung
+rampung
+
+fungsi update(Tabel, Kunci, DataBaru) ->
+    yen Kunci != "" ->
+        :ok
+    lain ->
+        {:error, :gagal_ubah}
+    rampung
+rampung
+
+fungsi delete(Tabel, Kunci) ->
+    yen Kunci != "" ->
+        :ok
+    lain ->
+        {:error, :gagal_hapus}
+    rampung
+rampung

@@ -1,0 +1,17 @@
+modul ObrolanAktor
+
+fungsi pengguna(Nama) ->
+    tampa
+        {pesan, Dari, Teks} ->
+            cetak(Teks)
+    rampung
+rampung
+
+fungsi utama() ->
+    User1 = cakra(fungsi() -> pengguna("Gajah Mada") rampung)
+    User2 = cakra(fungsi() -> pengguna("Hayam Wuruk") rampung)
+
+    User1 <- {pesan, diri, "Sugeng rawuh ing kluster Garuda!"}
+    User2 <- {pesan, diri, "Sugeng rawuh ing kluster Garuda!"}
+    42
+rampung

@@ -1,0 +1,22 @@
+modul FizzBuzz
+
+fungsi cetak_fizzbuzz(N) ->
+    yen N > 15 ->
+        :ok
+    lain ->
+        yen (N == 3) atau (N == 6) atau (N == 9) atau (N == 12) atau (N == 15) ->
+            cetak("Fizz")
+        lain ->
+            yen (N == 5) atau (N == 10) ->
+                cetak("Buzz")
+            lain ->
+                cetak(N)
+            rampung
+        rampung
+        cetak_fizzbuzz(N + 1)
+    rampung
+rampung
+
+fungsi utama() ->
+    cetak_fizzbuzz(1)
+rampung

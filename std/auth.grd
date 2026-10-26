@@ -1,0 +1,13 @@
+modul Auth
+
+fungsi login(Pengguna, KataKunci) ->
+    yen Pengguna != "" ->
+        {:ok, "token_12345"}
+    lain ->
+        {:error, :salah_katakunci}
+    rampung
+rampung
+
+fungsi protect(Handler) ->
+    Handler
+rampung
