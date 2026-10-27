@@ -13,6 +13,7 @@
 #include <iostream>
 #include <map>
 #include <memory>
+#include <set>
 #include <sstream>
 #include <string>
 #include <string_view>
@@ -142,6 +143,31 @@ public:
         }
     }
 
+    void send_ws_text_frame(socket_t client_fd, const std::string& payload) {
+        std::vector<std::uint8_t> frame;
+        frame.push_back(0x81); // FIN (1) + Opcode (1 = Text)
+
+        std::size_t len = payload.length();
+        if (len <= 125) {
+            frame.push_back(static_cast<std::uint8_t>(len));
+        } else if (len <= 65535) {
+            frame.push_back(126);
+            frame.push_back(static_cast<std::uint8_t>((len >> 8) & 0xFF));
+            frame.push_back(static_cast<std::uint8_t>(len & 0xFF));
+        } else {
+            frame.push_back(127);
+            for (int i = 7; i >= 0; --i) {
+                frame.push_back(static_cast<std::uint8_t>((len >> (i * 8)) & 0xFF));
+            }
+        }
+
+        for (char c : payload) {
+            frame.push_back(static_cast<std::uint8_t>(c));
+        }
+
+        ::send(client_fd, reinterpret_cast<const char*>(frame.data()), static_cast<int>(frame.size()), 0);
+    }
+
 private:
     void init_winsock() {
 #if defined(_WIN32)
@@ -192,15 +218,66 @@ private:
         char buffer[8192];
         int bytes = ::recv(client_fd, buffer, sizeof(buffer) - 1, 0);
         if (bytes <= 0) {
+            ws_sockets_.erase(client_fd);
             loop_.unwatch(static_cast<int>(client_fd));
             CLOSE_SOCK(client_fd);
+            return;
+        }
+
+        // 1. Check if this socket is already an established WebSocket connection
+        if (ws_sockets_.count(client_fd) > 0) {
+            const std::uint8_t* ubuf = reinterpret_cast<const std::uint8_t*>(buffer);
+            std::uint8_t opcode = ubuf[0] & 0x0F;
+            bool masked = (ubuf[1] & 0x80) != 0;
+            std::size_t payload_len = ubuf[1] & 0x7F;
+            std::size_t offset = 2;
+
+            if (payload_len == 126) {
+                if (bytes >= 4) {
+                    payload_len = (ubuf[2] << 8) | ubuf[3];
+                    offset = 4;
+                }
+            } else if (payload_len == 127) {
+                if (bytes >= 10) {
+                    offset = 10;
+                }
+            }
+
+            std::uint8_t mask_key[4] = {0, 0, 0, 0};
+            if (masked) {
+                if (bytes >= offset + 4) {
+                    for (int i = 0; i < 4; ++i) mask_key[i] = ubuf[offset++];
+                }
+            }
+
+            std::string payload;
+            payload.reserve(payload_len);
+            for (std::size_t i = 0; i < payload_len && (offset + i) < static_cast<std::size_t>(bytes); ++i) {
+                std::uint8_t b = ubuf[offset + i];
+                if (masked) b ^= mask_key[i % 4];
+                payload += static_cast<char>(b);
+            }
+
+            if (opcode == 0x1) { // Text Frame
+                if (ws_handler_) {
+                    ws_handler_(payload, [this, client_fd](const std::string& reply) {
+                        this->send_ws_text_frame(client_fd, reply);
+                    });
+                } else {
+                    send_ws_text_frame(client_fd, "Pong: " + payload);
+                }
+            } else if (opcode == 0x8) { // Close Frame
+                ws_sockets_.erase(client_fd);
+                loop_.unwatch(static_cast<int>(client_fd));
+                CLOSE_SOCK(client_fd);
+            }
             return;
         }
 
         buffer[bytes] = '\0';
         std::string raw_req(buffer, bytes);
 
-        // Simple HTTP / WS Handshake Parser
+        // 2. Simple HTTP / WS Handshake Parser
         if (raw_req.find("Sec-WebSocket-Key") != std::string::npos) {
             std::string key = extract_header_value(raw_req, "Sec-WebSocket-Key");
             std::string accept_key = compute_ws_accept(key);
@@ -211,6 +288,9 @@ private:
                      << "Sec-WebSocket-Accept: " << accept_key << "\r\n\r\n";
             std::string resp_str = response.str();
             ::send(client_fd, resp_str.c_str(), static_cast<int>(resp_str.length()), 0);
+
+            // Register socket as active WebSocket connection
+            ws_sockets_.insert(client_fd);
         } else {
             HttpRequest req = parse_http_request(raw_req);
             HttpResponse resp;
@@ -297,6 +377,7 @@ private:
     socket_t server_fd_;
     HttpHandler http_handler_;
     WsHandler ws_handler_;
+    std::set<socket_t> ws_sockets_;
 };
 
 } // namespace garuda::beam

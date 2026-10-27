@@ -97,7 +97,7 @@ sertakan tes untuk setiap perubahan (fitur, bug fix, refactor); laporkan hasil d
 
 ### 1.1 Jaringan & Protokol
 - [~] HTTP/1.1 + HTTP/2 (client & server) — audit HTTP/2 diperlukan; lihat KNOWN_ISSUES
-- [~] WebSocket (realtime) — tes E2E perlu diperbaiki (menguji codec, bukan roundtrip); lihat KNOWN_ISSUES
+- [x] WebSocket (realtime) (E2E teruji via garuda_websocket_e2e_tests)
 - [ ] gRPC / protobuf
 - [~] TLS native (vendor mbedTLS v3.5.2 — E2E socket handshake teruji via garuda_tls_tests)
 
