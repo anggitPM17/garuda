@@ -103,7 +103,7 @@ sertakan tes untuk setiap perubahan (fitur, bug fix, refactor); laporkan hasil d
 
 ### 1.2 Data & Persistensi
 - [ ] Driver DB matang (Postgres, SQLite, Redis)
-- [ ] ORM ringan / query builder
+- [x] ORM ringan / query builder (QueryBuilder + Tes SQL Injection)
 - [ ] Migrasi skema
 - [~] Persistensi aktor (snapshot + event log) — implementasi Term/JSON & tes disk roundtrip selesai
 

@@ -4,10 +4,12 @@
 #include "../core/term.hpp"
 
 #include <iostream>
+#include <map>
 #include <memory>
 #include <optional>
 #include <sstream>
 #include <string>
+#include <utility>
 #include <vector>
 
 namespace garuda::beam::stdlib {
@@ -47,7 +49,24 @@ struct SqlQuery {
 
 class QueryBuilder {
 public:
+    enum class Mode { Select, Insert, Update, Delete };
+
     QueryBuilder() = default;
+
+    static QueryBuilder create() {
+        return QueryBuilder();
+    }
+
+    QueryBuilder& select(const std::vector<std::string>& columns = {"*"}) {
+        mode_ = Mode::Select;
+        columns_ = columns;
+        return *this;
+    }
+
+    QueryBuilder& from(const std::string& table) {
+        table_ = table;
+        return *this;
+    }
 
     static QueryBuilder select_from(const std::string& table, const std::vector<std::string>& columns = {"*"}) {
         QueryBuilder qb;
@@ -55,6 +74,18 @@ public:
         qb.table_ = table;
         qb.columns_ = columns;
         return qb;
+    }
+
+    QueryBuilder& insert_into(const std::string& table, const std::map<std::string, std::string>& data) {
+        mode_ = Mode::Insert;
+        table_ = table;
+        columns_.clear();
+        params_.clear();
+        for (const auto& [k, v] : data) {
+            columns_.push_back(k);
+            params_.push_back(SqlParam::make_text(v));
+        }
+        return *this;
     }
 
     static QueryBuilder insert_into(const std::string& table, const std::vector<std::string>& columns, const std::vector<SqlParam>& values) {
@@ -66,10 +97,39 @@ public:
         return qb;
     }
 
+    QueryBuilder& update(const std::string& table) {
+        mode_ = Mode::Update;
+        table_ = table;
+        return *this;
+    }
+
+    QueryBuilder& set(const std::string& column, const std::string& value) {
+        set_clauses_.push_back(column + " = ?");
+        params_.push_back(SqlParam::make_text(value));
+        return *this;
+    }
+
+    QueryBuilder& set(const std::map<std::string, std::string>& data) {
+        for (const auto& [k, v] : data) {
+            set(k, v);
+        }
+        return *this;
+    }
+
+    QueryBuilder& delete_from(const std::string& table) {
+        mode_ = Mode::Delete;
+        table_ = table;
+        return *this;
+    }
+
     QueryBuilder& where(const std::string& column, const std::string& op, const SqlParam& param) {
         where_clauses_.push_back(column + " " + op + " ?");
         params_.push_back(param);
         return *this;
+    }
+
+    QueryBuilder& where(const std::string& column, const std::string& op, const std::string& value) {
+        return where(column, op, SqlParam::make_text(value));
     }
 
     QueryBuilder& where_text(const std::string& column, const std::string& op, const std::string& text) {
@@ -86,9 +146,13 @@ public:
 
         if (mode_ == Mode::Select) {
             oss << "SELECT ";
-            for (std::size_t i = 0; i < columns_.size(); ++i) {
-                if (i > 0) oss << ", ";
-                oss << columns_[i];
+            if (columns_.empty()) {
+                oss << "*";
+            } else {
+                for (std::size_t i = 0; i < columns_.size(); ++i) {
+                    if (i > 0) oss << ", ";
+                    oss << columns_[i];
+                }
             }
             oss << " FROM " << table_;
 
@@ -111,11 +175,51 @@ public:
                 oss << "?";
             }
             oss << ")";
+        } else if (mode_ == Mode::Update) {
+            oss << "UPDATE " << table_ << " SET ";
+            for (std::size_t i = 0; i < set_clauses_.size(); ++i) {
+                if (i > 0) oss << ", ";
+                oss << set_clauses_[i];
+            }
+            if (!where_clauses_.empty()) {
+                oss << " WHERE ";
+                for (std::size_t i = 0; i < where_clauses_.size(); ++i) {
+                    if (i > 0) oss << " AND ";
+                    oss << where_clauses_[i];
+                }
+            }
+        } else if (mode_ == Mode::Delete) {
+            oss << "DELETE FROM " << table_;
+            if (!where_clauses_.empty()) {
+                oss << " WHERE ";
+                for (std::size_t i = 0; i < where_clauses_.size(); ++i) {
+                    if (i > 0) oss << " AND ";
+                    oss << where_clauses_[i];
+                }
+            }
         }
 
         result.sql = oss.str();
         result.params = params_;
         return result;
+    }
+
+    std::pair<std::string, std::vector<std::string>> build() const {
+        SqlQuery sq = to_sql();
+        std::vector<std::string> str_params;
+        str_params.reserve(sq.params.size());
+        for (const auto& p : sq.params) {
+            if (p.type == SqlParam::Type::Text) {
+                str_params.push_back(p.text_val);
+            } else if (p.type == SqlParam::Type::Int64) {
+                str_params.push_back(std::to_string(p.int_val));
+            } else if (p.type == SqlParam::Type::Double) {
+                str_params.push_back(std::to_string(p.double_val));
+            } else {
+                str_params.push_back("");
+            }
+        }
+        return {sq.sql, str_params};
     }
 
     static bool execute_prepared(sqlite3* db, const SqlQuery& query) {
@@ -181,9 +285,10 @@ public:
     }
 
 private:
-    enum class Mode { Select, Insert } mode_ = Mode::Select;
+    Mode mode_ = Mode::Select;
     std::string table_;
     std::vector<std::string> columns_;
+    std::vector<std::string> set_clauses_;
     std::vector<std::string> where_clauses_;
     std::vector<SqlParam> params_;
 };
