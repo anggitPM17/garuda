@@ -96,7 +96,7 @@ sertakan tes untuk setiap perubahan (fitur, bug fix, refactor); laporkan hasil d
 **Tujuan:** Garuda bisa dipakai membangun layanan produksi nyata.
 
 ### 1.1 Jaringan & Protokol
-- [ ] HTTP/1.1 + HTTP/2 (client & server)
+- [x] HTTP/1.1 + HTTP/2 (client & server) (E2E teruji via garuda_http_server_e2e_tests)
 - [ ] WebSocket (realtime)
 - [ ] gRPC / protobuf
 - [ ] TLS native
