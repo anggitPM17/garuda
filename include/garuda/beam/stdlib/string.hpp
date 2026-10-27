@@ -22,6 +22,15 @@ public:
         return a + b;
     }
 
+    static std::string gabung_list(const std::vector<std::string>& items, const std::string& delim) {
+        std::ostringstream oss;
+        for (std::size_t i = 0; i < items.size(); ++i) {
+            if (i > 0) oss << delim;
+            oss << items[i];
+        }
+        return oss.str();
+    }
+
     static std::string potong(const std::string& s, std::int64_t start, std::int64_t len) {
         if (start < 0 || static_cast<std::size_t>(start) >= s.length()) return "";
         return s.substr(static_cast<std::size_t>(start), static_cast<std::size_t>(len));

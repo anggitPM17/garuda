@@ -15,6 +15,8 @@ int main() {
     assert(Str::panjang("hello") == 5);                      // 1
     assert(Str::panjang("") == 0);                           // 2
     assert(Str::gabung("a", "b") == "ab");                   // 3
+    assert(Str::gabung_list({"a", "b", "c"}, "-") == "a-b-c"); // 3b
+    assert(Str::gabung_list({"halo"}, ",") == "halo");        // 3c
     assert(Str::potong("hello", 1, 3) == "ell");             // 4
     assert(Str::potong("hello", 10, 3) == "");               // 5
     assert(Str::besar("hello") == "HELLO");                  // 6
