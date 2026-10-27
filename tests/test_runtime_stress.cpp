@@ -69,6 +69,7 @@ int main() {
             std::chrono::high_resolution_clock::now() - start).count();
 
         GARUDA_CHECK(rt.active_actor_count() >= 10000, "Must have 10,000 active actors spawned");
+        GARUDA_CHECK(rt.get_total_actors_spawned() >= 10000, "Spawn counter must match");
         GARUDA_CHECK(elapsed < 2000, "Parallel spawn of 10,000 actors must finish < 2000 ms");
         std::cout << "  ✓ Test 1: Global Lock pada Spawn PASS (" << elapsed << " ms)\n";
     }, 10);
@@ -124,6 +125,7 @@ int main() {
         auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(
             std::chrono::high_resolution_clock::now() - start).count();
 
+        GARUDA_CHECK(rt.get_total_messages_sent() == 100000, "Message counter must match");
         GARUDA_CHECK(elapsed < 3000, "100,000 concurrent messages must be sent < 3000 ms");
         std::cout << "  ✓ Test 2: Global Lock pada Messaging PASS (" << elapsed << " ms)\n";
     }, 10);

@@ -32,7 +32,11 @@ public:
 
     void set_verbose(bool verbose) { verbose_ = verbose; }
 
+    std::size_t get_total_messages_sent() const { return total_messages_sent_.load(); }
+    std::size_t get_total_actors_spawned() const { return total_actors_spawned_.load(); }
+
     Pid spawn_actor(std::size_t start_ip) {
+        total_actors_spawned_++;
         std::lock_guard<std::mutex> lock(mu_);
         Pid new_pid{next_pid_++};
         auto actor = std::make_unique<GvmActor>();
@@ -49,6 +53,7 @@ public:
     }
 
     void send_message(Pid target_pid, Term message) {
+        total_messages_sent_++;
         std::lock_guard<std::mutex> lock(mu_);
         auto it = actors_.find(target_pid.id);
         if (it != actors_.end()) {
@@ -206,6 +211,8 @@ public:
 
 private:
     mutable std::mutex mu_;
+    std::atomic<std::size_t> total_messages_sent_{0};
+    std::atomic<std::size_t> total_actors_spawned_{0};
     std::uint64_t next_pid_ = 1;
     bool verbose_ = true;
     std::vector<Instruction> instructions_;
