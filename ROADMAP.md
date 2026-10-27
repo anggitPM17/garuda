@@ -149,7 +149,7 @@ STATUS: Lapis 1 FUNGSIONAL SELESAI (Fondasi server & demo RICHAT terbukti). Gate
 
 ### 2.3 Ekosistem & Komunitas
 - [ ] Registry paket publik
-- [ ] Dokumentasi API otomatis (doc comments → HTML)
+- [x] Dokumentasi API otomatis (doc comments → HTML) (DocGenerator teruji)
 - [ ] Contoh proyek (CLI tool, desktop app, server)
 - [ ] Program kontributor & governance
 
