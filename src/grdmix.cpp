@@ -1,6 +1,6 @@
 #pragma once
 // Garuda Language Package Manager: `grdmix` CLI (`grdmix.cpp`)
-// Menawarkan otomatisasi alur proyek: grdmix new, grdmix compile, grdmix run, grdmix test, grdmix deps.get.
+// Menawarkan otomatisasi alur proyek: grdmix new, grdmix init, grdmix compile/build, grdmix run, grdmix test, grdmix deps.get.
 #include "../include/garuda/compiler/lexer.hpp"
 #include "../include/garuda/compiler/parser.hpp"
 #include "../include/garuda/compiler/codegen.hpp"
@@ -26,7 +26,8 @@ public:
     static void print_help() {
         std::cout << "Penggunaan CLI Package Manager Garuda (grdmix):\n";
         std::cout << "  grdmix new <nama>      Buat perancangan proyek baru (scaffold)\n";
-        std::cout << "  grdmix compile         Kompilasi seluruh berkas .grd di folder src/\n";
+        std::cout << "  grdmix init            Inisialisasi proyek baru di folder saat ini\n";
+        std::cout << "  grdmix compile/build   Kompilasi seluruh berkas .grd di folder src/\n";
         std::cout << "  grdmix run             Kompilasi dan jalankan modul utama (src/utama.grd)\n";
         std::cout << "  grdmix test            Jalankan seluruh pengujian otomatis di folder test/\n";
         std::cout << "  grdmix deps.get        Unduh dependensi eksternal proyek\n";
@@ -65,6 +66,77 @@ public:
         std::cout << "🚀 [GRDMIX] Publishing current package to local registry..." << std::endl;
         std::cout << "✅ [GRDMIX] Package published successfully!" << std::endl;
         return 0;
+    }
+
+    static int init_project(const fs::path& proj_dir = fs::current_path()) {
+        fs::path toml_path = proj_dir / "grdmix.toml";
+        if (fs::exists(toml_path)) {
+            std::cerr << "❌ Error: 'grdmix.toml' sudah ada di folder ini.\n";
+            return 1;
+        }
+
+        try {
+            std::string name = proj_dir.filename().string();
+            if (name.empty()) name = "proyek_garuda";
+
+            fs::create_directories(proj_dir / "src");
+            fs::create_directories(proj_dir / "test");
+
+            // 1. grdmix.toml
+            std::ofstream toml_ofs(toml_path);
+            toml_ofs << "[project]\n";
+            toml_ofs << "name = \"" << name << "\"\n";
+            toml_ofs << "version = \"0.1.0\"\n";
+            toml_ofs << "author = \"Pengembang Garuda\"\n";
+            toml_ofs << "description = \"Proyek Garuda\"\n\n";
+            toml_ofs << "[dependencies]\n";
+            toml_ofs.close();
+
+            // 2. src/utama.grd
+            fs::path main_grd = proj_dir / "src" / "utama.grd";
+            if (!fs::exists(main_grd)) {
+                std::ofstream src_ofs(main_grd);
+                src_ofs << "modul Utama\n\n";
+                src_ofs << "fungsi utama() ->\n";
+                src_ofs << "    cetak(\"Sugeng rawuh saking " << name << "!\")\n";
+                src_ofs << "    42\n";
+                src_ofs << "rampung\n";
+                src_ofs.close();
+            }
+
+            // 3. test/test_utama.grd
+            fs::path test_grd = proj_dir / "test" / "test_utama.grd";
+            if (!fs::exists(test_grd)) {
+                std::ofstream test_ofs(test_grd);
+                test_ofs << "modul TestUtama\n\n";
+                test_ofs << "fungsi utama() ->\n";
+                test_ofs << "    :ok\n";
+                test_ofs << "rampung\n";
+                test_ofs.close();
+            }
+
+            // 4. README.md
+            fs::path readme_path = proj_dir / "README.md";
+            if (!fs::exists(readme_path)) {
+                std::ofstream readme_ofs(readme_path);
+                readme_ofs << "# 🦅 " << name << "\n\nProyek Bahasa Garuda dibuat menggunakan `grdmix`.\n";
+                readme_ofs.close();
+            }
+
+            // 5. .gitignore
+            fs::path git_path = proj_dir / ".gitignore";
+            if (!fs::exists(git_path)) {
+                std::ofstream git_ofs(git_path);
+                git_ofs << "*.gvm\nbuild/\n.grdmix/\n";
+                git_ofs.close();
+            }
+
+            std::cout << "✅ Proyek '" << name << "' berhasil di-inisialisasi di: " << proj_dir.string() << "\n";
+            return 0;
+        } catch (const std::exception& e) {
+            std::cerr << "❌ Error: Gagal menginisialisasi proyek: " << e.what() << "\n";
+            return 1;
+        }
     }
 
     static int new_project(const std::string& name, const fs::path& base_dir = fs::current_path()) {
@@ -257,7 +329,11 @@ int main(int argc, char* argv[]) {
         return garuda::cli::Grdmix::new_project(argv[2]);
     }
 
-    if (command == "compile") {
+    if (command == "init") {
+        return garuda::cli::Grdmix::init_project();
+    }
+
+    if (command == "compile" || command == "build") {
         return garuda::cli::Grdmix::compile();
     }
 
