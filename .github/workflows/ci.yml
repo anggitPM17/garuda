@@ -28,13 +28,13 @@ jobs:
 
       - name: Build Test Executables
         run: |
-          cmake --build build --target garuda_tco_tests garuda_control_flow_tests garuda_isolation_tests garuda_fault_tests garuda_runtime_stress_tests garuda_memory_tests garuda_error_reporting_tests garuda_fuzzing_tests garuda_grdmix_e2e_tests garuda_bench_http_server
+          cmake --build build --target garuda_tco_tests garuda_control_flow_tests garuda_isolation_tests garuda_fault_tests garuda_runtime_stress_tests garuda_memory_tests garuda_error_reporting_tests garuda_fuzzing_tests garuda_grdmix_e2e_tests garuda_bytecode_io_tests garuda_bench_http_server
 
       - name: Verify Test Executables Exist
         shell: pwsh
         run: |
           $missing = @()
-          foreach ($exe in @("garuda_tco_tests.exe", "garuda_control_flow_tests.exe", "garuda_isolation_tests.exe", "garuda_fault_tests.exe", "garuda_runtime_stress_tests.exe", "garuda_memory_tests.exe", "garuda_error_reporting_tests.exe", "garuda_fuzzing_tests.exe", "garuda_grdmix_e2e_tests.exe", "garuda_bench_http_server.exe")) {
+          foreach ($exe in @("garuda_tco_tests.exe", "garuda_control_flow_tests.exe", "garuda_isolation_tests.exe", "garuda_fault_tests.exe", "garuda_runtime_stress_tests.exe", "garuda_memory_tests.exe", "garuda_error_reporting_tests.exe", "garuda_fuzzing_tests.exe", "garuda_grdmix_e2e_tests.exe", "garuda_bytecode_io_tests.exe", "garuda_bench_http_server.exe")) {
               if (-not (Test-Path "build/$exe")) { $missing += $exe }
           }
           if ($missing.Count -gt 0) {
@@ -77,6 +77,10 @@ jobs:
       - name: Run Test - Package Manager grdmix E2E Suite
         timeout-minutes: 5
         run: build/garuda_grdmix_e2e_tests.exe
+
+      - name: Run Test - Bytecode I/O & Checksum Suite
+        timeout-minutes: 5
+        run: build/garuda_bytecode_io_tests.exe
 
       - name: Run Performance Benchmarks
         timeout-minutes: 5
