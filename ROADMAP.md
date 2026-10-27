@@ -145,7 +145,7 @@ STATUS: Lapis 1 FUNGSIONAL SELESAI (Fondasi server & demo RICHAT terbukti). Gate
 - [ ] Cross-compile (Windows, Linux, macOS)
 - [ ] Static linking + distribusi single binary
 - [ ] GUI toolkit — binding ke GTK/Qt, atau toolkit native Garuda
-- [ ] Filesystem, process, signal, terminal (TUI)
+- [~] Filesystem & Process API (Fondasi toolchain desktop)
 
 ### 2.3 Ekosistem & Komunitas
 - [ ] Registry paket publik
