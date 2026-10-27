@@ -137,7 +137,7 @@ STATUS: Lapis 1 FUNGSIONAL SELESAI (Fondasi server & demo RICHAT terbukti). Gate
 **Tujuan:** Garuda bisa dipakai untuk CLI, desktop, scripting, otomasi — bukan hanya server.
 
 ### 2.1 Interop & FFI
-- [ ] C ABI stabil — bisa memanggil & dipanggil dari C/C++
+- [~] C ABI stabil (Fondasi FFI: registry + konversi tipe dasar)
 - [ ] Binding otomatis dari header C (seperti bindgen)
 - [ ] Embedding API — GVM bisa ditanam di aplikasi C++/Rust
 
