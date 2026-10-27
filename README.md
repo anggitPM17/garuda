@@ -105,6 +105,8 @@ rampung
 - [Panduan & Tutorial 10 Bab](docs/tutorial.md)
 - [Referensi Sintaksis Bahasa](docs/sintaks.md)
 - [Dokumentasi Referensi Standard Library (String, List, Map, Enum)](docs/STDLIB_REFERENCE.md)
+- [Panduan Penggunaan Package Manager grdmix](docs/GRDMIX.md)
+- [Panduan Integrasi C++ Compiler API](docs/COMPILER_API.md)
 - [Arsitektur GVM Engine](docs/arsitektur.md)
 - [Spesifikasi Model Memori Hibrida GVM](docs/MEMORY_MODEL.md)
 - [Desain Arsitektur Stadion Garuda (WASM Playground)](docs/STADION.md)
