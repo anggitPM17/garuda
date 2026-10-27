@@ -57,6 +57,9 @@ cd aplikasi_saya
 
 ## 📄 Contoh Kode Bahasa Garuda (`.grd`)
 
+- [Contoh Peta & Daftar (`examples/peta_dan_daftar.grd`)](examples/peta_dan_daftar.grd): Demonstrasi pembuatan dan pemrosesan data struktur Map dan List pustaka standar.
+- [Contoh Aktor & Supervisor (`examples/aktor_supervisor.grd`)](examples/aktor_supervisor.grd): Demonstrasi spawning aktor (`cakra`), pengiriman pesan (`<-`), dan pemrosesan mailbox (`tampa`).
+
 ### 1. Model Aktor Concurrent (PingPong)
 ```garuda
 modul PingPong

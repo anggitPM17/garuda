@@ -1,0 +1,15 @@
+modul PetaDanDaftar
+
+# Contoh Penggunaan Modul Map & List Standard Library Garuda
+
+fungsi utama() ->
+    DaftarSiswa = [101, 102, 103, 104]
+    Total = List.panjang(DaftarSiswa)
+
+    SiswaMap = Map.taruh(Map.baru(), "nama", "Budi")
+    NamaSiswa = Map.ambil(SiswaMap, "nama")
+
+    cetak("Data siswa berhasil dikelola:")
+    cetak(NamaSiswa)
+    42
+rampung

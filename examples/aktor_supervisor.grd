@@ -1,0 +1,22 @@
+modul AktorSupervisor
+
+# Contoh Pembuatan Aktor (cakra), Pengiriman Pesan (<-), dan Penerimaan Pesan (tampa)
+
+fungsi pekerja() ->
+    tampa
+        {salam, Dari} ->
+            Dari <- {balasan, "Sugeng rawuh saking Aktor Pekerja!"}
+            pekerja()
+    rampung
+rampung
+
+fungsi utama() ->
+    PekerjaPid = cakra(fungsi() -> pekerja() rampung)
+    PekerjaPid <- {salam, diri}
+
+    tampa
+        {balasan, Pesan} ->
+            cetak(Pesan)
+            42
+    rampung
+rampung
