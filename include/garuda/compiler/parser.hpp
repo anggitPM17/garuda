@@ -16,7 +16,12 @@ namespace garuda::compiler {
 class ParseError : public std::runtime_error {
 public:
     ParseError(const std::string& msg, std::size_t line, std::size_t col)
-        : std::runtime_error("ParseError at " + std::to_string(line) + ":" + std::to_string(col) + " — " + msg) {}
+        : std::runtime_error("ParseError at line " + std::to_string(line) + ", col " + std::to_string(col) + ": " + msg),
+          raw_message(msg), line(line), column(col) {}
+
+    std::string raw_message;
+    std::size_t line = 0;
+    std::size_t column = 0;
 };
 
 class Parser {
