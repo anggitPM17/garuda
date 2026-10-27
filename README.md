@@ -1,5 +1,6 @@
 # 🦅 Garuda Language & GVM BEAM-Core Runtime v67.0.0
 
+[![Garuda CI](https://github.com/anggitPM17/garuda/actions/workflows/ci.yml/badge.svg)](https://github.com/anggitPM17/garuda/actions/workflows/ci.yml)
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)]()
 [![C++ Standard](https://img.shields.io/badge/c%2B%2B-20-blue.svg)]()
 [![License](https://img.shields.io/badge/license-MIT-green.svg)]()
@@ -69,12 +70,14 @@ rampung
 
 ---
 
-## 📚 Dokumentasi Lengkap
+## 📚 Dokumentasi Lengkap & Kontribusi
 
 - [Panduan & Tutorial 10 Bab](docs/tutorial.md)
 - [Referensi Sintaksis Bahasa](docs/sintaks.md)
 - [Arsitektur GVM Engine](docs/arsitektur.md)
 - [Infrastruktur Terdistribusi](docs/distributed.md)
+- [Panduan Kontribusi (CONTRIBUTING.md)](CONTRIBUTING.md)
+- [Kebijakan Keamanan (SECURITY.md)](SECURITY.md)
 
 ---
 
