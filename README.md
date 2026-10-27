@@ -113,6 +113,7 @@ rampung
 - [Infrastruktur Terdistribusi](docs/distributed.md)
 - [Panduan Kontribusi (CONTRIBUTING.md)](CONTRIBUTING.md)
 - [Kebijakan Keamanan (SECURITY.md)](SECURITY.md)
+- [Catatan Perubahan (CHANGELOG.md)](CHANGELOG.md)
 
 ---
 
