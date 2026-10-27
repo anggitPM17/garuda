@@ -1,6 +1,7 @@
 # 🦅 Garuda Language & GVM BEAM-Core Runtime v67.0.0
 
 [![Garuda CI](https://github.com/anggitPM17/garuda/actions/workflows/ci.yml/badge.svg)](https://github.com/anggitPM17/garuda/actions/workflows/ci.yml)
+[![Lapis 0](https://img.shields.io/badge/Lapis%200-Selesai-brightgreen.svg)]()
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)]()
 [![C++ Standard](https://img.shields.io/badge/c%2B%2B-20-blue.svg)]()
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)]()
