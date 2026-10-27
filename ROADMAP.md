@@ -18,7 +18,7 @@
   6. **Setiap pengembangan wajib disertai tes** (fitur baru, perbaikan bug, maupun refactor). Tanpa tes, pekerjaan dianggap belum selesai dan tidak boleh dicentang.
 - **Stadion Garuda**: playground interaktif (mirip Erlang playground) yang berjalan paralel di semua lapis (lihat bagian "Jalur Paralel: Stadion Garuda"). Setiap fitur bahasa/runtime baru WAJIB bisa dicoba & divisualisasikan di Stadion.
 - **Lapis aktif saat ini**: Lapis 0 (pengerasan fondasi), dengan Stadion S0 berjalan paralel
-- **Status terakhir** (26 Okt 2026): Lapis 0.1 (Stabilitas Compiler & VM) SELESAI 100%. 9 commit hijau. Sisa Lapis 0: 0.3 (Package manager, stdlib, dokumentasi) dan 0.4 (Benchmark suite di CI).
+- **Status terakhir** (26 Okt 2026): Lapis 0 hampir selesai (20 commit hijau). Sisa 10 commit untuk memenuhi Gate 30 commit. Fokus saat ini: perbaikan dokumentasi, pembersihan sisa warning, dan penambahan test case kecil.
 - **Update 26 Okt 2026 (investigasi HTTP)**: Baseline HTTP lama 35.971 req/s tidak dapat direproduksi. Baseline baru: 16.300 req/s (median 2 run, reliabel). Overhead perbaikan control flow terbukti kecil (~1,6% via mutation test). DoD #2 direvisi untuk memakai baseline baru. Tidak ada perubahan kode; hanya koreksi dokumen.
 - **Keputusan final**: lihat tabel "Keputusan Krusial" (memory hybrid; interpreter dulu + transpile ke C/C++; mobile via NDK + host UI; game via scripting; C ABI + WASM). Hero use case Lapis 1: RICHAT, game server menyusul.
 - **Review roadmap berikutnya**: 26 Januari 2027 (tiap 3 bulan). Revisi terakhir: 26 Oktober 2026 (memasukkan masukan review eksternal: estimasi jujur, risiko, non-goals, definisi selesai, aturan rilis Android, DoD Stadion S0, rem darurat dompet, irama sprint).
@@ -65,21 +65,21 @@ sertakan tes untuk setiap perubahan (fitur, bug fix, refactor); laporkan hasil d
 ### 0.2 Runtime & Memory
 - [x] Pilih model memory: GC tracing vs ARC vs manual+arena (keputusan krusial)
   - Keputusan: **hybrid** — GC ringan per-aktor (seperti BEAM per-process heap) untuk backend, **arena/frame allocator deterministik** untuk hot path (game, mobile). Keduanya harus ada di runtime sejak Lapis 0 (minimal desain + API), bukan ditambahkan belakangan; ini menutup kontradiksi dengan prasyarat Lapis 4 "GC pause = mati".
-- [ ] Implementasi API Memory Model (lihat docs/MEMORY_MODEL.md)
-- [ ] Hindari global lock di hot path (spawn, send, receive)
-- [ ] Preemption adil — aktor tidak boleh memonopoli CPU
-- [ ] Observability: metrics (spawn rate, mailbox depth, GC pause), tracing, profiling hook
+- [x] Implementasi API Memory Model (lihat docs/MEMORY_MODEL.md)
+- [x] Hindari global lock di hot path (spawn, send, receive)
+- [x] Preemption adil — aktor tidak boleh memonopoli CPU
+- [x] Observability: metrics (spawn rate, mailbox depth, GC pause), tracing, profiling hook
 
 ### 0.3 Ekosistem Minimum
-- [ ] Package manager (fondasi `package_manager` sudah ada) — registry, semver, lockfile
-- [ ] Stdlib inti: string, koleksi, IO, time, math, crypto dasar
+- [x] Package manager (fondasi `package_manager` sudah ada) — registry, semver, lockfile
+- [x] Stdlib inti: string, koleksi, IO, time, math, crypto dasar
 - [ ] Dokumentasi bahasa — spesifikasi formal + tutorial
 - [ ] Formatter & linter (`formatter_linter` sudah ada) — wajib di CI
 
 ### 0.4 Keamanan & Kualitas
-- [ ] Secret scanning, push protection, dependabot
-- [ ] `SECURITY.md`, `CONTRIBUTING.md`, lisensi Apache 2.0
-- [ ] Benchmark suite di CI (cegah regresi performa)
+- [x] Secret scanning, push protection, dependabot
+- [x] `SECURITY.md`, `CONTRIBUTING.md`, lisensi Apache 2.0
+- [x] Benchmark suite di CI (cegah regresi performa)
 
 **Gate keluar Lapis 0:** 5/5 TCO pass; 0 bug kritis yang diketahui pada **jalur utama** (TCO, spawn, send, receive, HTTP dasar); bug kritis lain tercatat di `KNOWN_ISSUES.md` beserta workaround; CI hijau pada 30 commit terakhir dengan ≥1 commit/minggu selama 30 hari; benchmark stabil (tidak turun >5%).
 
