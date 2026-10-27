@@ -40,6 +40,9 @@ public:
         std::uint16_t fn_count = read_uint16(header + 10);
         std::uint32_t inst_count = read_uint32(header + 12);
         std::uint32_t expected_checksum = read_uint32(header + 16);
+        (void)mod_name_len;
+        (void)fn_count;
+        (void)inst_count;
 
         // Read remaining body
         std::string body((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
