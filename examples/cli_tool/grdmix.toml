@@ -1,0 +1,9 @@
+[proyek]
+nama = "salam_cli"
+versi = "1.0.0"
+penulis = "Tim Garuda"
+deskripsi = "CLI Tool Salam Sederhana di Garuda"
+
+[kompilasi]
+sumber = "main.grd"
+target = "salam.gvm"

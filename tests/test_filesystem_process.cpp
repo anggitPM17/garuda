@@ -68,7 +68,7 @@ int main() {
 
     // === Test 3: Process Execution (Echo) ===
     run_test_with_timeout("Test 3: Process Execution (Echo)", []() {
-        auto [code, output] = Process::run("echo Hello from Process");
+        auto [code, output] = SystemProcess::run("echo Hello from Process");
         GARUDA_CHECK(code == 0, "Process exit code must be 0 for echo");
         GARUDA_CHECK(output.find("Hello from Process") != std::string::npos, "Output must contain 'Hello from Process'");
 
@@ -78,9 +78,9 @@ int main() {
     // === Test 4: Process Failure Exit Code ===
     run_test_with_timeout("Test 4: Process Failure Exit Code", []() {
 #if defined(_WIN32)
-        auto [code, output] = Process::run("cmd /c exit 1");
+        auto [code, output] = SystemProcess::run("cmd /c exit 1");
 #else
-        auto [code, output] = Process::run("exit 1");
+        auto [code, output] = SystemProcess::run("exit 1");
 #endif
         GARUDA_CHECK(code != 0, "Process exit code must be non-zero for failed command");
 

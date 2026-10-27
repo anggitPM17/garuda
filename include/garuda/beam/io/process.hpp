@@ -9,7 +9,7 @@
 
 namespace garuda::beam {
 
-class Process {
+class SystemProcess {
 public:
     static std::pair<int, std::string> run(const std::string& command) {
         std::string full_cmd;

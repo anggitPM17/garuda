@@ -1,0 +1,6 @@
+# Contoh CLI Tool 'salam' di Garuda
+fungsi utama(nama) ->
+    yen nama == "Budi" ->
+        cetak("Halo, Budi!")
+    lain ->
+        cetak("Penggunaan: salam --nama <nama>")
