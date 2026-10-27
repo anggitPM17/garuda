@@ -96,10 +96,10 @@ sertakan tes untuk setiap perubahan (fitur, bug fix, refactor); laporkan hasil d
 **Tujuan:** Garuda bisa dipakai membangun layanan produksi nyata.
 
 ### 1.1 Jaringan & Protokol
-- [x] HTTP/1.1 + HTTP/2 (client & server) (E2E teruji via garuda_http_server_e2e_tests)
-- [ ] WebSocket (realtime)
+- [~] HTTP/1.1 + HTTP/2 (client & server) — audit HTTP/2 diperlukan; lihat KNOWN_ISSUES
+- [~] WebSocket (realtime) — tes E2E perlu diperbaiki (menguji codec, bukan roundtrip); lihat KNOWN_ISSUES
 - [ ] gRPC / protobuf
-- [ ] TLS native
+- [~] TLS native (vendor mbedTLS v3.5.2 — E2E socket handshake teruji via garuda_tls_tests)
 
 ### 1.2 Data & Persistensi
 - [ ] Driver DB matang (Postgres, SQLite, Redis)
