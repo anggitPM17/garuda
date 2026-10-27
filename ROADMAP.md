@@ -151,7 +151,7 @@ STATUS: Lapis 1 FUNGSIONAL SELESAI (Fondasi server & demo RICHAT terbukti). Gate
 - [ ] Registry paket publik
 - [x] Dokumentasi API otomatis (doc comments → HTML) (DocGenerator teruji)
 - [~] Contoh proyek CLI tool (salam CLI)
-- [ ] Program kontributor & governance
+- [x] Program kontributor & governance (dokumen CONTRIBUTING, CoC, Governance)
 
 ### 2.4 Scripting & Embedding
 - [ ] Mode scripting ringan (tanpa compile terpisah)

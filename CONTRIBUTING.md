@@ -1,66 +1,54 @@
-# 🤝 Panduan Kontribusi Garuda (Contributing Guidelines)
+# 🤝 Panduan Kontribusi Garuda
 
-Terima kasih telah tertarik untuk berkontribusi pada pengembangan Bahasa Garuda!
-
-## 🛠️ 1. Persiapan & Build Lokal
-
-### Persyaratan System
-- Windows 10/11 dengan **Visual Studio 2022** (Workload C++ Desktop Development) atau Build Tools for Visual Studio.
-- **CMake** version 3.14 atau yang lebih baru.
-- **Ninja** build tool.
-
-### Cara Build
-```powershell
-# Clone repositori
-git clone https://github.com/anggitPM17/garuda.git
-cd garuda
-
-# Konfigurasi CMake dengan Ninja & MSVC
-cmake -B build -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl
-
-# Build seluruh target
-cmake --build build --config Release
-```
+Terima kasih telah tertarik untuk berkontribusi pada proyek **Garuda**! Proyek ini dikembangkan dengan komitmen tinggi terhadap kualitas kode, determinisme build, dan stabilitas performa.
 
 ---
 
-## 🧪 2. Menjalankan Tes
+## 🚀 1. Cara Memulai
 
-Sebelum membuat Pull Request, **pastikan Anda menjalankan `scripts/run_tests.ps1` sebelum membuat Pull Request** untuk memverifikasi seluruh test suite lokal lulus 100%:
+### Prasyarat
+- **Compiler**: MSVC (Visual Studio 2022/2026), GCC 11+, atau Clang 13+ dengan dukungan C++20.
+- **Build System**: CMake 3.14+ dan Ninja / MSBuild.
+- **PowerShell**: Untuk menjalankan skrip pengujian lokal.
 
-```powershell
+### Langkah Build & Tes Lokal
+```bash
+# 1. Clone repositori
+git clone https://github.com/richat/garuda.git
+cd garuda
+
+# 2. Konfigurasi CMake
+cmake -B build -G "Ninja" -DCMAKE_BUILD_TYPE=Release
+
+# 3. Jalankan seluruh test suite dengan skrip watchdog
 powershell -ExecutionPolicy Bypass -File scripts/run_tests.ps1
 ```
 
-Script ini akan mem-build dan mengeksekusi watchdog suite untuk seluruh test target:
-- `garuda_tco_tests` (Tail Call Optimization)
-- `garuda_control_flow_tests` (Percabangan & Control Flow)
-- `garuda_isolation_tests` (Isolasi Proses Aktor)
-- `garuda_fault_tests` (Fault Tolerance & Fault Isolation)
-- `garuda_runtime_stress_tests` (Runtime Lock-Free Stress & Preemption)
-- `garuda_memory_tests` (Arena Allocator)
-- `garuda_error_reporting_tests` (Diagnostics Line/Column Precision)
-- `garuda_fuzzing_tests` (Parser & Lexer Fuzzing)
-- `garuda_grdmix_e2e_tests` (Package Manager End-to-End)
-- `garuda_bytecode_io_tests` (Bytecode Checksum & Deserialization)
-- `garuda_compiler_api_tests` (In-Process Compiler API)
-- `garuda_formatter_linter_tests` (Formatter & Linter)
+---
+
+## 📝 2. Aturan Commit & Pull Request
+
+1. **Satu Fitur / Bugfix Per PR**: Buat Pull Request yang berfokus pada satu tujuan spesifik.
+2. **Wajib Menyertakan Tes**: Setiap perubahan atau penambahan fitur WAJIB disertai dengan unit test atau E2E test di folder `tests/`.
+3. **Lulus 100% CI/CD**: PR hanya akan digabungkan (merge) jika seluruh test suite lulus di runner lokal dan GitHub Actions CI.
+4. **Disiplin Pesan Commit**: Gunakan pesan commit yang deskriptif dalam Bahasa Indonesia atau Inggris, contoh:
+   - `feat(io): tambah modul rate_limiter`
+   - `fix(compiler): perbaiki penanganan error sintaks pada parser`
 
 ---
 
-## 📋 3. Aturan Pull Request (PR)
+## 🎨 3. Standar Kode & Style Guide
 
-1. **Wajib Lulus CI**: Seluruh Pull Request harus lulus pemeriksaan otomatis di GitHub Actions CI.
-2. **Wajib Ada Tes**: Setiap fitur baru, perbaikan bug, atau refactoring WAJIB disertai tes unit/integrasi otomatis.
-3. **Commit Pesan Jelas**: Gunakan format commit yang terstruktur (contoh: `feat: ...`, `fix: ...`, `docs: ...`, `test: ...`).
-4. **Prinsip Lapis 0**: Utamakan pengerasan fondasi dan stabilitas compiler/runtime.
+- **Bahasa**: C++20 murni tanpa dependensi eksternal yang tidak perlu.
+- **Penamaan**:
+  - Class / Struct: `PascalCase` (contoh: `HealthChecker`, `QueryBuilder`).
+  - Function / Method / Variable: `snake_case` (contoh: `get_secret`, `is_allowed`).
+  - Constant / Enum: `PascalCase` atau `UPPER_CASE`.
+- **Formatting**: Gunakan indentasi 4 spasi (bukan tab) dan pastikan tidak ada whitespace ekstra di akhir baris.
 
 ---
 
-## 🎨 4. Gaya Penulisan Kode (Code Style)
+## 💬 4. Diskusi & Komunikasi
 
-- **Standar Bahasa**: C++20 (`cxx_std_20`).
-- **Penamaan Class & Struct**: `PascalCase` (contoh: `CodeGenerator`, `GvmProcessState`).
-- **Penamaan Fungsi & Variabel**: `snake_case` (contoh: `execute_slice`, `alloc_reg`).
-- **Header Guard**: Gunakan `#pragma once`.
-- **Manajemen Memori**: Hindari alokasi raw pointer manual; gunakan `std::unique_ptr` / `std::shared_ptr` atau `Arena` allocator.
+- **Bug & Permintaan Fitur**: Gunakan [GitHub Issues](https://github.com/richat/garuda/issues) dengan template yang disediakan.
+- **Tanya Jawab & Ide**: Gunakan [GitHub Discussions](https://github.com/richat/garuda/discussions).
