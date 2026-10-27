@@ -143,7 +143,7 @@ STATUS: Lapis 1 FUNGSIONAL SELESAI (Fondasi server & demo RICHAT terbukti). Gate
 
 ### 2.2 Toolchain Desktop
 - [ ] Cross-compile (Windows, Linux, macOS)
-- [ ] Static linking + distribusi single binary
+- [~] Static linking (konfigurasi build selesai; cross-compile Linux/macOS menyusul)
 - [ ] GUI toolkit — binding ke GTK/Qt, atau toolkit native Garuda
 - [~] Filesystem & Process API (Fondasi toolchain desktop)
 

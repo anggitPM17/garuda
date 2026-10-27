@@ -21,7 +21,7 @@ jobs:
           arch: x64
 
       - name: Configure CMake
-        run: cmake -B build -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl
+        run: cmake -B build -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl -DGARUDA_STATIC_LINK=ON
 
       - name: Check Deterministic Build
         run: powershell -ExecutionPolicy Bypass -File scripts/check_deterministic.ps1
@@ -41,6 +41,16 @@ jobs:
               Write-Host "Missing executables: $($missing -join ', ')"
               exit 1
           }
+
+      - name: Verify Static Runtime (No C++ Runtime DLL)
+        shell: pwsh
+        run: |
+          $deps = dumpbin /dependents build/garuda_tco_tests.exe
+          if ($deps -match "VCRUNTIME" -or $deps -match "MSVCP") {
+              Write-Host "DLL Dependents check failed! C++ Runtime DLL found in static binary."
+              exit 1
+          }
+          Write-Host "Static Linking Verified: No C++ Runtime DLL dependents found."
 
       - name: Run Test - TCO Suite
         timeout-minutes: 5

@@ -16,6 +16,20 @@ endif()
 
 option(GARUDA_BUILD_TESTS "Bangun tes dan benchmark" ON)
 option(GARUDA_SANITIZE "Aktifkan ASan+UBSan pada target tes" OFF)
+option(GARUDA_STATIC_LINK "Link MSVC /MT atau GCC/Clang static runtime" ON)
+
+if(GARUDA_STATIC_LINK)
+  if(MSVC)
+    set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+    foreach(flag_var CMAKE_C_FLAGS CMAKE_C_FLAGS_DEBUG CMAKE_C_FLAGS_RELEASE CMAKE_CXX_FLAGS CMAKE_CXX_FLAGS_DEBUG CMAKE_CXX_FLAGS_RELEASE)
+      if(${flag_var} MATCHES "/MD")
+        string(REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
+      endif()
+    endforeach()
+  else()
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static-libgcc -static-libstdc++")
+  endif()
+endif()
 
 find_package(Threads REQUIRED)
 
