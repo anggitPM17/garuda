@@ -18,7 +18,7 @@
   6. **Setiap pengembangan wajib disertai tes** (fitur baru, perbaikan bug, maupun refactor). Tanpa tes, pekerjaan dianggap belum selesai dan tidak boleh dicentang.
 - **Stadion Garuda**: playground interaktif (mirip Erlang playground) yang berjalan paralel di semua lapis (lihat bagian "Jalur Paralel: Stadion Garuda"). Setiap fitur bahasa/runtime baru WAJIB bisa dicoba & divisualisasikan di Stadion.
 - **Lapis aktif saat ini**: Lapis 0 (pengerasan fondasi), dengan Stadion S0 berjalan paralel
-- **Status terakhir** (26 Okt 2026): TCO [x] selesai (6/6 tes pass, watchdog 5s, no regression). CATATAN PENTING: OpJump/OpJumpIfFalse sebelumnya tidak ditangani di execute_slice — perbaikan ini menyentuh SELURUH control flow, bukan hanya TCO. Audit control flow [x] selesai dengan tes eksplisit (yen tanpa lain, yen bersarang, else-if chain) + mutation test terbukti. Benchmark diukur ulang (lihat REMEDIATION_PLAN.md). Gate Lapis 0 BELUM tercapai: CI, benchmark stabil, dan audit bug kritis jalur utama masih pending. Prioritas berikutnya: lengkapi Gate Lapis 0 (CI + benchmark + KNOWN_ISSUES), baru Stadion S0.
+- **Status terakhir** (26 Okt 2026): Lapis 0.1 (Stabilitas Compiler & VM) SELESAI 100%. 9 commit hijau. Sisa Lapis 0: 0.3 (Package manager, stdlib, dokumentasi) dan 0.4 (Benchmark suite di CI).
 - **Update 26 Okt 2026 (investigasi HTTP)**: Baseline HTTP lama 35.971 req/s tidak dapat direproduksi. Baseline baru: 16.300 req/s (median 2 run, reliabel). Overhead perbaikan control flow terbukti kecil (~1,6% via mutation test). DoD #2 direvisi untuk memakai baseline baru. Tidak ada perubahan kode; hanya koreksi dokumen.
 - **Keputusan final**: lihat tabel "Keputusan Krusial" (memory hybrid; interpreter dulu + transpile ke C/C++; mobile via NDK + host UI; game via scripting; C ABI + WASM). Hero use case Lapis 1: RICHAT, game server menyusul.
 - **Review roadmap berikutnya**: 26 Januari 2027 (tiap 3 bulan). Revisi terakhir: 26 Oktober 2026 (memasukkan masukan review eksternal: estimasi jujur, risiko, non-goals, definisi selesai, aturan rilis Android, DoD Stadion S0, rem darurat dompet, irama sprint).
@@ -58,9 +58,9 @@ sertakan tes untuk setiap perubahan (fitur, bug fix, refactor); laporkan hasil d
 - [x] Audit Control Flow & Branching (`OpJump` & `OpJumpIfFalse` terverifikasi via `test_control_flow.cpp` + mutation test)
 - [!] Technical Debt: Watchdog tes berbasis `std::async` + `std::exit(1)` perlu diganti dengan watchdog proses terpisah sebelum CI stabil.
 - [ ] Test suite lengkap; CI wajib lulus sebelum merge ke main
-- [ ] Fuzzing parser & codegen (libFuzzer)
-- [ ] Error handling konsisten — semua error punya pesan + lokasi (baris/kolom)
-- [ ] Deterministic build — build sama menghasilkan binary sama
+- [x] Fuzzing parser & codegen (mini-fuzzer & truncation fuzzing di test_fuzzing.cpp)
+- [x] Error handling konsisten — semua error punya pesan + lokasi (baris/kolom terstruktur di ParseError)
+- [x] Deterministic build — build sama menghasilkan binary sama (/Brepro MSVC + check_deterministic.ps1)
 
 ### 0.2 Runtime & Memory
 - [x] Pilih model memory: GC tracing vs ARC vs manual+arena (keputusan krusial)
