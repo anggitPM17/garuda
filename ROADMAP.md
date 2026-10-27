@@ -120,6 +120,7 @@ sertakan tes untuk setiap perubahan (fitur, bug fix, refactor); laporkan hasil d
 - [x] Secret management (env, vault) — Env var & .env file loader teruji
 
 **Gate keluar Lapis 1:** 1 layanan produksi nyata berjalan ≥ 3 bulan (RICHAT sebagai hero use case) dengan uptime & observability terbukti.
+- [~] Demo backend RICHAT (WebSocket + SQLite) selesai; integrasi ke aplikasi nyata menyusul
 
 ---
 
