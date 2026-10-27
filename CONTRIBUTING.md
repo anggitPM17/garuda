@@ -7,7 +7,7 @@ Terima kasih telah tertarik untuk berkontribusi pada pengembangan Bahasa Garuda!
 ### Persyaratan System
 - Windows 10/11 dengan **Visual Studio 2022** (Workload C++ Desktop Development) atau Build Tools for Visual Studio.
 - **CMake** version 3.14 atau yang lebih baru.
-- **Ninja** (opsional, tetapi direkomendasikan).
+- **Ninja** build tool.
 
 ### Cara Build
 ```powershell
@@ -15,28 +15,36 @@ Terima kasih telah tertarik untuk berkontribusi pada pengembangan Bahasa Garuda!
 git clone https://github.com/anggitPM17/garuda.git
 cd garuda
 
-# Konfigurasi CMake
-cmake -B build -G "Ninja" -DCMAKE_BUILD_TYPE=Release
+# Konfigurasi CMake dengan Ninja & MSVC
+cmake -B build -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl
 
-# Build executable
-cmake --build build
+# Build seluruh target
+cmake --build build --config Release
 ```
 
 ---
 
 ## 🧪 2. Menjalankan Tes
 
-Sebelum membuat Pull Request, pastikan seluruh test suite lokal lulus menggunakan script pembantu PowerShell:
+Sebelum membuat Pull Request, **pastikan Anda menjalankan `scripts/run_tests.ps1` sebelum membuat Pull Request** untuk memverifikasi seluruh test suite lokal lulus 100%:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts/run_tests.ps1
 ```
 
-Script ini akan mem-build dan mengeksekusi:
+Script ini akan mem-build dan mengeksekusi watchdog suite untuk seluruh test target:
 - `garuda_tco_tests` (Tail Call Optimization)
 - `garuda_control_flow_tests` (Percabangan & Control Flow)
 - `garuda_isolation_tests` (Isolasi Proses Aktor)
 - `garuda_fault_tests` (Fault Tolerance & Fault Isolation)
+- `garuda_runtime_stress_tests` (Runtime Lock-Free Stress & Preemption)
+- `garuda_memory_tests` (Arena Allocator)
+- `garuda_error_reporting_tests` (Diagnostics Line/Column Precision)
+- `garuda_fuzzing_tests` (Parser & Lexer Fuzzing)
+- `garuda_grdmix_e2e_tests` (Package Manager End-to-End)
+- `garuda_bytecode_io_tests` (Bytecode Checksum & Deserialization)
+- `garuda_compiler_api_tests` (In-Process Compiler API)
+- `garuda_formatter_linter_tests` (Formatter & Linter)
 
 ---
 
@@ -55,4 +63,4 @@ Script ini akan mem-build dan mengeksekusi:
 - **Penamaan Class & Struct**: `PascalCase` (contoh: `CodeGenerator`, `GvmProcessState`).
 - **Penamaan Fungsi & Variabel**: `snake_case` (contoh: `execute_slice`, `alloc_reg`).
 - **Header Guard**: Gunakan `#pragma once`.
-- **Manajemen Memori**: Hindari alokasi raw pointer manual; gunakan `std::unique_ptr` / `std::shared_ptr` atau alokator pool bawaan runtime.
+- **Manajemen Memori**: Hindari alokasi raw pointer manual; gunakan `std::unique_ptr` / `std::shared_ptr` atau `Arena` allocator.

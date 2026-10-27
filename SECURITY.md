@@ -17,7 +17,7 @@ Kami memberikan pembaruan keamanan untuk versi utama yang sedang aktif:
 
 Jika Anda menemukan kerentanan keamanan pada compiler `grdc` atau runtime GVM:
 
-1. Harap laporkan celah tersebut secara privat melalui email pemilik proyek atau kanal pelaporan privat GitHub Security Advisories.
+1. Silakan hubungi pengelola proyek secara privat melalui **GitHub Security Advisories** atau email ke: **anggit.prasetyo3060@gmail.com**.
 2. Sertakan detail langkah-langkah untuk mereproduksi masalah, skrip contoh, serta dampak potensi keamanan.
 3. Tim akan merespons laporan dalam waktu 48 jam dan memberikan estimasi waktu perbaikan secara transparan.
 
