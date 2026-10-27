@@ -23,6 +23,9 @@ jobs:
       - name: Configure CMake
         run: cmake -B build -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl
 
+      - name: Check Deterministic Build
+        run: powershell -ExecutionPolicy Bypass -File scripts/check_deterministic.ps1
+
       - name: Build Test Executables
         run: |
           cmake --build build --target garuda_tco_tests garuda_control_flow_tests garuda_isolation_tests garuda_fault_tests garuda_runtime_stress_tests garuda_memory_tests garuda_error_reporting_tests garuda_fuzzing_tests
