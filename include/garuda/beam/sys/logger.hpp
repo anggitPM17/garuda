@@ -16,6 +16,59 @@ namespace garuda::beam {
 
 enum class LogLevel { Debug = 0, Info = 1, Warning = 2, Error = 3, Critical = 4 };
 
+class StructuredLogger {
+public:
+    static std::string format_json_log(const std::string& level, const std::string& msg, const std::string& module = "garuda") {
+        auto now = std::chrono::system_clock::now();
+        auto in_time_t = std::chrono::system_clock::to_time_t(now);
+
+        struct tm tm_buf{};
+#if defined(_WIN32)
+        gmtime_s(&tm_buf, &in_time_t);
+#else
+        gmtime_r(&in_time_t, &tm_buf);
+#endif
+
+        std::ostringstream ss;
+        ss << "{\"timestamp\":\"" << std::put_time(&tm_buf, "%Y-%m-%dT%H:%M:%SZ") << "\","
+           << "\"level\":\"" << level << "\","
+           << "\"module\":\"" << module << "\","
+           << "\"msg\":\"" << escape_json_str(msg) << "\"}";
+        return ss.str();
+    }
+
+    static void info(const std::string& msg, const std::string& module = "garuda", std::ostream& os = std::cout) {
+        os << format_json_log("INFO", msg, module) << "\n";
+    }
+
+    static void warn(const std::string& msg, const std::string& module = "garuda", std::ostream& os = std::cout) {
+        os << format_json_log("WARN", msg, module) << "\n";
+    }
+
+    static void error(const std::string& msg, const std::string& module = "garuda", std::ostream& os = std::cout) {
+        os << format_json_log("ERROR", msg, module) << "\n";
+    }
+
+    static void debug(const std::string& msg, const std::string& module = "garuda", std::ostream& os = std::cout) {
+        os << format_json_log("DEBUG", msg, module) << "\n";
+    }
+
+private:
+    static std::string escape_json_str(const std::string& s) {
+        std::string res;
+        res.reserve(s.length() + 8);
+        for (char c : s) {
+            if (c == '"') res += "\\\"";
+            else if (c == '\\') res += "\\\\";
+            else if (c == '\n') res += "\\n";
+            else if (c == '\r') res += "\\r";
+            else if (c == '\t') res += "\\t";
+            else res += c;
+        }
+        return res;
+    }
+};
+
 class Logger {
 public:
     static Logger& instance() {
