@@ -63,8 +63,9 @@ sertakan tes untuk setiap perubahan (fitur, bug fix, refactor); laporkan hasil d
 - [ ] Deterministic build — build sama menghasilkan binary sama
 
 ### 0.2 Runtime & Memory
-- [ ] Pilih model memory: GC tracing vs ARC vs manual+arena (keputusan krusial)
+- [x] Pilih model memory: GC tracing vs ARC vs manual+arena (keputusan krusial)
   - Keputusan: **hybrid** — GC ringan per-aktor (seperti BEAM per-process heap) untuk backend, **arena/frame allocator deterministik** untuk hot path (game, mobile). Keduanya harus ada di runtime sejak Lapis 0 (minimal desain + API), bukan ditambahkan belakangan; ini menutup kontradiksi dengan prasyarat Lapis 4 "GC pause = mati".
+- [ ] Implementasi API Memory Model (lihat docs/MEMORY_MODEL.md)
 - [ ] Hindari global lock di hot path (spawn, send, receive)
 - [ ] Preemption adil — aktor tidak boleh memonopoli CPU
 - [ ] Observability: metrics (spawn rate, mailbox depth, GC pause), tracing, profiling hook

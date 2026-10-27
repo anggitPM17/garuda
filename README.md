@@ -3,7 +3,7 @@
 [![Garuda CI](https://github.com/anggitPM17/garuda/actions/workflows/ci.yml/badge.svg)](https://github.com/anggitPM17/garuda/actions/workflows/ci.yml)
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)]()
 [![C++ Standard](https://img.shields.io/badge/c%2B%2B-20-blue.svg)]()
-[![License](https://img.shields.io/badge/license-MIT-green.svg)]()
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)]()
 
 **Garuda** adalah Bahasa Pemrograman Concurrent Actor-Model berkinerja tinggi yang berjalan di atas **GVM (Garuda Virtual Machine)** berbasis arsitektur BEAM Erlang/OTP.
 
@@ -82,4 +82,4 @@ rampung
 ---
 
 ## 📜 Lisensi
-Dikembangkan di bawah Lisensi [MIT](LICENSE).
+Dikembangkan di bawah Lisensi [Apache 2.0](LICENSE).
