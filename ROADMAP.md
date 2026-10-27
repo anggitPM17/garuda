@@ -105,7 +105,7 @@ sertakan tes untuk setiap perubahan (fitur, bug fix, refactor); laporkan hasil d
 - [ ] Driver DB matang (Postgres, SQLite, Redis)
 - [ ] ORM ringan / query builder
 - [ ] Migrasi skema
-- [ ] Persistensi aktor (snapshot + event log) — penting untuk Raft & workflow
+- [~] Persistensi aktor (snapshot + event log) — implementasi Term/JSON & tes disk roundtrip selesai
 
 ### 1.3 Observability & Operasional
 - [ ] Structured logging
