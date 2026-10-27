@@ -116,7 +116,7 @@ sertakan tes untuk setiap perubahan (fitur, bug fix, refactor); laporkan hasil d
 
 ### 1.4 Keamanan Aplikasi
 - [ ] Auth (JWT, OAuth2 client)
-- [ ] Rate limiting, input validation
+- [x] Rate limiting, input validation (RateLimiter + Validator + Tes XSS)
 - [ ] Secret management (env, vault)
 
 **Gate keluar Lapis 1:** 1 layanan produksi nyata berjalan ≥ 3 bulan (RICHAT sebagai hero use case) dengan uptime & observability terbukti.
