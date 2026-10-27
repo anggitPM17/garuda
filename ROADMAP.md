@@ -56,7 +56,7 @@ sertakan tes untuk setiap perubahan (fitur, bug fix, refactor); laporkan hasil d
 ### 0.1 Stabilitas Compiler & VM
 - [x] Selesaikan TCO (6/6 tes TCO lulus, stack O(1), no regression di test_isolation & test_fault_isolation)
 - [x] Audit Control Flow & Branching (`OpJump` & `OpJumpIfFalse` terverifikasi via `test_control_flow.cpp` + mutation test)
-- [!] Technical Debt: Watchdog tes berbasis `std::async` + `std::exit(1)` perlu diganti dengan watchdog proses terpisah sebelum CI stabil.
+- [x] Watchdog tes berbasis proses terpisah (`scripts/run_tests.ps1`)
 - [ ] Test suite lengkap; CI wajib lulus sebelum merge ke main
 - [x] Fuzzing parser & codegen (mini-fuzzer & truncation fuzzing di test_fuzzing.cpp)
 - [x] Error handling konsisten — semua error punya pesan + lokasi (baris/kolom terstruktur di ParseError)

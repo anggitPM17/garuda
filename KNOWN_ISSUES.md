@@ -9,4 +9,4 @@
 - **Native / FFI Tail Calls**: TCO saat ini diimplementasikan untuk pemanggilan fungsi bytecode internal Garuda (`OpTailCall`). Pemanggilan ke C/C++ FFI / BIF belum mendukung TCO (akan selalu membutuhkan stack frame native C++).
 
 ## Technical Debt
-- **Watchdog Timeout**: Watchdog tes C++ berbasis `std::async` + `std::exit(1)` berjalan berdampingan dengan runner `scripts/run_tests.ps1` (process watchdog 30s timeout).
+- **CI Timeout**: Runner `scripts/run_tests.ps1` menggunakan proses terpisah dengan timeout 30 detik. Namun, jika ada tes yang hang di dalam binary C++ (misal infinite loop di parser), kita harus menunggu 30 detik. Ke depannya, kita bisa menambahkan timeout per-test di dalam kode C++.
