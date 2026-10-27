@@ -43,10 +43,21 @@ cmake --build build --config Release
 ./build/Release/grdc run examples/halo.gvm
 ```
 
+### 3. Membuat Proyek Baru dengan Package Manager `grdmix`
+```bash
+# Inisialisasi perancangan proyek baru
+./build/Release/grdmix new aplikasi_saya
+cd aplikasi_saya
+
+# Kompilasi dan jalankan modul utama (src/utama.grd)
+../build/Release/grdmix run
+```
+
 ---
 
 ## 📄 Contoh Kode Bahasa Garuda (`.grd`)
 
+### 1. Model Aktor Concurrent (PingPong)
 ```garuda
 modul PingPong
 
@@ -59,12 +70,28 @@ rampung
 
 fungsi utama() ->
     ServerPid = cakra(fungsi() -> server() rampung)
-    ServerPid <- {ping, diri}
+    ServerPid <- {ping, Dari}
     tampa
         {pong, Sender} ->
             cetak("Diterima balasan PONG dari Server!")
             42
     rampung
+rampung
+```
+
+### 2. Modul Pustaka Standar Map & List
+```garuda
+modul PengelolaanData
+
+fungsi utama() ->
+    DaftarSiswa = [101, 102, 103, 104]
+    TotalSiswa = List.panjang(DaftarSiswa)
+
+    PetaStatus = Map.taruh(Map.baru(), "status", "aktif")
+    Status = Map.ambil(PetaStatus, "status")
+
+    cetak("Jumlah siswa terdaftar: " ++ String.panjang(TotalSiswa))
+    42
 rampung
 ```
 
@@ -74,7 +101,10 @@ rampung
 
 - [Panduan & Tutorial 10 Bab](docs/tutorial.md)
 - [Referensi Sintaksis Bahasa](docs/sintaks.md)
+- [Dokumentasi Referensi Standard Library (String, List, Map, Enum)](docs/STDLIB_REFERENCE.md)
 - [Arsitektur GVM Engine](docs/arsitektur.md)
+- [Spesifikasi Model Memori Hibrida GVM](docs/MEMORY_MODEL.md)
+- [Desain Arsitektur Stadion Garuda (WASM Playground)](docs/STADION.md)
 - [Infrastruktur Terdistribusi](docs/distributed.md)
 - [Panduan Kontribusi (CONTRIBUTING.md)](CONTRIBUTING.md)
 - [Kebijakan Keamanan (SECURITY.md)](SECURITY.md)
