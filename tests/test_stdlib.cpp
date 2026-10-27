@@ -73,6 +73,10 @@ int main() {
     assert(List::kosong({}) == true);                        // 28
     assert(List::kosong(l1) == false);                      // 29
     assert(List::tambah({}, garuda::beam::Term(10LL)).size() == 1); // 30
+
+    std::vector<garuda::beam::Term> l_extra = {garuda::beam::Term(100LL)};
+    assert(List::panjang(l_extra) == 1);                     // 30b
+    assert(*List::kepala(l_extra).get_if<std::int64_t>() == 100); // 30c
     std::cout << "  ✓ List Module (15 assertions) PASS\n";
 
     // === Module 3: Map Tests (10 assertions) ===

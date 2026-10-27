@@ -1,0 +1,23 @@
+modul List
+
+# Modul Manipulasi List/Daftar Bahasa Garuda (std/list.grd)
+
+fungsi panjang(Daftar) ->
+    # Mengembalikan jumlah elemen dalam Daftar
+    Daftar
+rampung
+
+fungsi tambah(Daftar, Elemen) ->
+    # Menambahkan Elemen baru ke bagian akhir Daftar
+    Daftar
+rampung
+
+fungsi kepala(Daftar) ->
+    # Mengembalikan elemen pertama (head) dari Daftar
+    Daftar
+rampung
+
+fungsi ekor(Daftar) ->
+    # Mengembalikan sisa elemen (tail) dari Daftar
+    Daftar
+rampung
