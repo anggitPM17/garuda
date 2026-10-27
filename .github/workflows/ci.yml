@@ -25,13 +25,13 @@ jobs:
 
       - name: Build Test Executables
         run: |
-          cmake --build build --target garuda_tco_tests garuda_control_flow_tests garuda_isolation_tests garuda_fault_tests garuda_runtime_stress_tests garuda_memory_tests garuda_error_reporting_tests
+          cmake --build build --target garuda_tco_tests garuda_control_flow_tests garuda_isolation_tests garuda_fault_tests garuda_runtime_stress_tests garuda_memory_tests garuda_error_reporting_tests garuda_fuzzing_tests
 
       - name: Verify Test Executables Exist
         shell: pwsh
         run: |
           $missing = @()
-          foreach ($exe in @("garuda_tco_tests.exe", "garuda_control_flow_tests.exe", "garuda_isolation_tests.exe", "garuda_fault_tests.exe", "garuda_runtime_stress_tests.exe", "garuda_memory_tests.exe", "garuda_error_reporting_tests.exe")) {
+          foreach ($exe in @("garuda_tco_tests.exe", "garuda_control_flow_tests.exe", "garuda_isolation_tests.exe", "garuda_fault_tests.exe", "garuda_runtime_stress_tests.exe", "garuda_memory_tests.exe", "garuda_error_reporting_tests.exe", "garuda_fuzzing_tests.exe")) {
               if (-not (Test-Path "build/$exe")) { $missing += $exe }
           }
           if ($missing.Count -gt 0) {
@@ -66,3 +66,7 @@ jobs:
       - name: Run Test - Error Reporting & Diagnostics Suite
         timeout-minutes: 5
         run: build/garuda_error_reporting_tests.exe
+
+      - name: Run Test - Fuzzing Suite
+        timeout-minutes: 5
+        run: build/garuda_fuzzing_tests.exe

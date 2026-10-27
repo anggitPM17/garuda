@@ -19,7 +19,7 @@ if (-not (Test-Path "build")) {
 
 # Step 2: Build test targets
 Write-Host "[2/3] Building Test Targets..." -ForegroundColor Yellow
-cmake --build build --config Release --target garuda_tco_tests garuda_control_flow_tests garuda_isolation_tests garuda_fault_tests garuda_runtime_stress_tests garuda_memory_tests garuda_error_reporting_tests
+cmake --build build --config Release --target garuda_tco_tests garuda_control_flow_tests garuda_isolation_tests garuda_fault_tests garuda_runtime_stress_tests garuda_memory_tests garuda_error_reporting_tests garuda_fuzzing_tests
 
 if ($LASTEXITCODE -ne 0) {
     Write-Host "[FAIL] Build failed!" -ForegroundColor Red
@@ -37,7 +37,8 @@ $TestNames = @(
     "garuda_fault_tests",
     "garuda_runtime_stress_tests",
     "garuda_memory_tests",
-    "garuda_error_reporting_tests"
+    "garuda_error_reporting_tests",
+    "garuda_fuzzing_tests"
 )
 
 $AllPassed = $true
