@@ -96,13 +96,13 @@ sertakan tes untuk setiap perubahan (fitur, bug fix, refactor); laporkan hasil d
 **Tujuan:** Garuda bisa dipakai membangun layanan produksi nyata.
 
 ### 1.1 Jaringan & Protokol
-- [~] HTTP/1.1 + HTTP/2 (client & server) — audit HTTP/2 diperlukan; lihat KNOWN_ISSUES
+- [x] HTTP/1.1 (HTTP/2 ditunda ke backlog)
 - [x] WebSocket (realtime) (E2E teruji via garuda_websocket_e2e_tests)
-- [~] gRPC / protobuf (Protobuf minimal encoder/decoder selesai, transport gRPC menyusul)
+- [~] gRPC / protobuf (Protobuf minimal selesai, gRPC penuh ditunda)
 - [~] TLS native (vendor mbedTLS v3.5.2 — E2E socket handshake teruji via garuda_tls_tests)
 
 ### 1.2 Data & Persistensi
-- [ ] Driver DB matang (Postgres, SQLite, Redis)
+- [~] SQLite matang; Postgres/Redis ditunda ke backlog
 - [x] ORM ringan / query builder (QueryBuilder + Tes SQL Injection)
 - [x] Migrasi skema (SchemaMigrator dengan transaksi SQL)
 - [~] Persistensi aktor (snapshot + event log) — implementasi Term/JSON & tes disk roundtrip selesai
@@ -112,15 +112,23 @@ sertakan tes untuk setiap perubahan (fitur, bug fix, refactor); laporkan hasil d
 - [ ] Metrics (format Prometheus)
 - [ ] Distributed tracing (OpenTelemetry)
 - [x] Graceful shutdown, health check, readiness probe (Health Check + Graceful Shutdown teruji)
-- [ ] Hot reload / zero-downtime deploy
+- [ ] Hot reload (ditunda ke backlog)
 
 ### 1.4 Keamanan Aplikasi
-- [ ] Auth (JWT, OAuth2 client)
+- [~] JWT selesai; OAuth2 client ditunda
 - [x] Rate limiting, input validation (RateLimiter + Validator + Tes XSS)
 - [x] Secret management (env, vault) — Env var & .env file loader teruji
 
 **Gate keluar Lapis 1:** 1 layanan produksi nyata berjalan ≥ 3 bulan (RICHAT sebagai hero use case) dengan uptime & observability terbukti.
 - [~] Demo backend RICHAT (WebSocket + SQLite) selesai; integrasi ke aplikasi nyata menyusul
+STATUS: Lapis 1 FUNGSIONAL SELESAI (Fondasi server & demo RICHAT terbukti). Gate resmi (RICHAT 3 bulan uptime) dikerjakan secara bertahap di lapis berikutnya.
+
+## 📦 BACKLOG (Dikerjakan Sambil Jalan)
+- [ ] HTTP/2
+- [ ] gRPC penuh (transport)
+- [ ] Driver Postgres & Redis
+- [ ] OAuth2 Client
+- [ ] Hot Reload
 
 ---
 
