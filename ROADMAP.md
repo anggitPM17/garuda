@@ -111,7 +111,7 @@ sertakan tes untuk setiap perubahan (fitur, bug fix, refactor); laporkan hasil d
 - [ ] Structured logging
 - [ ] Metrics (format Prometheus)
 - [ ] Distributed tracing (OpenTelemetry)
-- [ ] Graceful shutdown, health check, readiness probe
+- [x] Graceful shutdown, health check, readiness probe (Health Check + Graceful Shutdown teruji)
 - [ ] Hot reload / zero-downtime deploy
 
 ### 1.4 Keamanan Aplikasi
