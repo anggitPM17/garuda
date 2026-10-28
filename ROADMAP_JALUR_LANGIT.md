@@ -76,6 +76,11 @@ Jangan minta agen mengerjakan semuanya sekaligus. Berikan instruksi bertahap (sa
 *   **Tes:** `test_admin_gate.cpp`, `test_health_monitor.cpp`.
 *   **Verifikasi:** Mode gate bekerja (MANUAL/AUTOPILOT/STOP), health check fail-safe.
 
+### 📍 FASE 5.2: Autopilot AI — LLMClient + MockLLMClient + AICodeFixer - [x] SELESAI
+*   **Target:** `include/garuda/autopilot/llm_client.hpp`, `mock_llm_client.hpp`, `ai_code_fixer.hpp`.
+*   **Tes:** `test_ai_code_fixer.cpp`.
+*   **Verifikasi:** Interface LLM Client, mock behavior (SUCCESS/EMPTY_PATCH/FAILURE/THROW), input validation & max patch size limit (64KB).
+
 ---
 
 ## 📋 PROMPT UNTUK AGEN AI (SALIN & TEMPEL BESOK)
