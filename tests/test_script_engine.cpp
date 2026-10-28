@@ -87,6 +87,38 @@ int main() {
         std::cout << "  ✓ Test 4: Syntax Error Handling PASS (Returned std::nullopt cleanly)\n";
     }
 
+    // === Test 5: Nested Non-Tail Call (frame_stack regression) ===
+    {
+        std::cout << "Running Test 5: Nested Non-Tail Call..." << std::endl;
+        std::string code = R"(
+            fungsi helper(x) -> x * 2
+            rampung
+            fungsi utama() -> helper(5) + 1
+            rampung
+        )";
+        auto res = engine.eval(code);
+        GARUDA_CHECK(res.has_value(), "nested call must return a value");
+        GARUDA_CHECK(res->get_if<std::int64_t>() && *res->get_if<std::int64_t>() == 11,
+                     "helper(5) + 1 must equal 11 (caller frame must survive callee)");
+        std::cout << "  ✓ Test 5: Nested Non-Tail Call PASS (" << *res->get_if<std::int64_t>() << ")\n";
+    }
+
+    // === Test 6: Sequential Calls Preserve Caller Locals ===
+    {
+        std::cout << "Running Test 6: Sequential Calls..." << std::endl;
+        std::string code = R"(
+            fungsi tambah(a, b) -> a + b
+            rampung
+            fungsi utama() -> tambah(10, 20) + tambah(3, 4)
+            rampung
+        )";
+        auto res = engine.eval(code);
+        GARUDA_CHECK(res.has_value(), "sequential calls must return a value");
+        GARUDA_CHECK(res->get_if<std::int64_t>() && *res->get_if<std::int64_t>() == 37,
+                     "tambah(10,20) + tambah(3,4) must equal 37");
+        std::cout << "  ✓ Test 6: Sequential Calls PASS (" << *res->get_if<std::int64_t>() << ")\n";
+    }
+
     std::cout << "\n🎉 ALL SCRIPT ENGINE & EMBEDDING TESTS PASSED PERFECTLY!\n";
     return 0;
 }
