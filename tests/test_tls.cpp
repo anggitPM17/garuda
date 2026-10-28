@@ -2,6 +2,9 @@
 #include "../include/garuda/beam/net/tls.hpp"
 #include "mbedtls/x509_crt.h"
 #include "mbedtls/pk.h"
+#if !defined(_WIN32)
+#include <arpa/inet.h>
+#endif
 #include <chrono>
 #include <future>
 #include <iostream>

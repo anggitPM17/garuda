@@ -1,0 +1,7 @@
+build/
+.git/
+.github/
+*.tmp
+*.log
+richat_production_data/
+test_*_db/

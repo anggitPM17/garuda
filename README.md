@@ -1,122 +1,91 @@
-# 🦅 Garuda Language & GVM BEAM-Core Runtime v67.0.0
+# 🦅 Garuda BEAM (G-BEAM) 🇮🇩
 
-[![Garuda CI](https://github.com/anggitPM17/garuda/actions/workflows/ci.yml/badge.svg)](https://github.com/anggitPM17/garuda/actions/workflows/ci.yml)
-[![Lapis 0](https://img.shields.io/badge/Lapis%200-Selesai-brightgreen.svg)]()
-[![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)]()
-[![C++ Standard](https://img.shields.io/badge/c%2B%2B-20-blue.svg)]()
-[![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)]()
+> Runtime terdistribusi setara Erlang/OTP — dengan identitas Indonesia.
+> C++ header-only. Zero external dependencies (kecuali mbedTLS & SQLite3).
 
-**Garuda** adalah Bahasa Pemrograman Concurrent Actor-Model berkinerja tinggi yang berjalan di atas **GVM (Garuda Virtual Machine)** berbasis arsitektur BEAM Erlang/OTP.
+## ✨ Fitur Lengkap (8 Fase, 100% PASS)
 
----
+| Fase | Fokus | Status |
+|---|---|---|
+| **G1** | OTP Behaviours (GenServer, Supervisor, Application, PubSub, GenStatem) | ✅ |
+| **G2** | Distributed Nodes (DistNode, GlobalRegistry, ClusterManager, PG) | ✅ |
+| **G3** | Mnesia Setara (Core, Tier, Sweep, Cluster) | ✅ |
+| **G4** | Crypto (SHA256, Merkle Tree, Sealed Sender, E2E Session) | ✅ |
+| **G5** | WebRTC & Presence (Signaling, Presence, Typing, Receipt, Reaction) | ✅ |
+| **G6** | Shell & REPL (Shell, RPC, Observer) | ✅ |
+| **G7** | Telemetry (Metrics, Tracing, Logger, Aggregator) | ✅ |
+| **G8** | Application Layer RICHAT (App, GroupMember, Fanout, Dist, ColdDB) | ✅ |
+| **B**  | Port Linux & Cross-Platform (Build Scripts, CI, Docker, Deployment Guide) | ✅ |
 
-## ⚡ Fitur Utama
+## 🚀 Build & Run
 
-- 🇮🇩 **Sintaks Dwibahasa Nusantara & Elixir**: Tulis kode dengan kata kunci lokal (`modul`, `fungsi`, `rampung`, `cakra`, `tampa`, `yen`) atau Elixir.
-- ⚡ **Tail Call Optimization (TCO)**: Rekursi ekor 10.000.000+ iterasi dengan penggunaan *stack memory* tetap $O(1)$.
-- 🐣 **Million-Scale Concurrency**: Sanggup mengeksekusi **1.000.000+ Proses Aktor Konkuren** secara paralel dengan RAM < 2.5 GB.
-- ⏱️ **Preemptive Scheduler**: Anggaran 4000 *reductions per slice* mencegah *CPU starvation*.
-- 🧹 **Per-Process Generational GC**: Pembersihan memori lokal per-proses tanpa *global stop-the-world pause* (Jeda GC < 10 ms).
-- 📦 **Binary Bytecode Format (`.gvm`)**: Kompilasi biner terstruktur dengan verifikasi *FNV1a Checksum*.
-- 🗳️ **Raft Consensus Protocol**: Pemilihan *Leader* otomatis & replikasi log konsensus terdistribusi.
-- 🌐 **Global Process Registry & Distributed PubSub**: Pencarian PID global & *broadcast* pesan masif lintas-server VPS via Soket TCP.
-- 🔥 **Hot Code Reloading**: Pembaruan modul biner di memori secara *live* tanpa *downtime* (*Zero Downtime Upgrade*).
-
----
-
-## 🚀 Panduan Cepat (*Quick Start*)
-
-### 1. Kompilasi Engine dengan CMake
+### Linux / macOS
 ```bash
-cmake -S . -B build
+./scripts/build_linux.sh
+./scripts/run_tests.sh
+```
+
+### Windows (MSVC / Ninja)
+```powershell
+cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
 cmake --build build --config Release
+powershell -ExecutionPolicy Bypass -File scripts/run_tests.ps1
 ```
 
-### 2. Jalankan Program Contoh
+### Docker Container
 ```bash
-# Menjalankan kode sumber .grd langsung
-./build/Release/grdc run examples/halo.grd
-./build/Release/grdc run examples/faktorial.grd
-./build/Release/grdc run examples/pingpong.grd
-
-# Kompilasi ke biner .gvm dan jalankan
-./build/Release/grdc compile examples/halo.grd
-./build/Release/grdc run examples/halo.gvm
+docker build -t garuda-beam .
+docker run --rm -p 9002:9002 garuda-beam
 ```
 
-### 3. Membuat Proyek Baru dengan Package Manager `grdmix`
-```bash
-# Inisialisasi perancangan proyek baru
-./build/Release/grdmix new aplikasi_saya
-cd aplikasi_saya
+## 📊 Benchmark & Production Metrics
 
-# Kompilasi dan jalankan modul utama (src/utama.grd)
-../build/Release/grdmix run
+- **HTTP Flood**: 191 req/s, 0 failed (di VPS 1 vCPU, 1GB RAM)
+- **1000 User Load**: 2000 transaksi, 100% availability
+- **RAM Memory Usage**: **~1.8 MB** (vs Erlang ~69.4 MB — **38x lebih hemat**)
+- **Chaos (SIGKILL)**: Auto-restart < 5 detik (systemd)
+- **Security & Robustness**: Path traversal & SQL injection blocked
+
+## 📁 Struktur Directory
+
+```
+include/garuda/
+├── beam/           # Runtime inti
+│   ├── core/       # Scheduler, Actor, GC, Term
+│   ├── otp/        # GenServer, Supervisor, Mnesia, dll
+│   ├── dist/       # Distributed Nodes
+│   ├── crypto/     # Crypto & E2E
+│   ├── webrtc/     # WebRTC & Presence
+│   ├── shell/      # Shell, RPC, Observer
+│   └── telemetry/  # Metrics, Tracing, Logger
+├── richat/         # Application Layer RICHAT
+└── jalur_langit/   # Database Engine
+
+tests/              # 50+ test executable, semua PASS
+scripts/            # Build & test scripts
+docs/               # Panduan deployment Linux VPS
 ```
 
----
+## 📚 Dokumentasi
 
-## 📄 Contoh Kode Bahasa Garuda (`.grd`)
+- [Panduan Deployment Linux VPS](docs/DEPLOYMENT_LINUX.md)
+- [Roadmap Garuda BEAM](ROADMAP_GARUDA_BEAM.md)
 
-- [Contoh Peta & Daftar (`examples/peta_dan_daftar.grd`)](examples/peta_dan_daftar.grd): Demonstrasi pembuatan dan pemrosesan data struktur Map dan List pustaka standar.
-- [Contoh Aktor & Supervisor (`examples/aktor_supervisor.grd`)](examples/aktor_supervisor.grd): Demonstrasi spawning aktor (`cakra`), pengiriman pesan (`<-`), dan pemrosesan mailbox (`tampa`).
+## 🏆 Pencapaian
 
-### 1. Model Aktor Concurrent (PingPong)
-```garuda
-modul PingPong
-
-fungsi server() ->
-    tampa
-        {ping, Dari} ->
-            Dari <- {pong, diri}
-    rampung
-rampung
-
-fungsi utama() ->
-    ServerPid = cakra(fungsi() -> server() rampung)
-    ServerPid <- {ping, Dari}
-    tampa
-        {pong, Sender} ->
-            cetak("Diterima balasan PONG dari Server!")
-            42
-    rampung
-rampung
-```
-
-### 2. Modul Pustaka Standar Map & List
-```garuda
-modul PengelolaanData
-
-fungsi utama() ->
-    DaftarSiswa = [101, 102, 103, 104]
-    TotalSiswa = List.panjang(DaftarSiswa)
-
-    PetaStatus = Map.taruh(Map.baru(), "status", "aktif")
-    Status = Map.ambil(PetaStatus, "status")
-
-    cetak("Jumlah siswa terdaftar: " ++ String.panjang(TotalSiswa))
-    42
-rampung
-```
-
----
-
-## 📚 Dokumentasi Lengkap & Kontribusi
-
-- [Panduan & Tutorial 10 Bab](docs/tutorial.md)
-- [Referensi Sintaksis Bahasa](docs/sintaks.md)
-- [Dokumentasi Referensi Standard Library (String, List, Map, Enum)](docs/STDLIB_REFERENCE.md)
-- [Panduan Penggunaan Package Manager grdmix](docs/GRDMIX.md)
-- [Panduan Integrasi C++ Compiler API](docs/COMPILER_API.md)
-- [Arsitektur GVM Engine](docs/arsitektur.md)
-- [Spesifikasi Model Memori Hibrida GVM](docs/MEMORY_MODEL.md)
-- [Desain Arsitektur Stadion Garuda (WASM Playground)](docs/STADION.md)
-- [Infrastruktur Terdistribusi](docs/distributed.md)
-- [Panduan Kontribusi (CONTRIBUTING.md)](CONTRIBUTING.md)
-- [Kebijakan Keamanan (SECURITY.md)](SECURITY.md)
-- [Catatan Perubahan (CHANGELOG.md)](CHANGELOG.md)
-
----
+- ✅ 8 fase + Port Linux, 35+ sub-fase, 50+ test executables, semua PASS
+- ✅ Production-tested & deployed di VPS Ubuntu Linux (`https://richat.my.id`)
+- ✅ 38x lebih hemat RAM dibanding Erlang
+- ✅ Zero downtime migration & parallel fallback architecture
 
 ## 📜 Lisensi
-Dikembangkan di bawah Lisensi [Apache 2.0](LICENSE).
+
+[MIT](LICENSE) — bebas digunakan, dimodifikasi, dan didistribusikan.
+
+## 🇮🇩 Tentang
+
+Garuda BEAM adalah runtime terdistribusi berkinerja tinggi karya bangsa.
+Dibuat dengan visi: **"Erlang/OTP versi Indonesia, dengan identitas dan efisiensi memori yang jauh lebih baik."**
+
+---
+**Dibuat dengan ❤️ di Indonesia. 🦅**

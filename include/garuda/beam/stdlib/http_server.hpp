@@ -14,11 +14,13 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
+#include <netinet/tcp.h>
 #endif
 
 #include <algorithm>
 #include <atomic>
 #include <condition_variable>
+#include <cstring>
 #include <cstdint>
 #include <functional>
 #include <iostream>

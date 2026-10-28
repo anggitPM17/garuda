@@ -5,6 +5,7 @@
 #include "../core/runtime.hpp"
 
 #include <algorithm>
+#include <atomic>
 #include <cstdint>
 #include <iostream>
 #include <memory>

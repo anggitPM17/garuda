@@ -2,6 +2,9 @@
 #include "../include/garuda/beam/stdlib/query_builder.hpp"
 #include "../include/garuda/beam/stdlib/json.hpp"
 #include "../include/garuda/beam/core/runtime.hpp"
+#if !defined(_WIN32)
+#include <arpa/inet.h>
+#endif
 #include <chrono>
 #include <future>
 #include <iostream>

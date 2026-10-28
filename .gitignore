@@ -1,88 +1,113 @@
-﻿# ==============================================
-# GARUDA PROJECT - .gitignore
-# ==============================================
+﻿# ============================================================
+# Garuda BEAM — .gitignore (production-ready)
+# ============================================================
 
-# --- Build Directories ---
+# Build directories & artifacts
 build/
+build-*/
 out/
-cmake-build-*/
 bin/
 obj/
-*.dir/
-.vs/
-.vscode/
-.idea/
-
-# --- Compiled Binaries ---
+*.o
+*.obj
 *.exe
 *.dll
-*.lib
 *.so
+*.a
+*.lib
 *.dylib
-*.obj
-*.o
-*.pdb
-*.ilk
-*.exp
-
-# --- CMake / MSBuild ---
 CMakeCache.txt
 CMakeFiles/
 cmake_install.cmake
+compile_commands.json
+Makefile
+*.ninja
 *.vcxproj
 *.vcxproj.filters
 *.vcxproj.user
-*.slnx
-Makefile
-ALL_BUILD*
-ZERO_CHECK*
-INSTALL*
-RUN_TESTS*
+*.sln
 
-# --- Jalur Langit Database Files ---
-jalur_langit_data/
-test_jalur_langit_data/
-*.wal
-wal.log
+# IDE & Editor files
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.swp
+*.swo
+*.code-workspace
+
+# Caches & Temp
+.cache/
+ccache/
+.tmp/
+temp/
+
+# Databases & Storage
 *.db
 *.sqlite
 *.sqlite3
+*.mnesia
+richat_db/
+garuda_db/
+garuda_richat_db/
+test_*_db/
+test_*_dir/
+richat_production_data/
+var/
 
-# --- Test Temporary Files ---
-test_*_data/
-tmp/
-temp/
-*.tmp
+# Logs
 *.log
+logs/
+journal/
 
-# --- Garuda Runtime Artifacts ---
-*.gvm
-*.grd.bak
-*.grd.orig
+# Environment & Secrets
+.env
+.env.*
+*.key
+*.pem
+*.p12
+*.jks
+*.keystore
+secrets/
 
-# --- OS Specific ---
+# Test Outputs
+test_results/
+*.test.log
+*.junit.xml
+coverage/
+
+# OS Specific
 .DS_Store
 Thumbs.db
 desktop.ini
 
-# --- IDE Specific ---
-*.swp
-*.swo
-*~
-*.autosave
+# Backup Folders
+backup/
+richat-backup/
 
-# --- Environment & Secrets ---
-.env
-.env.local
-.env.*.local
-*.pem
-*.key
+# Erlang & Elixir Legacy (Guard)
+_build/
+deps/
+rel/
+*.erl
+*.hrl
+rebar.config
+rebar.lock
+mix.exs
+mix.lock
 
-# --- Backup Files (dari agen AI) ---
-*.bak
-*.bak-*
-*.orig
-*.rej
+# Android Legacy (Guard)
+app/
+RichatAndroid/
+*.apk
+*.aab
+gradle/
+gradlew
+gradlew.bat
 
-# Raft temporary state files
-*.state
+# Python Legacy (Guard)
+__pycache__/
+*.pyc
+venv/
+.venv/

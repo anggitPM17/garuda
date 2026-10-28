@@ -1,6 +1,9 @@
 #include "../include/garuda/beam/io/http_ws_server.hpp"
 #include "../include/garuda/beam/stdlib/crypto.hpp"
 #include "../include/garuda/beam/core/runtime.hpp"
+#if !defined(_WIN32)
+#include <arpa/inet.h>
+#endif
 #include <atomic>
 #include <chrono>
 #include <future>

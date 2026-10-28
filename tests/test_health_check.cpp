@@ -1,6 +1,9 @@
 #include "../include/garuda/beam/io/health_check.hpp"
 #include "../include/garuda/beam/io/http_ws_server.hpp"
 #include "../include/garuda/beam/core/runtime.hpp"
+#if !defined(_WIN32)
+#include <arpa/inet.h>
+#endif
 #include <chrono>
 #include <future>
 #include <iostream>

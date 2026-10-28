@@ -9,6 +9,7 @@
 #include <string>
 
 #if !defined(_WIN32)
+#include <csignal>
 #include <fcntl.h>
 #include <sys/socket.h>
 #include <sys/stat.h>

@@ -36,7 +36,11 @@ struct SemVer {
         std::string s = str;
         if (!s.empty() && (s.front() == 'v' || s.front() == 'V')) s.erase(0, 1);
 
+#if defined(_WIN32)
         sscanf_s(s.c_str(), "%d.%d.%d", &v.major, &v.minor, &v.patch);
+#else
+        sscanf(s.c_str(), "%d.%d.%d", &v.major, &v.minor, &v.patch);
+#endif
         return v;
     }
 
