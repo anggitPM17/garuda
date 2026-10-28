@@ -81,6 +81,11 @@ Jangan minta agen mengerjakan semuanya sekaligus. Berikan instruksi bertahap (sa
 *   **Tes:** `test_ai_code_fixer.cpp`.
 *   **Verifikasi:** Interface LLM Client, mock behavior (SUCCESS/EMPTY_PATCH/FAILURE/THROW), input validation & max patch size limit (64KB).
 
+### 📍 R0: Spesifikasi Kontrak API RICHAT - [x] SELESAI
+*   **Target:** `docs/RICHAT_API_CONTRACT.md`, `tests/test_richat_contract_schema.json`.
+*   **Tes:** `test_richat_contract.cpp`.
+*   **Verifikasi:** Pembekuan spesifikasi API RICHAT, validasi skema payload valid & invalid.
+
 ---
 
 ## 📋 PROMPT UNTUK AGEN AI (SALIN & TEMPEL BESOK)
