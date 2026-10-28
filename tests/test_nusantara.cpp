@@ -6,6 +6,7 @@
 #include <chrono>
 #include <atomic>
 #include <set>
+#include <filesystem>
 
 using namespace garuda::nusantara;
 using namespace garuda::nusantara::entities;
@@ -506,6 +507,140 @@ int main() {
         std::cout << "  ✓ Test R: Connect Timeout PASS (failed in " << elapsed_ms << " ms)\n";
     }
 
-    std::cout << "\n=== EKOSISTEM GARUDA NUSANTARA FASE C CLEANUP BERJALAN SUKSES ===\n";
+    // === Test S: Persistence Store ===
+    std::cout << "\n=== TEST S: PERSISTENCE STORE ===\n";
+    {
+        auto& broker = NusantaraBroker::get_instance();
+
+        auto db_path = (std::filesystem::temp_directory_path() / "nusantara_test_s.db").string();
+        std::filesystem::remove(db_path);
+
+        GARUDA_CHECK(broker.enable_persistence(db_path), "enable_persistence must succeed");
+        GARUDA_CHECK(broker.persistence_enabled(), "persistence must be enabled");
+
+        broker.start();
+
+        NusantaraMessage msg;
+        msg.message_id = "persist-s-001";
+        msg.sender = EntityTarget::AUTOPILOT_AI;
+        msg.receiver = EntityTarget::STADION_UI;
+        msg.action = NusantaraAction::BROADCAST_MSG;
+        msg.payload["text"] = "persist me";
+
+        broker.send_message(msg);
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
+        broker.stop();
+
+        GARUDA_CHECK(std::filesystem::exists(db_path), "DB file must exist");
+
+        broker.disable_persistence();
+        std::filesystem::remove(db_path);
+
+        std::cout << "  ✓ Test S: Persistence Store PASS\n";
+    }
+
+    // === Test T: Persistence Recovery ===
+    std::cout << "\n=== TEST T: PERSISTENCE RECOVERY ===\n";
+    {
+        auto& broker = NusantaraBroker::get_instance();
+
+        auto db_path = (std::filesystem::temp_directory_path() / "nusantara_test_t.db").string();
+        std::filesystem::remove(db_path);
+
+        GARUDA_CHECK(broker.enable_persistence(db_path), "enable_persistence must succeed");
+
+        NusantaraMessage msg;
+        msg.message_id = "persist-t-001";
+        msg.sender = EntityTarget::AUTOPILOT_AI;
+        msg.receiver = EntityTarget::ANDROID_STUDIO;
+        msg.action = NusantaraAction::BROADCAST_MSG;
+        msg.payload["text"] = "recover me";
+
+        broker.send_message(msg); // Stored in DB as 'pending'
+
+        broker.disable_persistence(); // Simulated crash
+
+        std::atomic<int> received{0};
+        broker.register_entity(EntityTarget::ANDROID_STUDIO, [&](const NusantaraMessage& m) {
+            if (m.message_id == "persist-t-001") received.fetch_add(1);
+        });
+
+        GARUDA_CHECK(broker.enable_persistence(db_path), "re-enable_persistence must succeed");
+        broker.start(); // Recovery happens here
+
+        auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(3);
+        while (received.load() < 1 && std::chrono::steady_clock::now() < deadline) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(20));
+        }
+        GARUDA_CHECK(received.load() == 1, "recovered message must be processed");
+
+        broker.stop();
+        broker.disable_persistence();
+        std::filesystem::remove(db_path);
+
+        std::cout << "  ✓ Test T: Persistence Recovery PASS\n";
+    }
+
+    // === Test U: Persistence Prune ===
+    std::cout << "\n=== TEST U: PERSISTENCE PRUNE ===\n";
+    {
+        auto& broker = NusantaraBroker::get_instance();
+
+        auto db_path = (std::filesystem::temp_directory_path() / "nusantara_test_u.db").string();
+        std::filesystem::remove(db_path);
+
+        GARUDA_CHECK(broker.enable_persistence(db_path), "enable_persistence must succeed");
+        broker.start();
+
+        broker.register_entity(EntityTarget::STADION_UI, [](const NusantaraMessage&) {});
+        NusantaraMessage msg;
+        msg.message_id = "persist-u-001";
+        msg.sender = EntityTarget::AUTOPILOT_AI;
+        msg.receiver = EntityTarget::STADION_UI;
+        msg.action = NusantaraAction::BROADCAST_MSG;
+        broker.send_message(msg);
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
+        GARUDA_CHECK(broker.persistent_pending_count() == 0, "no pending messages after processing");
+
+        broker.stop();
+        broker.disable_persistence();
+        std::filesystem::remove(db_path);
+
+        std::cout << "  ✓ Test U: Persistence Prune PASS\n";
+    }
+
+    // === Test V: Backward Compatible (No Persistence) ===
+    std::cout << "\n=== TEST V: BACKWARD COMPATIBLE (NO PERSISTENCE) ===\n";
+    {
+        auto& broker = NusantaraBroker::get_instance();
+
+        GARUDA_CHECK(!broker.persistence_enabled(), "persistence must be disabled by default");
+
+        std::atomic<int> received{0};
+        broker.register_entity(EntityTarget::STADION_UI, [&](const NusantaraMessage&) {
+            received.fetch_add(1);
+        });
+        broker.start();
+
+        NusantaraMessage msg;
+        msg.message_id = "no-persist-001";
+        msg.sender = EntityTarget::AUTOPILOT_AI;
+        msg.receiver = EntityTarget::STADION_UI;
+        msg.action = NusantaraAction::BROADCAST_MSG;
+        broker.send_message(msg);
+
+        auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(2);
+        while (received.load() < 1 && std::chrono::steady_clock::now() < deadline) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(20));
+        }
+        GARUDA_CHECK(received.load() == 1, "message must be processed without persistence");
+
+        broker.stop();
+        std::cout << "  ✓ Test V: Backward Compatible PASS\n";
+    }
+
+    std::cout << "\n=== EKOSISTEM GARUDA NUSANTARA FASE D3 BERJALAN SUKSES ===\n";
     return 0;
 }

@@ -1,6 +1,7 @@
 #pragma once
 #include "nusantara_protocol.hpp"
 #include "nusantara_transport.hpp"
+#include "nusantara_store.hpp"
 #include <atomic>
 #include <condition_variable>
 #include <functional>
@@ -10,6 +11,7 @@
 #include <mutex>
 #include <queue>
 #include <thread>
+#include <unordered_map>
 
 namespace garuda::nusantara {
 
@@ -44,6 +46,12 @@ private:
     std::thread wss_listener_thread_;
     std::atomic<bool> wss_listener_running_{false};
     transport::WssListener wss_listener_;
+
+    // Persistensi SQLite WAL
+    std::unique_ptr<NusantaraMessageStore> store_;
+    mutable std::mutex store_mutex_;
+    std::atomic<bool> persistence_on_{false};
+    std::unordered_map<std::string, std::int64_t> pending_row_ids_;
 
     NusantaraBroker() = default; // Singleton
 
@@ -82,6 +90,17 @@ private:
                     }
                 } else {
                     std::cerr << "[GARUDA NUSANTARA] Peringatan: Penerima tidak ditemukan!\n";
+                }
+
+                if (persistence_on_.load()) {
+                    std::lock_guard<std::mutex> store_lock(store_mutex_);
+                    auto it = pending_row_ids_.find(msg.message_id);
+                    if (it != pending_row_ids_.end()) {
+                        if (store_ && store_->is_open()) {
+                            store_->mark_completed(it->second);
+                        }
+                        pending_row_ids_.erase(it);
+                    }
                 }
             }
         }
@@ -215,12 +234,72 @@ public:
         stop_listener_tls();
         stop_listener();
         stop();
+        disable_persistence();
+    }
+
+    // === PERSISTENSI SQLITE WAL API ===
+    bool enable_persistence(const std::string& db_path) {
+        std::lock_guard<std::mutex> lock(store_mutex_);
+        if (persistence_on_.load()) return false;
+        auto new_store = std::make_unique<NusantaraMessageStore>();
+        if (!new_store->open(db_path)) return false;
+        store_ = std::move(new_store);
+        persistence_on_.store(true);
+        std::cout << "[GARUDA NUSANTARA] Persistensi aktif: " << db_path << "\n";
+        return true;
+    }
+
+    void disable_persistence() {
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            std::queue<NusantaraMessage> empty;
+            std::swap(message_queue_, empty);
+        }
+        std::lock_guard<std::mutex> lock(store_mutex_);
+        if (!persistence_on_.load()) return;
+        persistence_on_.store(false);
+        if (store_) {
+            store_->close();
+            store_.reset();
+        }
+        pending_row_ids_.clear();
+        std::cout << "[GARUDA NUSANTARA] Persistensi nonaktif.\n";
+    }
+
+    bool persistence_enabled() const {
+        return persistence_on_.load();
+    }
+
+    std::size_t persistent_pending_count() const {
+        std::lock_guard<std::mutex> lock(store_mutex_);
+        if (persistence_on_.load() && store_) {
+            return store_->pending_count();
+        }
+        return 0;
     }
 
     void start() {
-        std::lock_guard<std::mutex> lock(mutex_);
-        if (running_.load()) return;
-        running_.store(true);
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            if (running_.load()) return;
+            running_.store(true);
+        }
+
+        if (persistence_on_.load()) {
+            std::lock_guard<std::mutex> store_lock(store_mutex_);
+            if (store_ && store_->is_open()) {
+                auto pending = store_->load_pending();
+                if (!pending.empty()) {
+                    std::lock_guard<std::mutex> lock(mutex_);
+                    for (const auto& [row_id, msg] : pending) {
+                        message_queue_.push(msg);
+                        pending_row_ids_[msg.message_id] = row_id;
+                    }
+                    std::cout << "[GARUDA NUSANTARA] Recovery: " << pending.size() << " pesan pending dari DB.\n";
+                }
+            }
+        }
+
         worker_ = std::thread([this]() { this->worker_loop(); });
         std::cout << "[GARUDA NUSANTARA] Async Worker Broker dimulai.\n";
     }
@@ -235,6 +314,17 @@ public:
         if (worker_.joinable()) {
             worker_.join();
         }
+
+        if (persistence_on_.load()) {
+            std::lock_guard<std::mutex> store_lock(store_mutex_);
+            if (store_ && store_->is_open()) {
+                std::size_t pruned = store_->prune_completed(3600);
+                if (pruned > 0) {
+                    std::cout << "[GARUDA NUSANTARA] Prune DB: " << pruned << " pesan 'done' dibersihkan.\n";
+                }
+            }
+        }
+
         std::cout << "[GARUDA NUSANTARA] Async Worker Broker dihentikan.\n";
     }
 
@@ -405,6 +495,16 @@ public:
 
     // Mengirim pesan (Bisa dari mana saja)
     void send_message(const NusantaraMessage& msg) {
+        if (persistence_on_.load()) {
+            std::lock_guard<std::mutex> store_lock(store_mutex_);
+            if (store_ && store_->is_open()) {
+                std::int64_t row_id = store_->store_message(msg);
+                if (row_id >= 0) {
+                    pending_row_ids_[msg.message_id] = row_id;
+                }
+            }
+        }
+
         {
             std::lock_guard<std::mutex> lock(mutex_);
             message_queue_.push(msg);
@@ -444,6 +544,17 @@ public:
                     }
                 } else {
                     std::cerr << "[GARUDA NUSANTARA] Peringatan: Penerima tidak ditemukan!\n";
+                }
+
+                if (persistence_on_.load()) {
+                    std::lock_guard<std::mutex> store_lock(store_mutex_);
+                    auto it = pending_row_ids_.find(msg.message_id);
+                    if (it != pending_row_ids_.end()) {
+                        if (store_ && store_->is_open()) {
+                            store_->mark_completed(it->second);
+                        }
+                        pending_row_ids_.erase(it);
+                    }
                 }
             }
         }
