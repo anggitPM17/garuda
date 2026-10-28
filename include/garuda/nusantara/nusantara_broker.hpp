@@ -2,6 +2,7 @@
 #include "nusantara_protocol.hpp"
 #include "nusantara_transport.hpp"
 #include "nusantara_store.hpp"
+#include "nusantara_metrics.hpp"
 #include <atomic>
 #include <condition_variable>
 #include <functional>
@@ -12,6 +13,7 @@
 #include <queue>
 #include <thread>
 #include <unordered_map>
+#include <chrono>
 
 namespace garuda::nusantara {
 
@@ -53,6 +55,11 @@ private:
     std::atomic<bool> persistence_on_{false};
     std::unordered_map<std::string, std::int64_t> pending_row_ids_;
 
+    // Observability (Metrics & Tracing)
+    mutable std::unique_ptr<NusantaraMetrics> metrics_;
+    mutable std::unique_ptr<NusantaraTracer> tracer_;
+    mutable std::mutex observability_mutex_;
+
     NusantaraBroker() = default; // Singleton
 
     void worker_loop() {
@@ -82,14 +89,38 @@ private:
             }
 
             if (has_msg) {
+                auto start_time = std::chrono::steady_clock::now();
+                NusantaraTracer::SpanHandle span_handle;
+                if (tracer_ && tracer_->is_enabled()) {
+                    span_handle = tracer_->start_span(msg);
+                }
+
+                bool success = true;
                 if (receiver) {
                     try {
                         receiver(msg);
                     } catch (const std::exception& e) {
+                        success = false;
                         std::cerr << "[GARUDA NUSANTARA ERROR] Gagal memproses pesan: " << e.what() << "\n";
                     }
                 } else {
+                    success = false;
                     std::cerr << "[GARUDA NUSANTARA] Peringatan: Penerima tidak ditemukan!\n";
+                }
+
+                auto elapsed_ms = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - start_time).count();
+
+                if (metrics_ && metrics_->is_enabled()) {
+                    metrics_->observe_processing_latency_ms(elapsed_ms);
+                    metrics_->inc_messages_processed(msg.receiver, success);
+                    {
+                        std::lock_guard<std::mutex> lock(mutex_);
+                        metrics_->set_queue_size(message_queue_.size());
+                    }
+                }
+
+                if (tracer_ && tracer_->is_enabled()) {
+                    tracer_->end_span(span_handle, success);
                 }
 
                 if (persistence_on_.load()) {
@@ -131,6 +162,9 @@ private:
                 send_message(*msg);
             } else {
                 std::cerr << "[GARUDA NUSANTARA WARNING] Formulasi JSON TCP tidak valid: " << *line << "\n";
+                if (metrics_ && metrics_->is_enabled()) {
+                    metrics_->inc_transport_error("tcp");
+                }
             }
         }
     }
@@ -160,6 +194,9 @@ private:
                 send_message(*msg);
             } else {
                 std::cerr << "[GARUDA NUSANTARA WARNING] Formulasi JSON TLS tidak valid: " << *line << "\n";
+                if (metrics_ && metrics_->is_enabled()) {
+                    metrics_->inc_transport_error("tls");
+                }
             }
         }
     }
@@ -189,6 +226,9 @@ private:
                 send_message(*msg);
             } else {
                 std::cerr << "[GARUDA NUSANTARA WARNING] Formulasi JSON WS tidak valid: " << *text << "\n";
+                if (metrics_ && metrics_->is_enabled()) {
+                    metrics_->inc_transport_error("ws");
+                }
             }
         }
     }
@@ -218,6 +258,9 @@ private:
                 send_message(*msg);
             } else {
                 std::cerr << "[GARUDA NUSANTARA WARNING] Formulasi JSON WSS tidak valid: " << *text << "\n";
+                if (metrics_ && metrics_->is_enabled()) {
+                    metrics_->inc_transport_error("wss");
+                }
             }
         }
     }
@@ -235,6 +278,53 @@ public:
         stop_listener();
         stop();
         disable_persistence();
+        disable_tracing();
+        disable_metrics();
+    }
+
+    // === OBSERVABILITY (METRICS & TRACING) API ===
+    bool enable_metrics() {
+        std::lock_guard<std::mutex> lock(observability_mutex_);
+        if (!metrics_) metrics_ = std::make_unique<NusantaraMetrics>();
+        return metrics_->enable();
+    }
+
+    void disable_metrics() {
+        std::lock_guard<std::mutex> lock(observability_mutex_);
+        if (metrics_) metrics_->disable();
+    }
+
+    bool metrics_enabled() const {
+        std::lock_guard<std::mutex> lock(observability_mutex_);
+        return metrics_ && metrics_->is_enabled();
+    }
+
+    bool enable_tracing(const std::string& service_name = "garuda-nusantara") {
+        std::lock_guard<std::mutex> lock(observability_mutex_);
+        if (!tracer_) tracer_ = std::make_unique<NusantaraTracer>();
+        return tracer_->enable(service_name);
+    }
+
+    void disable_tracing() {
+        std::lock_guard<std::mutex> lock(observability_mutex_);
+        if (tracer_) tracer_->disable();
+    }
+
+    bool tracing_enabled() const {
+        std::lock_guard<std::mutex> lock(observability_mutex_);
+        return tracer_ && tracer_->is_enabled();
+    }
+
+    std::string render_metrics() const {
+        std::lock_guard<std::mutex> lock(observability_mutex_);
+        if (metrics_) return metrics_->render_prometheus();
+        return "";
+    }
+
+    std::string export_traces() const {
+        std::lock_guard<std::mutex> lock(observability_mutex_);
+        if (tracer_) return tracer_->export_otlp_json();
+        return "{}";
     }
 
     // === PERSISTENSI SQLITE WAL API ===
@@ -300,6 +390,10 @@ public:
             }
         }
 
+        if (metrics_ && metrics_->is_enabled()) {
+            metrics_->set_db_pending(persistent_pending_count());
+        }
+
         worker_ = std::thread([this]() { this->worker_loop(); });
         std::cout << "[GARUDA NUSANTARA] Async Worker Broker dimulai.\n";
     }
@@ -323,6 +417,10 @@ public:
                     std::cout << "[GARUDA NUSANTARA] Prune DB: " << pruned << " pesan 'done' dibersihkan.\n";
                 }
             }
+        }
+
+        if (metrics_ && metrics_->is_enabled()) {
+            metrics_->set_db_pending(persistent_pending_count());
         }
 
         std::cout << "[GARUDA NUSANTARA] Async Worker Broker dihentikan.\n";
@@ -505,11 +603,19 @@ public:
             }
         }
 
+        std::size_t qsize = 0;
         {
             std::lock_guard<std::mutex> lock(mutex_);
             message_queue_.push(msg);
+            qsize = message_queue_.size();
         }
         cv_.notify_one();
+
+        if (metrics_ && metrics_->is_enabled()) {
+            metrics_->inc_messages_received(msg.sender, msg.action);
+            metrics_->set_queue_size(qsize);
+        }
+
         std::cout << "[GARUDA NUSANTARA] Pesan masuk: Action=" << (int)msg.action
                   << ", Dari=" << (int)msg.sender
                   << ", Ke=" << (int)msg.receiver << "\n";
@@ -536,14 +642,26 @@ public:
             }
 
             if (has_msg) {
+                auto start_time = std::chrono::steady_clock::now();
+
+                bool success = true;
                 if (receiver) {
                     try {
                         receiver(msg);
                     } catch (const std::exception& e) {
+                        success = false;
                         std::cerr << "[GARUDA NUSANTARA ERROR] Gagal memproses pesan: " << e.what() << "\n";
                     }
                 } else {
+                    success = false;
                     std::cerr << "[GARUDA NUSANTARA] Peringatan: Penerima tidak ditemukan!\n";
+                }
+
+                auto elapsed_ms = std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - start_time).count();
+
+                if (metrics_ && metrics_->is_enabled()) {
+                    metrics_->observe_processing_latency_ms(elapsed_ms);
+                    metrics_->inc_messages_processed(msg.receiver, success);
                 }
 
                 if (persistence_on_.load()) {

@@ -641,6 +641,166 @@ int main() {
         std::cout << "  ✓ Test V: Backward Compatible PASS\n";
     }
 
-    std::cout << "\n=== EKOSISTEM GARUDA NUSANTARA FASE D3 BERJALAN SUKSES ===\n";
+    // === Test W: Metrics Counter & Gauge ===
+    std::cout << "\n=== TEST W: METRICS COUNTER & GAUGE ===\n";
+    {
+        auto& broker = NusantaraBroker::get_instance();
+
+        GARUDA_CHECK(broker.enable_metrics(), "enable_metrics must succeed");
+        GARUDA_CHECK(broker.metrics_enabled(), "metrics must be enabled");
+
+        std::atomic<int> received{0};
+        broker.register_entity(EntityTarget::STADION_UI, [&](const NusantaraMessage&) {
+            received.fetch_add(1);
+        });
+        broker.start();
+
+        for (int i = 0; i < 5; ++i) {
+            NusantaraMessage msg;
+            msg.message_id = "metric-w-" + std::to_string(i);
+            msg.sender = EntityTarget::AUTOPILOT_AI;
+            msg.receiver = EntityTarget::STADION_UI;
+            msg.action = NusantaraAction::BROADCAST_MSG;
+            broker.send_message(msg);
+        }
+
+        auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(3);
+        while (received.load() < 5 && std::chrono::steady_clock::now() < deadline) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(20));
+        }
+        GARUDA_CHECK(received.load() == 5, "all 5 messages must be processed");
+
+        std::string prom = broker.render_metrics();
+        GARUDA_CHECK(prom.find("nusantara_messages_received_total") != std::string::npos,
+                     "Prometheus output must contain received counter");
+        GARUDA_CHECK(prom.find("nusantara_messages_processed_total") != std::string::npos,
+                     "Prometheus output must contain processed counter");
+        GARUDA_CHECK(prom.find("status=\"success\"") != std::string::npos,
+                     "Prometheus output must contain success label");
+
+        broker.stop();
+        broker.disable_metrics();
+
+        std::cout << "  ✓ Test W: Metrics Counter & Gauge PASS\n";
+    }
+
+    // === Test X: Tracing Span ===
+    std::cout << "\n=== TEST X: TRACING SPAN ===\n";
+    {
+        auto& broker = NusantaraBroker::get_instance();
+
+        GARUDA_CHECK(broker.enable_tracing("garuda-nusantara-test"), "enable_tracing must succeed");
+        GARUDA_CHECK(broker.tracing_enabled(), "tracing must be enabled");
+
+        std::atomic<int> received{0};
+        broker.register_entity(EntityTarget::ANDROID_STUDIO, [&](const NusantaraMessage&) {
+            received.fetch_add(1);
+        });
+        broker.start();
+
+        NusantaraMessage msg;
+        msg.message_id = "trace-x-001";
+        msg.sender = EntityTarget::AUTOPILOT_AI;
+        msg.receiver = EntityTarget::ANDROID_STUDIO;
+        msg.action = NusantaraAction::BROADCAST_MSG;
+        broker.send_message(msg);
+
+        auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(3);
+        while (received.load() < 1 && std::chrono::steady_clock::now() < deadline) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(20));
+        }
+        GARUDA_CHECK(received.load() == 1, "message must be processed");
+
+        std::string traces = broker.export_traces();
+        GARUDA_CHECK(traces.find("nusantara.process_message") != std::string::npos,
+                     "OTLP export must contain span name 'nusantara.process_message'");
+        GARUDA_CHECK(traces.find("trace-x-001") != std::string::npos,
+                     "OTLP export must contain message id 'trace-x-001'");
+
+        broker.stop();
+        broker.disable_tracing();
+
+        std::cout << "  ✓ Test X: Tracing Span PASS\n";
+    }
+
+    // === Test Y: Zero Overhead (Disabled) ===
+    std::cout << "\n=== TEST Y: ZERO OVERHEAD (DISABLED) ===\n";
+    {
+        auto& broker = NusantaraBroker::get_instance();
+
+        GARUDA_CHECK(!broker.metrics_enabled(), "metrics must be disabled by default");
+        GARUDA_CHECK(!broker.tracing_enabled(), "tracing must be disabled by default");
+
+        std::atomic<int> received{0};
+        broker.register_entity(EntityTarget::STADION_UI, [&](const NusantaraMessage&) {
+            received.fetch_add(1);
+        });
+        broker.start();
+
+        NusantaraMessage msg;
+        msg.message_id = "no-obs-001";
+        msg.sender = EntityTarget::AUTOPILOT_AI;
+        msg.receiver = EntityTarget::STADION_UI;
+        msg.action = NusantaraAction::BROADCAST_MSG;
+        broker.send_message(msg);
+
+        auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(2);
+        while (received.load() < 1 && std::chrono::steady_clock::now() < deadline) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(20));
+        }
+        GARUDA_CHECK(received.load() == 1, "message must be processed without observability");
+
+        broker.stop();
+        std::cout << "  ✓ Test Y: Zero Overhead PASS\n";
+    }
+
+    // === Test Z: Observability + Persistence ===
+    std::cout << "\n=== TEST Z: OBSERVABILITY + PERSISTENCE ===\n";
+    {
+        auto& broker = NusantaraBroker::get_instance();
+
+        auto db_path = (std::filesystem::temp_directory_path() / "nusantara_test_z.db").string();
+        std::filesystem::remove(db_path);
+
+        GARUDA_CHECK(broker.enable_persistence(db_path), "enable_persistence must succeed");
+        GARUDA_CHECK(broker.enable_metrics(), "enable_metrics must succeed");
+        GARUDA_CHECK(broker.enable_tracing("garuda-nusantara-test"), "enable_tracing must succeed");
+
+        std::atomic<int> received{0};
+        broker.register_entity(EntityTarget::STADION_UI, [&](const NusantaraMessage&) {
+            received.fetch_add(1);
+        });
+        broker.start();
+
+        for (int i = 0; i < 3; ++i) {
+            NusantaraMessage msg;
+            msg.message_id = "obs-persist-" + std::to_string(i);
+            msg.sender = EntityTarget::AUTOPILOT_AI;
+            msg.receiver = EntityTarget::STADION_UI;
+            msg.action = NusantaraAction::BROADCAST_MSG;
+            broker.send_message(msg);
+        }
+
+        auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(3);
+        while (received.load() < 3 && std::chrono::steady_clock::now() < deadline) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(20));
+        }
+        GARUDA_CHECK(received.load() == 3, "all 3 messages must be processed");
+
+        std::string prom = broker.render_metrics();
+        GARUDA_CHECK(prom.find("nusantara_messages_received_total") != std::string::npos,
+                     "metrics must be present");
+        GARUDA_CHECK(broker.persistence_enabled(), "persistence must still be enabled");
+
+        broker.stop();
+        broker.disable_tracing();
+        broker.disable_metrics();
+        broker.disable_persistence();
+        std::filesystem::remove(db_path);
+
+        std::cout << "  ✓ Test Z: Observability + Persistence PASS\n";
+    }
+
+    std::cout << "\n=== EKOSISTEM GARUDA NUSANTARA FASE D4 BERJALAN SUKSES ===\n";
     return 0;
 }
