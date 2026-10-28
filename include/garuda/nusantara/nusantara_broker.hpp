@@ -25,9 +25,15 @@ private:
     std::atomic<bool> running_{false};
     std::thread worker_;
 
+    // Plaintext TCP Listener
     std::thread listener_thread_;
     std::atomic<bool> listener_running_{false};
     transport::Listener listener_;
+
+    // TLS TCP Listener
+    std::thread tls_listener_thread_;
+    std::atomic<bool> tls_listener_running_{false};
+    transport::TlsListener tls_listener_;
 
     NusantaraBroker() = default; // Singleton
 
@@ -100,6 +106,35 @@ private:
         }
     }
 
+    void tls_listener_loop() {
+        while (tls_listener_running_.load()) {
+            auto client = tls_listener_.accept();
+            if (!client.valid()) {
+                if (!tls_listener_running_.load()) break;
+                continue;
+            }
+
+            std::thread([this, client_sock = std::move(client)]() mutable {
+                this->handle_tls_client(std::move(client_sock));
+            }).detach();
+        }
+    }
+
+    void handle_tls_client(transport::TlsSocket client) {
+        while (true) {
+            auto line = client.recv_until('\n');
+            if (!line.has_value()) break;
+            if (line->empty()) continue;
+
+            auto msg = NusantaraMessage::from_json(*line);
+            if (msg.has_value()) {
+                send_message(*msg);
+            } else {
+                std::cerr << "[GARUDA NUSANTARA WARNING] Formulasi JSON TLS tidak valid: " << *line << "\n";
+            }
+        }
+    }
+
 public:
     static NusantaraBroker& get_instance() {
         static NusantaraBroker instance;
@@ -107,6 +142,7 @@ public:
     }
 
     ~NusantaraBroker() {
+        stop_listener_tls();
         stop_listener();
         stop();
     }
@@ -132,6 +168,7 @@ public:
         std::cout << "[GARUDA NUSANTARA] Async Worker Broker dihentikan.\n";
     }
 
+    // === PLAINTEXT LISTENER API ===
     bool start_listener(std::uint16_t port) {
         std::lock_guard<std::mutex> lock(mutex_);
         if (listener_running_.load()) return false;
@@ -166,6 +203,46 @@ public:
 
     bool send_remote(const std::string& host, std::uint16_t port, const NusantaraMessage& msg) {
         auto sock = transport::connect_to(host, port);
+        if (!sock.has_value()) return false;
+        std::string payload = msg.to_json() + "\n";
+        return sock->send_all(payload);
+    }
+
+    // === TLS LISTENER API ===
+    bool start_listener_tls(std::uint16_t port, const std::string& cert_pem, const std::string& key_pem) {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (tls_listener_running_.load()) return false;
+        if (!tls_listener_.listen("0.0.0.0", port, cert_pem, key_pem)) return false;
+
+        tls_listener_running_.store(true);
+        tls_listener_thread_ = std::thread([this]() { this->tls_listener_loop(); });
+        std::cout << "[GARUDA NUSANTARA] Listener TLS terpasang pada port: " << tls_listener_.port() << "\n";
+        return true;
+    }
+
+    std::uint16_t tls_listener_port() const {
+        return tls_listener_.port();
+    }
+
+    bool tls_listener_active() const {
+        return tls_listener_running_.load();
+    }
+
+    void stop_listener_tls() {
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            if (!tls_listener_running_.load()) return;
+            tls_listener_running_.store(false);
+            tls_listener_.close();
+        }
+        if (tls_listener_thread_.joinable()) {
+            tls_listener_thread_.join();
+        }
+        std::cout << "[GARUDA NUSANTARA] Listener TLS dihentikan.\n";
+    }
+
+    bool send_remote_tls(const std::string& host, std::uint16_t port, const NusantaraMessage& msg, const std::string& ca_cert_path = "") {
+        auto sock = transport::connect_tls_to(host, port, ca_cert_path);
         if (!sock.has_value()) return false;
         std::string payload = msg.to_json() + "\n";
         return sock->send_all(payload);

@@ -213,6 +213,102 @@ int main() {
         std::cout << "  ✓ Test G: stop_listener() Idempotency PASS\n";
     }
 
-    std::cout << "\n=== EKOSISTEM GARUDA NUSANTARA FASE C BERJALAN SUKSES ===\n";
+    // === Test H: TLS Transport Roundtrip ===
+    std::cout << "\n=== TEST H: TLS TRANSPORT ===\n";
+    {
+        auto& broker = NusantaraBroker::get_instance();
+
+        transport::TlsCredentials creds;
+        GARUDA_CHECK(creds.generate_self_signed("garuda-test"), "generate_self_signed must succeed");
+
+        std::atomic<int> received{0};
+        std::atomic<bool> payload_ok{false};
+        broker.register_entity(EntityTarget::STADION_UI, [&](const NusantaraMessage& m) {
+            if (m.payload.count("text") && m.payload.at("text") == "hello via tls") {
+                payload_ok.store(true);
+            }
+            received.fetch_add(1);
+        });
+
+        const std::uint16_t port = 47825;
+        GARUDA_CHECK(broker.start_listener_tls(port, creds.cert_pem, creds.key_pem), "start_listener_tls must succeed");
+        broker.start();
+
+        NusantaraMessage msg;
+        msg.message_id = "tls-001";
+        msg.sender = EntityTarget::AUTOPILOT_AI;
+        msg.receiver = EntityTarget::STADION_UI;
+        msg.action = NusantaraAction::BROADCAST_MSG;
+        msg.payload["text"] = "hello via tls";
+
+        GARUDA_CHECK(broker.send_remote_tls("127.0.0.1", port, msg, ""), "send_remote_tls must succeed");
+
+        auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(3);
+        while (received.load() < 1 && std::chrono::steady_clock::now() < deadline) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(20));
+        }
+
+        GARUDA_CHECK(received.load() == 1, "TLS listener must receive 1 message");
+        GARUDA_CHECK(payload_ok.load(), "payload must be preserved across TLS");
+
+        broker.stop();
+        broker.stop_listener_tls();
+        std::cout << "  ✓ Test H: TLS Transport PASS\n";
+    }
+
+    // === Test I: Plaintext Client to TLS Listener — Handshake Failure Handled Gracefully ===
+    std::cout << "\n=== TEST I: TLS HANDSHAKE FAILURE ===\n";
+    {
+        auto& broker = NusantaraBroker::get_instance();
+
+        transport::TlsCredentials creds;
+        GARUDA_CHECK(creds.generate_self_signed("garuda-test"), "generate_self_signed must succeed");
+
+        const std::uint16_t port = 47826;
+        GARUDA_CHECK(broker.start_listener_tls(port, creds.cert_pem, creds.key_pem), "start_listener_tls must succeed");
+        broker.start();
+
+        // Kirim plaintext (bukan TLS) ke port TLS
+        auto plain = transport::connect_to("127.0.0.1", port);
+        GARUDA_CHECK(plain.has_value(), "connect_to must succeed");
+        plain->send_all("bukan tls handshake\n");
+        plain->close();
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
+        // Broker harus tetap hidup — kirim pesan TLS valid setelahnya
+        std::atomic<int> received{0};
+        broker.register_entity(EntityTarget::ANDROID_STUDIO, [&](const NusantaraMessage&) {
+            received.fetch_add(1);
+        });
+
+        NusantaraMessage msg;
+        msg.message_id = "tls-002";
+        msg.sender = EntityTarget::AUTOPILOT_AI;
+        msg.receiver = EntityTarget::ANDROID_STUDIO;
+        msg.action = NusantaraAction::BROADCAST_MSG;
+        GARUDA_CHECK(broker.send_remote_tls("127.0.0.1", port, msg, ""), "send_remote_tls must succeed after handshake failure");
+
+        auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(3);
+        while (received.load() < 1 && std::chrono::steady_clock::now() < deadline) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(20));
+        }
+        GARUDA_CHECK(received.load() == 1, "broker must survive handshake failure");
+
+        broker.stop();
+        broker.stop_listener_tls();
+        std::cout << "  ✓ Test I: TLS Handshake Failure PASS\n";
+    }
+
+    // === Test J: stop_listener_tls() Idempotency ===
+    std::cout << "\n=== TEST J: STOP TLS LISTENER IDEMPOTENCY ===\n";
+    {
+        auto& broker = NusantaraBroker::get_instance();
+        broker.stop_listener_tls();
+        broker.stop_listener_tls();
+        std::cout << "  ✓ Test J: stop_listener_tls() Idempotency PASS\n";
+    }
+
+    std::cout << "\n=== EKOSISTEM GARUDA NUSANTARA FASE D1 BERJALAN SUKSES ===\n";
     return 0;
 }

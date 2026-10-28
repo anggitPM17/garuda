@@ -28,6 +28,14 @@
   constexpr socket_t INVALID_SOCK = -1;
 #endif
 
+#include "mbedtls/net_sockets.h"
+#include "mbedtls/ssl.h"
+#include "mbedtls/entropy.h"
+#include "mbedtls/ctr_drbg.h"
+#include "mbedtls/x509_crt.h"
+#include "mbedtls/pk.h"
+#include "mbedtls/error.h"
+
 namespace garuda::nusantara::transport {
 
 inline void init_sockets() {
@@ -274,6 +282,376 @@ inline std::optional<Socket> connect_to(const std::string& host, std::uint16_t p
 
     freeaddrinfo(res);
     return Socket(fd);
+}
+
+// === FASE D1: TLS CREDENTIALS & SOCKET LAYER ===
+
+struct TlsCredentials {
+    std::string cert_pem;
+    std::string key_pem;
+    bool valid = false;
+
+    bool generate_self_signed(const std::string& common_name = "garuda-nusantara") {
+        mbedtls_pk_context key;
+        mbedtls_x509write_cert write_cert;
+        mbedtls_entropy_context entropy;
+        mbedtls_ctr_drbg_context ctr_drbg;
+
+        mbedtls_pk_init(&key);
+        mbedtls_x509write_crt_init(&write_cert);
+        mbedtls_entropy_init(&entropy);
+        mbedtls_ctr_drbg_init(&ctr_drbg);
+
+        const char* pers = "garuda_gen_cert";
+        int rc = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy,
+                                       reinterpret_cast<const unsigned char*>(pers), strlen(pers));
+        if (rc != 0) {
+            mbedtls_x509write_crt_free(&write_cert);
+            mbedtls_pk_free(&key);
+            mbedtls_ctr_drbg_free(&ctr_drbg);
+            mbedtls_entropy_free(&entropy);
+            return false;
+        }
+
+        rc = mbedtls_pk_setup(&key, mbedtls_pk_info_from_type(MBEDTLS_PK_RSA));
+        if (rc != 0) {
+            mbedtls_x509write_crt_free(&write_cert);
+            mbedtls_pk_free(&key);
+            mbedtls_ctr_drbg_free(&ctr_drbg);
+            mbedtls_entropy_free(&entropy);
+            return false;
+        }
+
+        rc = mbedtls_rsa_gen_key(mbedtls_pk_rsa(key), mbedtls_ctr_drbg_random, &ctr_drbg, 2048, 65537);
+        if (rc != 0) {
+            mbedtls_x509write_crt_free(&write_cert);
+            mbedtls_pk_free(&key);
+            mbedtls_ctr_drbg_free(&ctr_drbg);
+            mbedtls_entropy_free(&entropy);
+            return false;
+        }
+
+        std::string subject = "CN=" + common_name + ",O=Garuda";
+        mbedtls_x509write_crt_set_subject_key(&write_cert, &key);
+        mbedtls_x509write_crt_set_issuer_key(&write_cert, &key);
+        mbedtls_x509write_crt_set_md_alg(&write_cert, MBEDTLS_MD_SHA256);
+        mbedtls_x509write_crt_set_subject_name(&write_cert, subject.c_str());
+        mbedtls_x509write_crt_set_issuer_name(&write_cert, subject.c_str());
+        mbedtls_x509write_crt_set_validity(&write_cert, "20260101000000", "20360101000000");
+
+        mbedtls_mpi serial;
+        mbedtls_mpi_init(&serial);
+        mbedtls_mpi_read_string(&serial, 10, "1");
+        mbedtls_x509write_crt_set_serial(&write_cert, &serial);
+        mbedtls_mpi_free(&serial);
+
+        unsigned char cert_buf[4096];
+        memset(cert_buf, 0, sizeof(cert_buf));
+        rc = mbedtls_x509write_crt_pem(&write_cert, cert_buf, sizeof(cert_buf), mbedtls_ctr_drbg_random, &ctr_drbg);
+        if (rc != 0) {
+            mbedtls_x509write_crt_free(&write_cert);
+            mbedtls_pk_free(&key);
+            mbedtls_ctr_drbg_free(&ctr_drbg);
+            mbedtls_entropy_free(&entropy);
+            return false;
+        }
+        cert_pem = reinterpret_cast<char*>(cert_buf);
+
+        unsigned char key_buf[4096];
+        memset(key_buf, 0, sizeof(key_buf));
+        rc = mbedtls_pk_write_key_pem(&key, key_buf, sizeof(key_buf));
+        if (rc != 0) {
+            mbedtls_x509write_crt_free(&write_cert);
+            mbedtls_pk_free(&key);
+            mbedtls_ctr_drbg_free(&ctr_drbg);
+            mbedtls_entropy_free(&entropy);
+            return false;
+        }
+        key_pem = reinterpret_cast<char*>(key_buf);
+
+        mbedtls_x509write_crt_free(&write_cert);
+        mbedtls_pk_free(&key);
+        mbedtls_ctr_drbg_free(&ctr_drbg);
+        mbedtls_entropy_free(&entropy);
+
+        valid = true;
+        return true;
+    }
+};
+
+class TlsContext {
+private:
+    mbedtls_ssl_config conf_;
+    mbedtls_entropy_context entropy_;
+    mbedtls_ctr_drbg_context ctr_drbg_;
+    mbedtls_x509_crt srvcert_;
+    mbedtls_pk_context pkey_;
+
+public:
+    TlsContext() {
+        mbedtls_ssl_config_init(&conf_);
+        mbedtls_entropy_init(&entropy_);
+        mbedtls_ctr_drbg_init(&ctr_drbg_);
+        mbedtls_x509_crt_init(&srvcert_);
+        mbedtls_pk_init(&pkey_);
+
+        const char* pers = "garuda_nusantara_tls";
+        mbedtls_ctr_drbg_seed(&ctr_drbg_, mbedtls_entropy_func, &entropy_,
+                              reinterpret_cast<const unsigned char*>(pers), strlen(pers));
+    }
+
+    ~TlsContext() {
+        mbedtls_x509_crt_free(&srvcert_);
+        mbedtls_pk_free(&pkey_);
+        mbedtls_ssl_config_free(&conf_);
+        mbedtls_ctr_drbg_free(&ctr_drbg_);
+        mbedtls_entropy_free(&entropy_);
+    }
+
+    TlsContext(const TlsContext&) = delete;
+    TlsContext& operator=(const TlsContext&) = delete;
+
+    static std::shared_ptr<TlsContext> create_server(const std::string& cert_pem, const std::string& key_pem) {
+        auto ctx = std::make_shared<TlsContext>();
+        int rc = mbedtls_ssl_config_defaults(&ctx->conf_,
+                                             MBEDTLS_SSL_IS_SERVER,
+                                             MBEDTLS_SSL_TRANSPORT_STREAM,
+                                             MBEDTLS_SSL_PRESET_DEFAULT);
+        if (rc != 0) return nullptr;
+
+        mbedtls_ssl_conf_rng(&ctx->conf_, mbedtls_ctr_drbg_random, &ctx->ctr_drbg_);
+
+        rc = mbedtls_x509_crt_parse(&ctx->srvcert_,
+                                    reinterpret_cast<const unsigned char*>(cert_pem.c_str()),
+                                    cert_pem.length() + 1);
+        if (rc != 0) return nullptr;
+
+        rc = mbedtls_pk_parse_key(&ctx->pkey_,
+                                  reinterpret_cast<const unsigned char*>(key_pem.c_str()),
+                                  key_pem.length() + 1,
+                                  nullptr, 0,
+                                  mbedtls_ctr_drbg_random, &ctx->ctr_drbg_);
+        if (rc != 0) return nullptr;
+
+        rc = mbedtls_ssl_conf_own_cert(&ctx->conf_, &ctx->srvcert_, &ctx->pkey_);
+        if (rc != 0) return nullptr;
+
+        return ctx;
+    }
+
+    static std::shared_ptr<TlsContext> create_client(const std::string& ca_cert_path = "") {
+        auto ctx = std::make_shared<TlsContext>();
+        int rc = mbedtls_ssl_config_defaults(&ctx->conf_,
+                                             MBEDTLS_SSL_IS_CLIENT,
+                                             MBEDTLS_SSL_TRANSPORT_STREAM,
+                                             MBEDTLS_SSL_PRESET_DEFAULT);
+        if (rc != 0) return nullptr;
+
+        mbedtls_ssl_conf_rng(&ctx->conf_, mbedtls_ctr_drbg_random, &ctx->ctr_drbg_);
+
+        if (!ca_cert_path.empty()) {
+            rc = mbedtls_x509_crt_parse_file(&ctx->srvcert_, ca_cert_path.c_str());
+            if (rc == 0) {
+                mbedtls_ssl_conf_ca_chain(&ctx->conf_, &ctx->srvcert_, nullptr);
+                mbedtls_ssl_conf_authmode(&ctx->conf_, MBEDTLS_SSL_VERIFY_REQUIRED);
+            } else {
+                mbedtls_ssl_conf_authmode(&ctx->conf_, MBEDTLS_SSL_VERIFY_NONE);
+            }
+        } else {
+            mbedtls_ssl_conf_authmode(&ctx->conf_, MBEDTLS_SSL_VERIFY_NONE);
+        }
+
+        return ctx;
+    }
+
+    mbedtls_ssl_config* get_config() { return &conf_; }
+};
+
+class TlsSocket {
+private:
+    struct Impl {
+        std::shared_ptr<TlsContext> ctx;
+        Socket raw_sock;
+        mbedtls_net_context net_ctx;
+        mbedtls_ssl_context ssl;
+        bool ssl_initialized = false;
+        bool closed = false;
+        std::string recv_buf;
+
+        Impl(std::shared_ptr<TlsContext> c, Socket r) : ctx(std::move(c)), raw_sock(std::move(r)) {
+            if (ctx && raw_sock.valid()) {
+                mbedtls_ssl_init(&ssl);
+                mbedtls_net_init(&net_ctx);
+                net_ctx.fd = static_cast<int>(raw_sock.fd());
+
+                if (mbedtls_ssl_setup(&ssl, ctx->get_config()) == 0) {
+                    mbedtls_ssl_set_bio(&ssl, &net_ctx, mbedtls_net_send, mbedtls_net_recv, nullptr);
+                    ssl_initialized = true;
+                }
+            }
+        }
+
+        ~Impl() {
+            close();
+            if (ssl_initialized) {
+                mbedtls_ssl_free(&ssl);
+            }
+        }
+
+        void close() {
+            if (!closed) {
+                if (ssl_initialized) {
+                    mbedtls_ssl_close_notify(&ssl);
+                }
+                raw_sock.close();
+                closed = true;
+            }
+            recv_buf.clear();
+        }
+    };
+
+    std::shared_ptr<Impl> impl_;
+
+public:
+    TlsSocket() = default;
+
+    TlsSocket(std::shared_ptr<TlsContext> ctx, Socket raw_sock)
+        : impl_(std::make_shared<Impl>(std::move(ctx), std::move(raw_sock))) {}
+
+    bool valid() const { return impl_ && impl_->ssl_initialized && impl_->raw_sock.valid(); }
+
+    bool handshake() {
+        if (!valid()) return false;
+        int rc = 0;
+        while ((rc = mbedtls_ssl_handshake(&impl_->ssl)) != 0) {
+            if (rc != MBEDTLS_ERR_SSL_WANT_READ && rc != MBEDTLS_ERR_SSL_WANT_WRITE) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    bool send_all(const void* data, std::size_t len) {
+        if (!valid()) return false;
+        const unsigned char* p = static_cast<const unsigned char*>(data);
+        std::size_t written = 0;
+
+        while (written < len) {
+            int rc = mbedtls_ssl_write(&impl_->ssl, p + written, len - written);
+            if (rc > 0) {
+                written += static_cast<std::size_t>(rc);
+            } else if (rc != MBEDTLS_ERR_SSL_WANT_READ && rc != MBEDTLS_ERR_SSL_WANT_WRITE) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    bool send_all(const std::string& s) {
+        return send_all(s.data(), s.size());
+    }
+
+    std::optional<std::string> recv_until(char delim, std::size_t max_size = 16 * 1024 * 1024) {
+        if (!valid()) return std::nullopt;
+
+        while (true) {
+            auto pos = impl_->recv_buf.find(delim);
+            if (pos != std::string::npos) {
+                std::string result = impl_->recv_buf.substr(0, pos);
+                impl_->recv_buf.erase(0, pos + 1);
+                return result;
+            }
+
+            if (impl_->recv_buf.size() >= max_size) {
+                return std::nullopt;
+            }
+
+            unsigned char chunk[4096];
+            int rc = mbedtls_ssl_read(&impl_->ssl, chunk, sizeof(chunk));
+            if (rc > 0) {
+                impl_->recv_buf.append(reinterpret_cast<char*>(chunk), static_cast<std::size_t>(rc));
+            } else if (rc == MBEDTLS_ERR_SSL_WANT_READ || rc == MBEDTLS_ERR_SSL_WANT_WRITE) {
+                continue;
+            } else {
+                if (!impl_->recv_buf.empty()) {
+                    std::string result = std::move(impl_->recv_buf);
+                    impl_->recv_buf.clear();
+                    return result;
+                }
+                return std::nullopt;
+            }
+        }
+    }
+
+    void close() {
+        if (impl_) impl_->close();
+    }
+};
+
+class TlsListener {
+private:
+    std::shared_ptr<TlsContext> ctx_;
+    Listener raw_listener_;
+
+public:
+    TlsListener() = default;
+    ~TlsListener() { close(); }
+
+    TlsListener(TlsListener&& other) noexcept
+        : ctx_(std::move(other.ctx_)), raw_listener_(std::move(other.raw_listener_)) {}
+
+    TlsListener& operator=(TlsListener&& other) noexcept {
+        if (this != &other) {
+            close();
+            ctx_ = std::move(other.ctx_);
+            raw_listener_ = std::move(other.raw_listener_);
+        }
+        return *this;
+    }
+
+    TlsListener(const TlsListener&) = delete;
+    TlsListener& operator=(const TlsListener&) = delete;
+
+    bool listen(const std::string& host, std::uint16_t port, const std::string& cert_pem, const std::string& key_pem) {
+        ctx_ = TlsContext::create_server(cert_pem, key_pem);
+        if (!ctx_) return false;
+        return raw_listener_.listen(host, port);
+    }
+
+    TlsSocket accept() {
+        if (!valid()) return TlsSocket();
+        auto raw_conn = raw_listener_.accept();
+        if (!raw_conn.valid()) return TlsSocket();
+
+        TlsSocket tls_sock(ctx_, std::move(raw_conn));
+        if (!tls_sock.handshake()) {
+            tls_sock.close();
+            return TlsSocket();
+        }
+        return tls_sock;
+    }
+
+    void close() {
+        raw_listener_.close();
+        ctx_.reset();
+    }
+
+    bool valid() const { return raw_listener_.valid() && ctx_ != nullptr; }
+    std::uint16_t port() const { return raw_listener_.port(); }
+};
+
+inline std::optional<TlsSocket> connect_tls_to(const std::string& host, std::uint16_t port, const std::string& ca_cert_path = "", int timeout_ms = 5000) {
+    auto raw_sock = connect_to(host, port, timeout_ms);
+    if (!raw_sock.has_value()) return std::nullopt;
+
+    auto ctx = TlsContext::create_client(ca_cert_path);
+    if (!ctx) return std::nullopt;
+
+    TlsSocket tls_sock(ctx, std::move(*raw_sock));
+    if (!tls_sock.handshake()) {
+        return std::nullopt;
+    }
+    return tls_sock;
 }
 
 } // namespace garuda::nusantara::transport
