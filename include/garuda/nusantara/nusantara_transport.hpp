@@ -35,6 +35,8 @@
 #include "mbedtls/x509_crt.h"
 #include "mbedtls/pk.h"
 #include "mbedtls/error.h"
+#include "mbedtls/sha1.h"
+#include "mbedtls/base64.h"
 
 namespace garuda::nusantara::transport {
 
@@ -100,6 +102,15 @@ public:
         recv_buf_.clear();
     }
 
+    int recv_raw(void* buf, std::size_t len) {
+        if (!valid()) return -1;
+#ifdef _WIN32
+        return ::recv(fd_, static_cast<char*>(buf), static_cast<int>(len), 0);
+#else
+        return static_cast<int>(::recv(fd_, buf, len, 0));
+#endif
+    }
+
     bool send_all(const void* data, std::size_t len) {
         if (!valid()) return false;
         const char* ptr = static_cast<const char*>(data);
@@ -140,11 +151,7 @@ public:
             }
 
             char chunk[4096];
-#ifdef _WIN32
-            int n = ::recv(fd_, chunk, sizeof(chunk), 0);
-#else
-            ssize_t n = ::recv(fd_, chunk, sizeof(chunk), 0);
-#endif
+            int n = recv_raw(chunk, sizeof(chunk));
             if (n <= 0) {
                 if (!recv_buf_.empty()) {
                     std::string result = std::move(recv_buf_);
@@ -520,6 +527,16 @@ public:
 
     bool valid() const { return impl_ && impl_->ssl_initialized && impl_->raw_sock.valid(); }
 
+    int recv_raw(void* buf, std::size_t len) {
+        if (!valid()) return -1;
+        while (true) {
+            int rc = mbedtls_ssl_read(&impl_->ssl, reinterpret_cast<unsigned char*>(buf), len);
+            if (rc > 0) return rc;
+            if (rc == MBEDTLS_ERR_SSL_WANT_READ || rc == MBEDTLS_ERR_SSL_WANT_WRITE) continue;
+            return -1;
+        }
+    }
+
     bool handshake() {
         if (!valid()) return false;
         int rc = 0;
@@ -652,6 +669,470 @@ inline std::optional<TlsSocket> connect_tls_to(const std::string& host, std::uin
         return std::nullopt;
     }
     return tls_sock;
+}
+
+// === FASE D2: WEBSOCKET (WS & WSS) TRANSPORT LAYER ===
+
+enum class WsOpcode : std::uint8_t {
+    Continuation = 0x0,
+    Text         = 0x1,
+    Binary       = 0x2,
+    Close        = 0x8,
+    Ping         = 0x9,
+    Pong         = 0xA
+};
+
+struct WsFrame {
+    bool fin = true;
+    WsOpcode opcode = WsOpcode::Text;
+    bool masked = false;
+    std::string payload;
+};
+
+inline std::string ws_encode_frame(const WsFrame& frame, bool mask) {
+    std::string out;
+    std::uint8_t byte0 = (frame.fin ? 0x80 : 0x00) | (static_cast<std::uint8_t>(frame.opcode) & 0x0F);
+    out.push_back(static_cast<char>(byte0));
+
+    std::size_t len = frame.payload.size();
+    std::uint8_t mask_bit = mask ? 0x80 : 0x00;
+
+    if (len <= 125) {
+        out.push_back(static_cast<char>(mask_bit | static_cast<std::uint8_t>(len)));
+    } else if (len <= 65535) {
+        out.push_back(static_cast<char>(mask_bit | 126));
+        out.push_back(static_cast<char>((len >> 8) & 0xFF));
+        out.push_back(static_cast<char>(len & 0xFF));
+    } else {
+        out.push_back(static_cast<char>(mask_bit | 127));
+        for (int i = 7; i >= 0; --i) {
+            out.push_back(static_cast<char>((len >> (i * 8)) & 0xFF));
+        }
+    }
+
+    if (mask) {
+        std::uint8_t mask_key[4] = { 0x12, 0x34, 0x56, 0x78 };
+        out.append(reinterpret_cast<char*>(mask_key), 4);
+
+        std::string masked_payload;
+        masked_payload.reserve(len);
+        for (std::size_t i = 0; i < len; ++i) {
+            masked_payload.push_back(static_cast<char>(frame.payload[i] ^ mask_key[i % 4]));
+        }
+        out += masked_payload;
+    } else {
+        out += frame.payload;
+    }
+
+    return out;
+}
+
+inline std::optional<WsFrame> ws_decode_frame(std::string& buffer) {
+    if (buffer.size() < 2) return std::nullopt;
+
+    const auto* ubuf = reinterpret_cast<const std::uint8_t*>(buffer.data());
+    bool fin = (ubuf[0] & 0x80) != 0;
+    std::uint8_t raw_op = ubuf[0] & 0x0F;
+    WsOpcode opcode = static_cast<WsOpcode>(raw_op);
+    bool masked = (ubuf[1] & 0x80) != 0;
+    std::size_t payload_len = ubuf[1] & 0x7F;
+
+    std::size_t header_len = 2;
+    if (payload_len == 126) {
+        if (buffer.size() < 4) return std::nullopt;
+        payload_len = (static_cast<std::size_t>(ubuf[2]) << 8) | static_cast<std::size_t>(ubuf[3]);
+        header_len = 4;
+    } else if (payload_len == 127) {
+        if (buffer.size() < 10) return std::nullopt;
+        payload_len = 0;
+        for (int i = 0; i < 8; ++i) {
+            payload_len = (payload_len << 8) | static_cast<std::size_t>(ubuf[2 + i]);
+        }
+        header_len = 10;
+    }
+
+    std::uint8_t mask_key[4] = {0, 0, 0, 0};
+    if (masked) {
+        if (buffer.size() < header_len + 4) return std::nullopt;
+        for (int i = 0; i < 4; ++i) {
+            mask_key[i] = ubuf[header_len + i];
+        }
+        header_len += 4;
+    }
+
+    if (buffer.size() < header_len + payload_len) {
+        return std::nullopt;
+    }
+
+    WsFrame frame;
+    frame.fin = fin;
+    frame.opcode = opcode;
+    frame.masked = masked;
+    frame.payload.reserve(payload_len);
+
+    for (std::size_t i = 0; i < payload_len; ++i) {
+        std::uint8_t b = ubuf[header_len + i];
+        if (masked) b ^= mask_key[i % 4];
+        frame.payload.push_back(static_cast<char>(b));
+    }
+
+    buffer.erase(0, header_len + payload_len);
+    return frame;
+}
+
+inline std::string ws_compute_accept_key(const std::string& client_key) {
+    std::string concat = client_key + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+    unsigned char sha1_out[20];
+    mbedtls_sha1(reinterpret_cast<const unsigned char*>(concat.c_str()), concat.length(), sha1_out);
+
+    unsigned char b64_out[64];
+    std::size_t olen = 0;
+    mbedtls_base64_encode(b64_out, sizeof(b64_out), &olen, sha1_out, 20);
+    return std::string(reinterpret_cast<char*>(b64_out), olen);
+}
+
+class WsSocket {
+private:
+    Socket raw_sock_;
+    bool is_client_ = false;
+    bool closed_ = false;
+    std::string recv_buf_;
+
+public:
+    WsSocket() = default;
+    WsSocket(Socket raw_sock, bool is_client)
+        : raw_sock_(std::move(raw_sock)), is_client_(is_client) {}
+
+    bool valid() const { return raw_sock_.valid() && !closed_; }
+
+    void close() {
+        if (!closed_) {
+            if (raw_sock_.valid()) {
+                WsFrame f;
+                f.fin = true;
+                f.opcode = WsOpcode::Close;
+                raw_sock_.send_all(ws_encode_frame(f, is_client_));
+                raw_sock_.close();
+            }
+            closed_ = true;
+        }
+        recv_buf_.clear();
+    }
+
+    bool send_text(const std::string& text) {
+        if (!valid()) return false;
+        WsFrame f;
+        f.fin = true;
+        f.opcode = WsOpcode::Text;
+        f.payload = text;
+        std::string encoded = ws_encode_frame(f, is_client_);
+        return raw_sock_.send_all(encoded);
+    }
+
+    std::optional<std::string> recv_text() {
+        if (!valid()) return std::nullopt;
+
+        while (true) {
+            auto decoded = ws_decode_frame(recv_buf_);
+            if (decoded.has_value()) {
+                if (decoded->opcode == WsOpcode::Text) {
+                    return decoded->payload;
+                } else if (decoded->opcode == WsOpcode::Ping) {
+                    WsFrame pong;
+                    pong.fin = true;
+                    pong.opcode = WsOpcode::Pong;
+                    pong.payload = decoded->payload;
+                    raw_sock_.send_all(ws_encode_frame(pong, is_client_));
+                    continue;
+                } else if (decoded->opcode == WsOpcode::Close) {
+                    close();
+                    return std::nullopt;
+                } else {
+                    continue;
+                }
+            }
+
+            char chunk[4096];
+            int n = raw_sock_.recv_raw(chunk, sizeof(chunk));
+            if (n <= 0) {
+                close();
+                return std::nullopt;
+            }
+            recv_buf_.append(chunk, static_cast<std::size_t>(n));
+        }
+    }
+};
+
+class WssSocket {
+private:
+    TlsSocket tls_sock_;
+    bool is_client_ = false;
+    bool closed_ = false;
+    std::string recv_buf_;
+
+public:
+    WssSocket() = default;
+    WssSocket(TlsSocket tls_sock, bool is_client)
+        : tls_sock_(std::move(tls_sock)), is_client_(is_client) {}
+
+    bool valid() const { return tls_sock_.valid() && !closed_; }
+
+    void close() {
+        if (!closed_) {
+            if (tls_sock_.valid()) {
+                WsFrame f;
+                f.fin = true;
+                f.opcode = WsOpcode::Close;
+                tls_sock_.send_all(ws_encode_frame(f, is_client_));
+                tls_sock_.close();
+            }
+            closed_ = true;
+        }
+        recv_buf_.clear();
+    }
+
+    bool send_text(const std::string& text) {
+        if (!valid()) return false;
+        WsFrame f;
+        f.fin = true;
+        f.opcode = WsOpcode::Text;
+        f.payload = text;
+        std::string encoded = ws_encode_frame(f, is_client_);
+        return tls_sock_.send_all(encoded);
+    }
+
+    std::optional<std::string> recv_text() {
+        if (!valid()) return std::nullopt;
+
+        while (true) {
+            auto decoded = ws_decode_frame(recv_buf_);
+            if (decoded.has_value()) {
+                if (decoded->opcode == WsOpcode::Text) {
+                    return decoded->payload;
+                } else if (decoded->opcode == WsOpcode::Ping) {
+                    WsFrame pong;
+                    pong.fin = true;
+                    pong.opcode = WsOpcode::Pong;
+                    pong.payload = decoded->payload;
+                    tls_sock_.send_all(ws_encode_frame(pong, is_client_));
+                    continue;
+                } else if (decoded->opcode == WsOpcode::Close) {
+                    close();
+                    return std::nullopt;
+                } else {
+                    continue;
+                }
+            }
+
+            char chunk[4096];
+            int n = tls_sock_.recv_raw(chunk, sizeof(chunk));
+            if (n <= 0) {
+                close();
+                return std::nullopt;
+            }
+            recv_buf_.append(chunk, static_cast<std::size_t>(n));
+        }
+    }
+};
+
+class WsListener {
+private:
+    Listener raw_listener_;
+
+public:
+    WsListener() = default;
+    ~WsListener() { close(); }
+
+    bool listen(const std::string& host, std::uint16_t port) {
+        return raw_listener_.listen(host, port);
+    }
+
+    WsSocket accept() {
+        if (!valid()) return WsSocket();
+        auto raw_conn = raw_listener_.accept();
+        if (!raw_conn.valid()) return WsSocket();
+
+        auto http_req = raw_conn.recv_until('\n');
+        if (!http_req.has_value()) {
+            raw_conn.close();
+            return WsSocket();
+        }
+
+        std::string req_buf = *http_req + "\n";
+        while (req_buf.find("\r\n\r\n") == std::string::npos && req_buf.find("\n\n") == std::string::npos) {
+            auto line = raw_conn.recv_until('\n');
+            if (!line.has_value()) break;
+            req_buf += *line + "\n";
+        }
+
+        auto pos = req_buf.find("Sec-WebSocket-Key:");
+        if (pos == std::string::npos) {
+            pos = req_buf.find("sec-websocket-key:");
+        }
+
+        if (pos == std::string::npos) {
+            raw_conn.close();
+            return WsSocket();
+        }
+
+        auto end_line = req_buf.find("\n", pos);
+        std::string key_line = req_buf.substr(pos, end_line - pos);
+        auto colon = key_line.find(':');
+        std::string key = (colon != std::string::npos) ? key_line.substr(colon + 1) : "";
+        while (!key.empty() && (key.front() == ' ' || key.front() == '\t')) key.erase(0, 1);
+        while (!key.empty() && (key.back() == '\r' || key.back() == ' ' || key.back() == '\t')) key.pop_back();
+
+        std::string accept_key = ws_compute_accept_key(key);
+        std::string response = "HTTP/1.1 101 Switching Protocols\r\n"
+                               "Upgrade: websocket\r\n"
+                               "Connection: Upgrade\r\n"
+                               "Sec-WebSocket-Accept: " + accept_key + "\r\n\r\n";
+
+        if (!raw_conn.send_all(response)) {
+            raw_conn.close();
+            return WsSocket();
+        }
+
+        return WsSocket(std::move(raw_conn), /*is_client=*/false);
+    }
+
+    void close() { raw_listener_.close(); }
+    bool valid() const { return raw_listener_.valid(); }
+    std::uint16_t port() const { return raw_listener_.port(); }
+};
+
+class WssListener {
+private:
+    TlsListener tls_listener_;
+
+public:
+    WssListener() = default;
+    ~WssListener() { close(); }
+
+    bool listen(const std::string& host, std::uint16_t port, const std::string& cert_pem, const std::string& key_pem) {
+        return tls_listener_.listen(host, port, cert_pem, key_pem);
+    }
+
+    WssSocket accept() {
+        if (!valid()) return WssSocket();
+        auto tls_conn = tls_listener_.accept();
+        if (!tls_conn.valid()) return WssSocket();
+
+        auto http_req = tls_conn.recv_until('\n');
+        if (!http_req.has_value()) {
+            tls_conn.close();
+            return WssSocket();
+        }
+
+        std::string req_buf = *http_req + "\n";
+        while (req_buf.find("\r\n\r\n") == std::string::npos && req_buf.find("\n\n") == std::string::npos) {
+            auto line = tls_conn.recv_until('\n');
+            if (!line.has_value()) break;
+            req_buf += *line + "\n";
+        }
+
+        auto pos = req_buf.find("Sec-WebSocket-Key:");
+        if (pos == std::string::npos) {
+            pos = req_buf.find("sec-websocket-key:");
+        }
+
+        if (pos == std::string::npos) {
+            tls_conn.close();
+            return WssSocket();
+        }
+
+        auto end_line = req_buf.find("\n", pos);
+        std::string key_line = req_buf.substr(pos, end_line - pos);
+        auto colon = key_line.find(':');
+        std::string key = (colon != std::string::npos) ? key_line.substr(colon + 1) : "";
+        while (!key.empty() && (key.front() == ' ' || key.front() == '\t')) key.erase(0, 1);
+        while (!key.empty() && (key.back() == '\r' || key.back() == ' ' || key.back() == '\t')) key.pop_back();
+
+        std::string accept_key = ws_compute_accept_key(key);
+        std::string response = "HTTP/1.1 101 Switching Protocols\r\n"
+                               "Upgrade: websocket\r\n"
+                               "Connection: Upgrade\r\n"
+                               "Sec-WebSocket-Accept: " + accept_key + "\r\n\r\n";
+
+        if (!tls_conn.send_all(response)) {
+            tls_conn.close();
+            return WssSocket();
+        }
+
+        return WssSocket(std::move(tls_conn), /*is_client=*/false);
+    }
+
+    void close() { tls_listener_.close(); }
+    bool valid() const { return tls_listener_.valid(); }
+    std::uint16_t port() const { return tls_listener_.port(); }
+};
+
+inline std::optional<WsSocket> connect_ws_to(const std::string& host, std::uint16_t port, int timeout_ms = 5000) {
+    auto raw_sock = connect_to(host, port, timeout_ms);
+    if (!raw_sock.has_value()) return std::nullopt;
+
+    std::string key = "dGhlIHNhbXBsZSBub25jZQ==";
+    std::string req = "GET / HTTP/1.1\r\n"
+                      "Host: " + host + ":" + std::to_string(port) + "\r\n"
+                      "Upgrade: websocket\r\n"
+                      "Connection: Upgrade\r\n"
+                      "Sec-WebSocket-Key: " + key + "\r\n"
+                      "Sec-WebSocket-Version: 13\r\n\r\n";
+
+    if (!raw_sock->send_all(req)) return std::nullopt;
+
+    auto line = raw_sock->recv_until('\n');
+    if (!line.has_value() || line->find("101") == std::string::npos) {
+        return std::nullopt;
+    }
+
+    std::string resp_buf = *line + "\n";
+    while (resp_buf.find("\r\n\r\n") == std::string::npos && resp_buf.find("\n\n") == std::string::npos) {
+        auto next_line = raw_sock->recv_until('\n');
+        if (!next_line.has_value()) break;
+        resp_buf += *next_line + "\n";
+    }
+
+    std::string expected_accept = ws_compute_accept_key(key);
+    if (resp_buf.find(expected_accept) == std::string::npos) {
+        return std::nullopt;
+    }
+
+    return WsSocket(std::move(*raw_sock), /*is_client=*/true);
+}
+
+inline std::optional<WssSocket> connect_wss_to(const std::string& host, std::uint16_t port, const std::string& ca_cert_path = "", int timeout_ms = 5000) {
+    auto tls_sock = connect_tls_to(host, port, ca_cert_path, timeout_ms);
+    if (!tls_sock.has_value()) return std::nullopt;
+
+    std::string key = "dGhlIHNhbXBsZSBub25jZQ==";
+    std::string req = "GET / HTTP/1.1\r\n"
+                      "Host: " + host + ":" + std::to_string(port) + "\r\n"
+                      "Upgrade: websocket\r\n"
+                      "Connection: Upgrade\r\n"
+                      "Sec-WebSocket-Key: " + key + "\r\n"
+                      "Sec-WebSocket-Version: 13\r\n\r\n";
+
+    if (!tls_sock->send_all(req)) return std::nullopt;
+
+    auto line = tls_sock->recv_until('\n');
+    if (!line.has_value() || line->find("101") == std::string::npos) {
+        return std::nullopt;
+    }
+
+    std::string resp_buf = *line + "\n";
+    while (resp_buf.find("\r\n\r\n") == std::string::npos && resp_buf.find("\n\n") == std::string::npos) {
+        auto next_line = tls_sock->recv_until('\n');
+        if (!next_line.has_value()) break;
+        resp_buf += *next_line + "\n";
+    }
+
+    std::string expected_accept = ws_compute_accept_key(key);
+    if (resp_buf.find(expected_accept) == std::string::npos) {
+        return std::nullopt;
+    }
+
+    return WssSocket(std::move(*tls_sock), /*is_client=*/true);
 }
 
 } // namespace garuda::nusantara::transport

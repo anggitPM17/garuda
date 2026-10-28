@@ -268,7 +268,6 @@ int main() {
         GARUDA_CHECK(broker.start_listener_tls(port, creds.cert_pem, creds.key_pem), "start_listener_tls must succeed");
         broker.start();
 
-        // Kirim plaintext (bukan TLS) ke port TLS
         auto plain = transport::connect_to("127.0.0.1", port);
         GARUDA_CHECK(plain.has_value(), "connect_to must succeed");
         plain->send_all("bukan tls handshake\n");
@@ -276,7 +275,6 @@ int main() {
 
         std::this_thread::sleep_for(std::chrono::milliseconds(200));
 
-        // Broker harus tetap hidup — kirim pesan TLS valid setelahnya
         std::atomic<int> received{0};
         broker.register_entity(EntityTarget::ANDROID_STUDIO, [&](const NusantaraMessage&) {
             received.fetch_add(1);
@@ -309,6 +307,127 @@ int main() {
         std::cout << "  ✓ Test J: stop_listener_tls() Idempotency PASS\n";
     }
 
-    std::cout << "\n=== EKOSISTEM GARUDA NUSANTARA FASE D1 BERJALAN SUKSES ===\n";
+    // === Test K: WebSocket Plaintext Roundtrip ===
+    std::cout << "\n=== TEST K: WEBSOCKET PLAINTEXT ===\n";
+    {
+        auto& broker = NusantaraBroker::get_instance();
+
+        std::atomic<int> received{0};
+        std::atomic<bool> payload_ok{false};
+        broker.register_entity(EntityTarget::STADION_UI, [&](const NusantaraMessage& m) {
+            if (m.payload.count("text") && m.payload.at("text") == "hello via ws") {
+                payload_ok.store(true);
+            }
+            received.fetch_add(1);
+        });
+
+        const std::uint16_t port = 47827;
+        GARUDA_CHECK(broker.start_ws_listener(port), "start_ws_listener must succeed");
+        broker.start();
+
+        NusantaraMessage msg;
+        msg.message_id = "ws-001";
+        msg.sender = EntityTarget::AUTOPILOT_AI;
+        msg.receiver = EntityTarget::STADION_UI;
+        msg.action = NusantaraAction::BROADCAST_MSG;
+        msg.payload["text"] = "hello via ws";
+
+        GARUDA_CHECK(broker.send_remote_ws("127.0.0.1", port, msg), "send_remote_ws must succeed");
+
+        auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(3);
+        while (received.load() < 1 && std::chrono::steady_clock::now() < deadline) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(20));
+        }
+        GARUDA_CHECK(received.load() == 1, "WS listener must receive 1 message");
+        GARUDA_CHECK(payload_ok.load(), "payload must be preserved across WebSocket");
+
+        broker.stop();
+        broker.stop_ws_listener();
+        std::cout << "  ✓ Test K: WebSocket Plaintext PASS\n";
+    }
+
+    // === Test L: WSS (WebSocket over TLS) Roundtrip ===
+    std::cout << "\n=== TEST L: WEBSOCKET OVER TLS (WSS) ===\n";
+    {
+        auto& broker = NusantaraBroker::get_instance();
+
+        transport::TlsCredentials creds;
+        GARUDA_CHECK(creds.generate_self_signed("garuda-wss-test"), "generate_self_signed must succeed");
+
+        std::atomic<int> received{0};
+        std::atomic<bool> payload_ok{false};
+        broker.register_entity(EntityTarget::ANDROID_STUDIO, [&](const NusantaraMessage& m) {
+            if (m.payload.count("text") && m.payload.at("text") == "hello via wss") {
+                payload_ok.store(true);
+            }
+            received.fetch_add(1);
+        });
+
+        const std::uint16_t port = 47828;
+        GARUDA_CHECK(broker.start_wss_listener(port, creds.cert_pem, creds.key_pem), "start_wss_listener must succeed");
+        broker.start();
+
+        NusantaraMessage msg;
+        msg.message_id = "wss-001";
+        msg.sender = EntityTarget::AUTOPILOT_AI;
+        msg.receiver = EntityTarget::ANDROID_STUDIO;
+        msg.action = NusantaraAction::BROADCAST_MSG;
+        msg.payload["text"] = "hello via wss";
+
+        GARUDA_CHECK(broker.send_remote_wss("127.0.0.1", port, msg, ""), "send_remote_wss must succeed");
+
+        auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(3);
+        while (received.load() < 1 && std::chrono::steady_clock::now() < deadline) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(20));
+        }
+        GARUDA_CHECK(received.load() == 1, "WSS listener must receive 1 message");
+        GARUDA_CHECK(payload_ok.load(), "payload must be preserved across WSS");
+
+        broker.stop();
+        broker.stop_wss_listener();
+        std::cout << "  ✓ Test L: WSS PASS\n";
+    }
+
+    // === Test M: WebSocket Frame Roundtrip ===
+    std::cout << "\n=== TEST M: WEBSOCKET FRAME ROUNDTRIP ===\n";
+    {
+        using namespace garuda::nusantara::transport;
+
+        for (std::string payload : {std::string("hi"), std::string(200, 'A'), std::string(70000, 'B')}) {
+            WsFrame f;
+            f.fin = true;
+            f.opcode = WsOpcode::Text;
+            f.payload = payload;
+
+            std::string encoded_client = ws_encode_frame(f, /*mask=*/true);
+            std::string buf_client = encoded_client;
+            auto decoded_client = ws_decode_frame(buf_client);
+            GARUDA_CHECK(decoded_client.has_value(), "decode client frame must succeed");
+            GARUDA_CHECK(decoded_client->payload == payload, "client frame payload roundtrip");
+            GARUDA_CHECK(decoded_client->masked == true, "client frame must be masked");
+            GARUDA_CHECK(buf_client.empty(), "buffer must be fully consumed");
+
+            std::string encoded_server = ws_encode_frame(f, /*mask=*/false);
+            std::string buf_server = encoded_server;
+            auto decoded_server = ws_decode_frame(buf_server);
+            GARUDA_CHECK(decoded_server.has_value(), "decode server frame must succeed");
+            GARUDA_CHECK(decoded_server->payload == payload, "server frame payload roundtrip");
+            GARUDA_CHECK(decoded_server->masked == false, "server frame must not be masked");
+        }
+        std::cout << "  ✓ Test M: WebSocket Frame Roundtrip PASS\n";
+    }
+
+    // === Test N: WS/WSS Stop Idempotency ===
+    std::cout << "\n=== TEST N: WS/WSS STOP IDEMPOTENCY ===\n";
+    {
+        auto& broker = NusantaraBroker::get_instance();
+        broker.stop_ws_listener();
+        broker.stop_ws_listener();
+        broker.stop_wss_listener();
+        broker.stop_wss_listener();
+        std::cout << "  ✓ Test N: WS/WSS Stop Idempotency PASS\n";
+    }
+
+    std::cout << "\n=== EKOSISTEM GARUDA NUSANTARA FASE D2 BERJALAN SUKSES ===\n";
     return 0;
 }

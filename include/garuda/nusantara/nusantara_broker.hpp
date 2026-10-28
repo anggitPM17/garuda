@@ -35,6 +35,16 @@ private:
     std::atomic<bool> tls_listener_running_{false};
     transport::TlsListener tls_listener_;
 
+    // Plaintext WebSocket Listener
+    std::thread ws_listener_thread_;
+    std::atomic<bool> ws_listener_running_{false};
+    transport::WsListener ws_listener_;
+
+    // WSS Listener
+    std::thread wss_listener_thread_;
+    std::atomic<bool> wss_listener_running_{false};
+    transport::WssListener wss_listener_;
+
     NusantaraBroker() = default; // Singleton
 
     void worker_loop() {
@@ -135,6 +145,64 @@ private:
         }
     }
 
+    void ws_listener_loop() {
+        while (ws_listener_running_.load()) {
+            auto client = ws_listener_.accept();
+            if (!client.valid()) {
+                if (!ws_listener_running_.load()) break;
+                continue;
+            }
+
+            std::thread([this, client_sock = std::move(client)]() mutable {
+                this->handle_ws_client(std::move(client_sock));
+            }).detach();
+        }
+    }
+
+    void handle_ws_client(transport::WsSocket client) {
+        while (true) {
+            auto text = client.recv_text();
+            if (!text.has_value()) break;
+            if (text->empty()) continue;
+
+            auto msg = NusantaraMessage::from_json(*text);
+            if (msg.has_value()) {
+                send_message(*msg);
+            } else {
+                std::cerr << "[GARUDA NUSANTARA WARNING] Formulasi JSON WS tidak valid: " << *text << "\n";
+            }
+        }
+    }
+
+    void wss_listener_loop() {
+        while (wss_listener_running_.load()) {
+            auto client = wss_listener_.accept();
+            if (!client.valid()) {
+                if (!wss_listener_running_.load()) break;
+                continue;
+            }
+
+            std::thread([this, client_sock = std::move(client)]() mutable {
+                this->handle_wss_client(std::move(client_sock));
+            }).detach();
+        }
+    }
+
+    void handle_wss_client(transport::WssSocket client) {
+        while (true) {
+            auto text = client.recv_text();
+            if (!text.has_value()) break;
+            if (text->empty()) continue;
+
+            auto msg = NusantaraMessage::from_json(*text);
+            if (msg.has_value()) {
+                send_message(*msg);
+            } else {
+                std::cerr << "[GARUDA NUSANTARA WARNING] Formulasi JSON WSS tidak valid: " << *text << "\n";
+            }
+        }
+    }
+
 public:
     static NusantaraBroker& get_instance() {
         static NusantaraBroker instance;
@@ -142,6 +210,8 @@ public:
     }
 
     ~NusantaraBroker() {
+        stop_wss_listener();
+        stop_ws_listener();
         stop_listener_tls();
         stop_listener();
         stop();
@@ -168,7 +238,7 @@ public:
         std::cout << "[GARUDA NUSANTARA] Async Worker Broker dihentikan.\n";
     }
 
-    // === PLAINTEXT LISTENER API ===
+    // === PLAINTEXT TCP LISTENER API ===
     bool start_listener(std::uint16_t port) {
         std::lock_guard<std::mutex> lock(mutex_);
         if (listener_running_.load()) return false;
@@ -208,7 +278,7 @@ public:
         return sock->send_all(payload);
     }
 
-    // === TLS LISTENER API ===
+    // === TLS TCP LISTENER API ===
     bool start_listener_tls(std::uint16_t port, const std::string& cert_pem, const std::string& key_pem) {
         std::lock_guard<std::mutex> lock(mutex_);
         if (tls_listener_running_.load()) return false;
@@ -246,6 +316,84 @@ public:
         if (!sock.has_value()) return false;
         std::string payload = msg.to_json() + "\n";
         return sock->send_all(payload);
+    }
+
+    // === PLAINTEXT WEBSOCKET API ===
+    bool start_ws_listener(std::uint16_t port) {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (ws_listener_running_.load()) return false;
+        if (!ws_listener_.listen("0.0.0.0", port)) return false;
+
+        ws_listener_running_.store(true);
+        ws_listener_thread_ = std::thread([this]() { this->ws_listener_loop(); });
+        std::cout << "[GARUDA NUSANTARA] Listener WS terpasang pada port: " << ws_listener_.port() << "\n";
+        return true;
+    }
+
+    std::uint16_t ws_listener_port() const {
+        return ws_listener_.port();
+    }
+
+    bool ws_listener_active() const {
+        return ws_listener_running_.load();
+    }
+
+    void stop_ws_listener() {
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            if (!ws_listener_running_.load()) return;
+            ws_listener_running_.store(false);
+            ws_listener_.close();
+        }
+        if (ws_listener_thread_.joinable()) {
+            ws_listener_thread_.join();
+        }
+        std::cout << "[GARUDA NUSANTARA] Listener WS dihentikan.\n";
+    }
+
+    bool send_remote_ws(const std::string& host, std::uint16_t port, const NusantaraMessage& msg) {
+        auto sock = transport::connect_ws_to(host, port);
+        if (!sock.has_value()) return false;
+        return sock->send_text(msg.to_json());
+    }
+
+    // === WSS (WEBSOCKET OVER TLS) API ===
+    bool start_wss_listener(std::uint16_t port, const std::string& cert_pem, const std::string& key_pem) {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (wss_listener_running_.load()) return false;
+        if (!wss_listener_.listen("0.0.0.0", port, cert_pem, key_pem)) return false;
+
+        wss_listener_running_.store(true);
+        wss_listener_thread_ = std::thread([this]() { this->wss_listener_loop(); });
+        std::cout << "[GARUDA NUSANTARA] Listener WSS terpasang pada port: " << wss_listener_.port() << "\n";
+        return true;
+    }
+
+    std::uint16_t wss_listener_port() const {
+        return wss_listener_.port();
+    }
+
+    bool wss_listener_active() const {
+        return wss_listener_running_.load();
+    }
+
+    void stop_wss_listener() {
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            if (!wss_listener_running_.load()) return;
+            wss_listener_running_.store(false);
+            wss_listener_.close();
+        }
+        if (wss_listener_thread_.joinable()) {
+            wss_listener_thread_.join();
+        }
+        std::cout << "[GARUDA NUSANTARA] Listener WSS dihentikan.\n";
+    }
+
+    bool send_remote_wss(const std::string& host, std::uint16_t port, const NusantaraMessage& msg, const std::string& ca_cert_path = "") {
+        auto sock = transport::connect_wss_to(host, port, ca_cert_path);
+        if (!sock.has_value()) return false;
+        return sock->send_text(msg.to_json());
     }
 
     // Mendaftarkan entitas (misal: Autopilot, Richat, GVM)
