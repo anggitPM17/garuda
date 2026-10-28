@@ -52,6 +52,14 @@ public:
                 handle_get_messages(msg);
             } else if (msg.action == NusantaraAction::RICHAT_ACK_DELIVERED) {
                 handle_ack_delivered(msg);
+            } else if (msg.action == NusantaraAction::RICHAT_CREATE_ROOM) {
+                handle_create_room(msg);
+            } else if (msg.action == NusantaraAction::RICHAT_JOIN_ROOM) {
+                handle_join_room(msg);
+            } else if (msg.action == NusantaraAction::RICHAT_SEND_ROOM_MESSAGE) {
+                handle_send_room_message(msg);
+            } else if (msg.action == NusantaraAction::RICHAT_LEAVE_ROOM) {
+                handle_leave_room(msg);
             } else {
                 send_error(msg.sender, 403, "Action not allowed for RICHAT Gateway");
             }
@@ -179,6 +187,126 @@ private:
         resp.payload["status"] = "200";
         resp.payload["success"] = "true";
         resp.payload["message"] = "Acknowledged";
+        NusantaraBroker::get_instance().send_message(resp);
+    }
+
+    void handle_create_room(const NusantaraMessage& msg) {
+        auto sess_it = msg.payload.find("session_token");
+        auto name_it = msg.payload.find("room_name");
+
+        if (sess_it == msg.payload.end() || name_it == msg.payload.end()) {
+            send_error(msg.sender, 400, "Missing session_token or room_name");
+            return;
+        }
+
+        std::string user_id;
+        if (!validate_session(sess_it->second, user_id)) {
+            send_error(msg.sender, 401, "Invalid session_token");
+            return;
+        }
+
+        std::string room_id = store_.create_room(user_id, name_it->second);
+
+        NusantaraMessage resp;
+        resp.message_id = "resp_create_room";
+        resp.sender = EntityTarget::JALUR_LANGIT;
+        resp.receiver = msg.sender;
+        resp.action = NusantaraAction::BROADCAST_MSG;
+        resp.payload["status"] = "200";
+        resp.payload["success"] = "true";
+        resp.payload["room_id"] = room_id;
+        NusantaraBroker::get_instance().send_message(resp);
+    }
+
+    void handle_join_room(const NusantaraMessage& msg) {
+        auto sess_it = msg.payload.find("session_token");
+        auto room_it = msg.payload.find("room_id");
+
+        if (sess_it == msg.payload.end() || room_it == msg.payload.end()) {
+            send_error(msg.sender, 400, "Missing session_token or room_id");
+            return;
+        }
+
+        std::string user_id;
+        if (!validate_session(sess_it->second, user_id)) {
+            send_error(msg.sender, 401, "Invalid session_token");
+            return;
+        }
+
+        store_.join_room(user_id, room_it->second);
+
+        NusantaraMessage resp;
+        resp.message_id = "resp_join_room";
+        resp.sender = EntityTarget::JALUR_LANGIT;
+        resp.receiver = msg.sender;
+        resp.action = NusantaraAction::BROADCAST_MSG;
+        resp.payload["status"] = "200";
+        resp.payload["success"] = "true";
+        resp.payload["message"] = "Joined room";
+        NusantaraBroker::get_instance().send_message(resp);
+    }
+
+    void handle_leave_room(const NusantaraMessage& msg) {
+        auto sess_it = msg.payload.find("session_token");
+        auto room_it = msg.payload.find("room_id");
+
+        if (sess_it == msg.payload.end() || room_it == msg.payload.end()) {
+            send_error(msg.sender, 400, "Missing session_token or room_id");
+            return;
+        }
+
+        std::string user_id;
+        if (!validate_session(sess_it->second, user_id)) {
+            send_error(msg.sender, 401, "Invalid session_token");
+            return;
+        }
+
+        store_.leave_room(user_id, room_it->second);
+
+        NusantaraMessage resp;
+        resp.message_id = "resp_leave_room";
+        resp.sender = EntityTarget::JALUR_LANGIT;
+        resp.receiver = msg.sender;
+        resp.action = NusantaraAction::BROADCAST_MSG;
+        resp.payload["status"] = "200";
+        resp.payload["success"] = "true";
+        resp.payload["message"] = "Left room";
+        NusantaraBroker::get_instance().send_message(resp);
+    }
+
+    void handle_send_room_message(const NusantaraMessage& msg) {
+        auto sess_it = msg.payload.find("session_token");
+        auto room_it = msg.payload.find("room_id");
+        auto cnt_it = msg.payload.find("content");
+        auto cmsg_it = msg.payload.find("client_msg_id");
+
+        if (sess_it == msg.payload.end() || room_it == msg.payload.end() ||
+            cnt_it == msg.payload.end() || cmsg_it == msg.payload.end()) {
+            send_error(msg.sender, 400, "Missing required fields");
+            return;
+        }
+
+        std::string sender_id;
+        if (!validate_session(sess_it->second, sender_id)) {
+            send_error(msg.sender, 401, "Invalid session_token");
+            return;
+        }
+
+        if (cnt_it->second.empty() || cnt_it->second.size() > 4096) {
+            send_error(msg.sender, 413, "Content empty or too large");
+            return;
+        }
+
+        std::string message_id = store_.save_room_message(sender_id, room_it->second, cnt_it->second, cmsg_it->second);
+
+        NusantaraMessage resp;
+        resp.message_id = "resp_room_msg";
+        resp.sender = EntityTarget::JALUR_LANGIT;
+        resp.receiver = msg.sender;
+        resp.action = NusantaraAction::BROADCAST_MSG;
+        resp.payload["status"] = "200";
+        resp.payload["success"] = "true";
+        resp.payload["message_id"] = message_id;
         NusantaraBroker::get_instance().send_message(resp);
     }
 };

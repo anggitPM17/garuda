@@ -135,6 +135,107 @@ public:
             db_.get_storage().put("messages", message_id, *msg);
         }
     }
+
+    // --- Room Management ---
+    std::string create_room(const std::string& creator_id, const std::string& room_name) {
+        std::lock_guard<std::mutex> lock(mutex_);
+        std::string room_id = generate_id("room");
+        Row row;
+        row.columns["room_id"] = room_id;
+        row.columns["room_name"] = room_name;
+        row.columns["creator_id"] = creator_id;
+        row.columns["created_at"] = static_cast<std::int64_t>(std::time(nullptr));
+        db_.get_storage().put("rooms", room_id, row);
+
+        // Creator otomatis jadi member
+        std::string member_key = room_id + ":" + creator_id;
+        Row mrow;
+        mrow.columns["room_id"] = room_id;
+        mrow.columns["user_id"] = creator_id;
+        mrow.columns["joined_at"] = static_cast<std::int64_t>(std::time(nullptr));
+        db_.get_storage().put("room_members", member_key, mrow);
+
+        return room_id;
+    }
+
+    void join_room(const std::string& user_id, const std::string& room_id) {
+        std::lock_guard<std::mutex> lock(mutex_);
+        std::string member_key = room_id + ":" + user_id;
+        Row row;
+        row.columns["room_id"] = room_id;
+        row.columns["user_id"] = user_id;
+        row.columns["joined_at"] = static_cast<std::int64_t>(std::time(nullptr));
+        db_.get_storage().put("room_members", member_key, row);
+    }
+
+    void leave_room(const std::string& user_id, const std::string& room_id) {
+        std::lock_guard<std::mutex> lock(mutex_);
+        (void)user_id;
+        (void)room_id;
+    }
+
+    std::vector<std::string> get_room_members(const std::string& room_id) {
+        std::lock_guard<std::mutex> lock(mutex_);
+        std::vector<std::string> members;
+        auto all_members = db_.get_storage().scan("room_members");
+        for (const auto& m : all_members) {
+            auto r_it = m.columns.find("room_id");
+            auto u_it = m.columns.find("user_id");
+            if (r_it != m.columns.end() && u_it != m.columns.end()) {
+                if (std::get<std::string>(r_it->second) == room_id) {
+                    members.push_back(std::get<std::string>(u_it->second));
+                }
+            }
+        }
+        return members;
+    }
+
+    std::string save_room_message(const std::string& sender_id, const std::string& room_id, const std::string& content, const std::string& client_msg_id) {
+        std::lock_guard<std::mutex> lock(mutex_);
+
+        std::string dedup_key = sender_id + ":" + client_msg_id;
+        auto existing = db_.get_storage().get("dedup_index", dedup_key);
+        if (existing.has_value()) {
+            return std::get<std::string>(existing->columns["message_id"]);
+        }
+
+        std::string message_id = generate_id("rmsg");
+        Row row;
+        row.columns["message_id"] = message_id;
+        row.columns["room_id"] = room_id;
+        row.columns["sender_id"] = sender_id;
+        row.columns["content"] = content;
+        row.columns["timestamp"] = static_cast<std::int64_t>(std::time(nullptr));
+        row.columns["status"] = std::string("sent");
+
+        db_.get_storage().put("room_messages", message_id, row);
+
+        Row dedup_row;
+        dedup_row.columns["message_id"] = message_id;
+        db_.get_storage().put("dedup_index", dedup_key, dedup_row);
+
+        return message_id;
+    }
+
+    std::vector<Row> get_room_messages(const std::string& room_id, int limit = 50) {
+        std::lock_guard<std::mutex> lock(mutex_);
+        std::vector<Row> result;
+        auto all_messages = db_.get_storage().scan("room_messages");
+
+        for (const auto& msg : all_messages) {
+            auto r_it = msg.columns.find("room_id");
+            if (r_it != msg.columns.end() && std::get<std::string>(r_it->second) == room_id) {
+                result.push_back(msg);
+            }
+        }
+
+        std::sort(result.begin(), result.end(), [](const Row& a, const Row& b) {
+            return std::get<std::int64_t>(a.columns.at("timestamp")) > std::get<std::int64_t>(b.columns.at("timestamp"));
+        });
+
+        if (result.size() > static_cast<size_t>(limit)) result.resize(limit);
+        return result;
+    }
 };
 
 } // namespace garuda::richat

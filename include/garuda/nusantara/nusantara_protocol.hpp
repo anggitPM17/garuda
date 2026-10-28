@@ -33,7 +33,11 @@ enum class NusantaraAction {
     RICHAT_LOGIN,
     RICHAT_SEND_MESSAGE,
     RICHAT_GET_MESSAGES,
-    RICHAT_ACK_DELIVERED
+    RICHAT_ACK_DELIVERED,
+    RICHAT_CREATE_ROOM,
+    RICHAT_JOIN_ROOM,
+    RICHAT_LEAVE_ROOM,
+    RICHAT_SEND_ROOM_MESSAGE
 };
 
 inline const char* to_string(EntityTarget target) {
@@ -74,6 +78,10 @@ inline const char* to_string(NusantaraAction action) {
         case NusantaraAction::RICHAT_SEND_MESSAGE: return "RICHAT_SEND_MESSAGE";
         case NusantaraAction::RICHAT_GET_MESSAGES: return "RICHAT_GET_MESSAGES";
         case NusantaraAction::RICHAT_ACK_DELIVERED: return "RICHAT_ACK_DELIVERED";
+        case NusantaraAction::RICHAT_CREATE_ROOM: return "RICHAT_CREATE_ROOM";
+        case NusantaraAction::RICHAT_JOIN_ROOM: return "RICHAT_JOIN_ROOM";
+        case NusantaraAction::RICHAT_LEAVE_ROOM: return "RICHAT_LEAVE_ROOM";
+        case NusantaraAction::RICHAT_SEND_ROOM_MESSAGE: return "RICHAT_SEND_ROOM_MESSAGE";
     }
     return "UNKNOWN";
 }
@@ -93,6 +101,10 @@ inline bool from_string(const std::string& str, NusantaraAction& out) {
     if (str == "RICHAT_SEND_MESSAGE") { out = NusantaraAction::RICHAT_SEND_MESSAGE; return true; }
     if (str == "RICHAT_GET_MESSAGES") { out = NusantaraAction::RICHAT_GET_MESSAGES; return true; }
     if (str == "RICHAT_ACK_DELIVERED") { out = NusantaraAction::RICHAT_ACK_DELIVERED; return true; }
+    if (str == "RICHAT_CREATE_ROOM") { out = NusantaraAction::RICHAT_CREATE_ROOM; return true; }
+    if (str == "RICHAT_JOIN_ROOM") { out = NusantaraAction::RICHAT_JOIN_ROOM; return true; }
+    if (str == "RICHAT_LEAVE_ROOM") { out = NusantaraAction::RICHAT_LEAVE_ROOM; return true; }
+    if (str == "RICHAT_SEND_ROOM_MESSAGE") { out = NusantaraAction::RICHAT_SEND_ROOM_MESSAGE; return true; }
     return false;
 }
 
