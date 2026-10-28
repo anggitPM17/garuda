@@ -111,6 +111,11 @@ Jangan minta agen mengerjakan semuanya sekaligus. Berikan instruksi bertahap (sa
 *   **Tes:** `test_richat_call_log.cpp`.
 *   **Verifikasi:** Pencatatan panggilan audio/video (`start_call`, `end_call`, `get_call_logs`) & validasi tipe panggilan.
 
+### 📍 RICHAT Production Server (C++) — WebSocket Server v7.0 - [x] SELESAI
+*   **Target:** `src/richat_server.cpp`.
+*   **Tes:** `test_richat_server_smoke.cpp`.
+*   **Verifikasi:** Binary produksi WebSocket listener `garuda_richat_server.exe` di port 9001 dengan signal handling & CI-safe smoke test.
+
 ---
 
 ## 📋 PROMPT UNTUK AGEN AI (SALIN & TEMPEL BESOK)
