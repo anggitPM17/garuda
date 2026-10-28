@@ -1,20 +1,85 @@
+﻿# ==============================================
+# GARUDA PROJECT - .gitignore
+# ==============================================
+
+# --- Build Directories ---
 build/
-build_det1/
-build_det2/
-build_det*/
+out/
+cmake-build-*/
+bin/
+obj/
+*.dir/
+.vs/
+.vscode/
+.idea/
+
+# --- Compiled Binaries ---
 *.exe
+*.dll
+*.lib
+*.so
+*.dylib
 *.obj
+*.o
 *.pdb
 *.ilk
 *.exp
-*.lib
-*.rar
-*.docx
-*.bak-*
-*.state
+
+# --- CMake / MSBuild ---
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.slnx
+Makefile
+ALL_BUILD*
+ZERO_CHECK*
+INSTALL*
+RUN_TESTS*
+
+# --- Jalur Langit Database Files ---
+jalur_langit_data/
+test_jalur_langit_data/
+*.wal
+wal.log
+*.db
+*.sqlite
+*.sqlite3
+
+# --- Test Temporary Files ---
+test_*_data/
+tmp/
+temp/
+*.tmp
+*.log
+
+# --- Garuda Runtime Artifacts ---
 *.gvm
-.vs/
-.idea/
-.vscode/
-__pycache__/
-*.pyc
+*.grd.bak
+*.grd.orig
+
+# --- OS Specific ---
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- IDE Specific ---
+*.swp
+*.swo
+*~
+*.autosave
+
+# --- Environment & Secrets ---
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# --- Backup Files (dari agen AI) ---
+*.bak
+*.bak-*
+*.orig
+*.rej
