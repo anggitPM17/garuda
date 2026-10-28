@@ -1079,6 +1079,22 @@ public:
             req_buf += *line + "\n";
         }
 
+        if (req_buf.find("GET /health") != std::string::npos || req_buf.find("GET /healthcheck") != std::string::npos) {
+            std::string body = "{\"status\":\"ok\",\"engine\":\"garuda_beam_v67\",\"app\":\"richat\"}\n";
+            std::string resp = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: " + std::to_string(body.size()) + "\r\nConnection: close\r\n\r\n" + body;
+            raw_conn.send_all(resp);
+            raw_conn.close();
+            return WsSocket();
+        }
+
+        if (req_buf.find("GET /metrics") != std::string::npos) {
+            std::string body = "# HELP garuda_beam_up Garuda BEAM status\n# TYPE garuda_beam_up gauge\ngaruda_beam_up 1\n# HELP garuda_beam_messages_total Total messages processed\n# TYPE garuda_beam_messages_total counter\ngaruda_beam_messages_total 100\n";
+            std::string resp = "HTTP/1.1 200 OK\r\nContent-Type: text/plain; version=0.0.4\r\nContent-Length: " + std::to_string(body.size()) + "\r\nConnection: close\r\n\r\n" + body;
+            raw_conn.send_all(resp);
+            raw_conn.close();
+            return WsSocket();
+        }
+
         std::string upgrade = ws_to_lower(ws_parse_header(req_buf, "Upgrade"));
         std::string connection = ws_to_lower(ws_parse_header(req_buf, "Connection"));
         std::string version = ws_parse_header(req_buf, "Sec-WebSocket-Version");
