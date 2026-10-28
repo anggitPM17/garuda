@@ -57,7 +57,7 @@ Jangan minta agen mengerjakan semuanya sekaligus. Berikan instruksi bertahap (sa
 *   **Target:** Mengimplementasikan `jalur_langit_ultimate.hpp`.
 *   **Tes:** `test_jalur_langit.cpp` (Membuat tabel, insert data, memastikan file `wal.log` terbentuk).
 
-### 📍 FASE 2: Infrastructure (Hari ke-2)
+### 📍 FASE 2: Infrastructure (Hari ke-2) - [x] SELESAI
 *   **Target:** Implementasi `connection_pool.hpp`, `query_cache.hpp`, `json_serializer.hpp`.
 *   **Tes:** `test_connection_pool.cpp`, `test_query_cache.cpp`, `test_json_serializer.cpp`.
 *   **Verifikasi:** Pastikan cache mengembalikan data yang sama dengan database, dan JSON terbentuk dengan benar.
