@@ -339,6 +339,68 @@ public:
         }
         return count;
     }
+
+    // =========================================================
+    // R5 - CALL LOG MANAGEMENT
+    // =========================================================
+
+    std::string start_call(const std::string& caller_id, const std::string& receiver_id, const std::string& type) {
+        std::lock_guard<std::mutex> lock(mutex_);
+        std::string call_id = generate_id("call");
+        Row row;
+        row.columns["call_id"] = call_id;
+        row.columns["caller_id"] = caller_id;
+        row.columns["receiver_id"] = receiver_id;
+        row.columns["type"] = type; // "audio" atau "video"
+        row.columns["status"] = std::string("ringing"); // ringing, answered, missed, rejected
+        row.columns["start_time"] = static_cast<std::int64_t>(std::time(nullptr));
+        row.columns["end_time"] = static_cast<std::int64_t>(0); // 0 = belum selesai
+        row.columns["duration_seconds"] = static_cast<std::int64_t>(0);
+        db_.get_storage().put("call_logs", call_id, row);
+        return call_id;
+    }
+
+    bool end_call(const std::string& call_id, const std::string& status) {
+        std::lock_guard<std::mutex> lock(mutex_);
+        auto call = db_.get_storage().get("call_logs", call_id);
+        if (!call.has_value()) return false;
+
+        std::int64_t now = static_cast<std::int64_t>(std::time(nullptr));
+        std::int64_t start_time = std::get<std::int64_t>(call->columns["start_time"]);
+
+        call->columns["end_time"] = now;
+        call->columns["status"] = status; // "answered", "missed", "rejected"
+        call->columns["duration_seconds"] = now - start_time;
+
+        db_.get_storage().put("call_logs", call_id, *call);
+        return true;
+    }
+
+    std::vector<Row> get_call_logs(const std::string& user_id, int limit = 50) {
+        std::lock_guard<std::mutex> lock(mutex_);
+        std::vector<Row> result;
+        auto all_calls = db_.get_storage().scan("call_logs");
+
+        for (const auto& c : all_calls) {
+            auto caller_it = c.columns.find("caller_id");
+            auto receiver_it = c.columns.find("receiver_id");
+            if (caller_it == c.columns.end() || receiver_it == c.columns.end()) continue;
+
+            if (std::get<std::string>(caller_it->second) == user_id ||
+                std::get<std::string>(receiver_it->second) == user_id) {
+                result.push_back(c);
+            }
+        }
+
+        std::sort(result.begin(), result.end(), [](const Row& a, const Row& b) {
+            return std::get<std::int64_t>(a.columns.at("start_time")) > std::get<std::int64_t>(b.columns.at("start_time"));
+        });
+
+        if (result.size() > static_cast<size_t>(limit)) {
+            result.resize(limit);
+        }
+        return result;
+    }
 };
 
 } // namespace garuda::richat

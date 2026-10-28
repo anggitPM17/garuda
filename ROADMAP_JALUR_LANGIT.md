@@ -106,6 +106,11 @@ Jangan minta agen mengerjakan semuanya sekaligus. Berikan instruksi bertahap (sa
 *   **Tes:** `test_richat_status_moment.cpp`.
 *   **Verifikasi:** Status 24 jam (`create_status`, `get_statuses`) & Moment Feed (`create_moment`, `get_moments`, `like_moment`).
 
+### 📍 R5: RICHAT Call Logs — Pencatatan Panggilan - [x] SELESAI
+*   **Target:** `include/garuda/richat/richat_message_store.hpp`, `richat_gateway.hpp`.
+*   **Tes:** `test_richat_call_log.cpp`.
+*   **Verifikasi:** Pencatatan panggilan audio/video (`start_call`, `end_call`, `get_call_logs`) & validasi tipe panggilan.
+
 ---
 
 ## 📋 PROMPT UNTUK AGEN AI (SALIN & TEMPEL BESOK)

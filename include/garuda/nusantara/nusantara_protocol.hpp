@@ -42,7 +42,10 @@ enum class NusantaraAction {
     RICHAT_GET_STATUSES,
     RICHAT_CREATE_MOMENT,
     RICHAT_GET_MOMENTS,
-    RICHAT_LIKE_MOMENT
+    RICHAT_LIKE_MOMENT,
+    RICHAT_START_CALL,
+    RICHAT_END_CALL,
+    RICHAT_GET_CALL_LOGS
 };
 
 inline const char* to_string(EntityTarget target) {
@@ -92,6 +95,9 @@ inline const char* to_string(NusantaraAction action) {
         case NusantaraAction::RICHAT_CREATE_MOMENT: return "RICHAT_CREATE_MOMENT";
         case NusantaraAction::RICHAT_GET_MOMENTS: return "RICHAT_GET_MOMENTS";
         case NusantaraAction::RICHAT_LIKE_MOMENT: return "RICHAT_LIKE_MOMENT";
+        case NusantaraAction::RICHAT_START_CALL: return "RICHAT_START_CALL";
+        case NusantaraAction::RICHAT_END_CALL: return "RICHAT_END_CALL";
+        case NusantaraAction::RICHAT_GET_CALL_LOGS: return "RICHAT_GET_CALL_LOGS";
     }
     return "UNKNOWN";
 }
@@ -120,6 +126,9 @@ inline bool from_string(const std::string& str, NusantaraAction& out) {
     if (str == "RICHAT_CREATE_MOMENT") { out = NusantaraAction::RICHAT_CREATE_MOMENT; return true; }
     if (str == "RICHAT_GET_MOMENTS") { out = NusantaraAction::RICHAT_GET_MOMENTS; return true; }
     if (str == "RICHAT_LIKE_MOMENT") { out = NusantaraAction::RICHAT_LIKE_MOMENT; return true; }
+    if (str == "RICHAT_START_CALL") { out = NusantaraAction::RICHAT_START_CALL; return true; }
+    if (str == "RICHAT_END_CALL") { out = NusantaraAction::RICHAT_END_CALL; return true; }
+    if (str == "RICHAT_GET_CALL_LOGS") { out = NusantaraAction::RICHAT_GET_CALL_LOGS; return true; }
     return false;
 }
 
