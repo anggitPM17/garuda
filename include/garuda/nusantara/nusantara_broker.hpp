@@ -591,6 +591,11 @@ public:
         std::cout << "[GARUDA NUSANTARA] Entitas terdaftar: " << (int)target << "\n";
     }
 
+    // Registrasi Jalur Langit Bridge
+    void register_jalur_langit_bridge(EntityReceiver receiver) {
+        register_entity(EntityTarget::JALUR_LANGIT, receiver);
+    }
+
     // Mengirim pesan (Bisa dari mana saja)
     void send_message(const NusantaraMessage& msg) {
         if (persistence_on_.load()) {

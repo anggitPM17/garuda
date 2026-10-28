@@ -14,7 +14,8 @@ enum class EntityTarget {
     GARUDA_GVM,
     STADION_UI,
     ANDROID_STUDIO,
-    AUTOPILOT_AI
+    AUTOPILOT_AI,
+    JALUR_LANGIT
 };
 
 // Aksi yang bisa dilakukan antar entitas
@@ -24,7 +25,11 @@ enum class NusantaraAction {
     RUN_TEST,         // Perintah menjalankan pengujian
     GET_METRICS,      // Permintaan data telemetri / kesehatan
     PUSH_PATCH,       // Mengirim patch kode hasil perbaikan AI
-    BROADCAST_MSG     // Pesan teks biasa
+    BROADCAST_MSG,    // Pesan teks biasa
+    JALUR_LANGIT_CREATE_TABLE,
+    JALUR_LANGIT_INSERT,
+    JALUR_LANGIT_QUERY,
+    JALUR_LANGIT_UPDATE_SCHEMA
 };
 
 inline const char* to_string(EntityTarget target) {
@@ -34,6 +39,7 @@ inline const char* to_string(EntityTarget target) {
         case EntityTarget::STADION_UI: return "STADION_UI";
         case EntityTarget::ANDROID_STUDIO: return "ANDROID_STUDIO";
         case EntityTarget::AUTOPILOT_AI: return "AUTOPILOT_AI";
+        case EntityTarget::JALUR_LANGIT: return "JALUR_LANGIT";
     }
     return "UNKNOWN";
 }
@@ -44,6 +50,7 @@ inline bool from_string(const std::string& str, EntityTarget& out) {
     if (str == "STADION_UI") { out = EntityTarget::STADION_UI; return true; }
     if (str == "ANDROID_STUDIO") { out = EntityTarget::ANDROID_STUDIO; return true; }
     if (str == "AUTOPILOT_AI") { out = EntityTarget::AUTOPILOT_AI; return true; }
+    if (str == "JALUR_LANGIT") { out = EntityTarget::JALUR_LANGIT; return true; }
     return false;
 }
 
@@ -55,6 +62,10 @@ inline const char* to_string(NusantaraAction action) {
         case NusantaraAction::GET_METRICS: return "GET_METRICS";
         case NusantaraAction::PUSH_PATCH: return "PUSH_PATCH";
         case NusantaraAction::BROADCAST_MSG: return "BROADCAST_MSG";
+        case NusantaraAction::JALUR_LANGIT_CREATE_TABLE: return "JALUR_LANGIT_CREATE_TABLE";
+        case NusantaraAction::JALUR_LANGIT_INSERT: return "JALUR_LANGIT_INSERT";
+        case NusantaraAction::JALUR_LANGIT_QUERY: return "JALUR_LANGIT_QUERY";
+        case NusantaraAction::JALUR_LANGIT_UPDATE_SCHEMA: return "JALUR_LANGIT_UPDATE_SCHEMA";
     }
     return "UNKNOWN";
 }
@@ -66,6 +77,10 @@ inline bool from_string(const std::string& str, NusantaraAction& out) {
     if (str == "GET_METRICS") { out = NusantaraAction::GET_METRICS; return true; }
     if (str == "PUSH_PATCH") { out = NusantaraAction::PUSH_PATCH; return true; }
     if (str == "BROADCAST_MSG") { out = NusantaraAction::BROADCAST_MSG; return true; }
+    if (str == "JALUR_LANGIT_CREATE_TABLE") { out = NusantaraAction::JALUR_LANGIT_CREATE_TABLE; return true; }
+    if (str == "JALUR_LANGIT_INSERT") { out = NusantaraAction::JALUR_LANGIT_INSERT; return true; }
+    if (str == "JALUR_LANGIT_QUERY") { out = NusantaraAction::JALUR_LANGIT_QUERY; return true; }
+    if (str == "JALUR_LANGIT_UPDATE_SCHEMA") { out = NusantaraAction::JALUR_LANGIT_UPDATE_SCHEMA; return true; }
     return false;
 }
 
