@@ -4,9 +4,16 @@
 #include <iostream>
 #include <thread>
 #include <chrono>
+#include <atomic>
 
 using namespace garuda::nusantara;
 using namespace garuda::nusantara::entities;
+
+#define GARUDA_CHECK(cond, msg) \
+    if (!(cond)) { \
+        std::cerr << "  ❌ ASSERTION FAILED: " << msg << " (" << #cond << ")\n"; \
+        std::exit(1); \
+    }
 
 int main() {
     std::cout << "=== MEMULAI EKOSISTEM GARUDA NUSANTARA ===\n\n";
@@ -20,9 +27,10 @@ int main() {
 
     // 2. Autopilot AI mengirim perbaikan ke RICHAT
     std::cout << "\n[SCENARIO] Autopilot AI mendeteksi bug di RICHAT UI...\n";
-    std::this_thread::sleep_for(std::chrono::seconds(1));
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
 
     NusantaraMessage ai_patch_msg;
+    ai_patch_msg.message_id = "patch-001";
     ai_patch_msg.sender = EntityTarget::AUTOPILOT_AI;
     ai_patch_msg.receiver = EntityTarget::RICHAT_APP;
     ai_patch_msg.action = NusantaraAction::PUSH_PATCH;
@@ -33,6 +41,7 @@ int main() {
     // 3. Autopilot AI mengirim update logika ke GVM
     std::cout << "\n[SCENARIO] Autopilot AI mengirim update logika ke GVM...\n";
     NusantaraMessage ai_gvm_msg;
+    ai_gvm_msg.message_id = "gvm-001";
     ai_gvm_msg.sender = EntityTarget::AUTOPILOT_AI;
     ai_gvm_msg.receiver = EntityTarget::GARUDA_GVM;
     ai_gvm_msg.action = NusantaraAction::UPDATE_CODE;
@@ -40,10 +49,83 @@ int main() {
 
     NusantaraBroker::get_instance().send_message(ai_gvm_msg);
 
-    // 4. Proses antrean pesan
-    std::cout << "\n=== MEMPROSES ANTREAN GARUDA NUSANTARA ===\n";
+    // 4. Proses antrean pesan (Sync)
+    std::cout << "\n=== MEMPROSES ANTREAN GARUDA NUSANTARA (SYNC) ===\n";
     NusantaraBroker::get_instance().process_queue();
 
-    std::cout << "\n=== EKOSISTEM GARUDA NUSANTARA BERJALAN SUKSES ===\n";
+    // === Test A: JSON Roundtrip ===
+    std::cout << "\n=== TEST A: JSON ROUNDTRIP ===\n";
+    {
+        NusantaraMessage msg;
+        msg.message_id = "msg-001";
+        msg.sender = EntityTarget::AUTOPILOT_AI;
+        msg.receiver = EntityTarget::RICHAT_APP;
+        msg.action = NusantaraAction::PUSH_PATCH;
+        msg.payload["file"] = "LoginActivity.kt";
+        msg.payload["patch"] = "quote\" backslash\\ newline\n tab\t";
+
+        std::string json = msg.to_json();
+        std::cout << "JSON Output: " << json << "\n";
+
+        auto parsed = NusantaraMessage::from_json(json);
+        GARUDA_CHECK(parsed.has_value(), "from_json must parse to_json output");
+        GARUDA_CHECK(parsed->message_id == msg.message_id, "message_id roundtrip");
+        GARUDA_CHECK(parsed->sender == msg.sender, "sender roundtrip");
+        GARUDA_CHECK(parsed->receiver == msg.receiver, "receiver roundtrip");
+        GARUDA_CHECK(parsed->action == msg.action, "action roundtrip");
+        GARUDA_CHECK(parsed->payload == msg.payload, "payload roundtrip (with escapes)");
+        std::cout << "  ✓ Test A: JSON Roundtrip PASS\n";
+    }
+
+    // === Test B: JSON Parsing Error Handling ===
+    std::cout << "\n=== TEST B: JSON ERROR HANDLING ===\n";
+    {
+        GARUDA_CHECK(!NusantaraMessage::from_json("{invalid").has_value(), "malformed JSON must return nullopt");
+        GARUDA_CHECK(!NusantaraMessage::from_json("").has_value(), "empty JSON must return nullopt");
+        GARUDA_CHECK(!NusantaraMessage::from_json("{\"unknown\": 1}").has_value(), "missing required fields must return nullopt");
+        std::cout << "  ✓ Test B: JSON Error Handling PASS\n";
+    }
+
+    // === Test C: Async Broker ===
+    std::cout << "\n=== TEST C: ASYNC BROKER WORKER ===\n";
+    {
+        auto& broker = NusantaraBroker::get_instance();
+        std::atomic<int> received{0};
+        broker.register_entity(EntityTarget::STADION_UI, [&](const NusantaraMessage&) {
+            received.fetch_add(1);
+        });
+
+        broker.start();
+
+        for (int i = 0; i < 10; ++i) {
+            NusantaraMessage m;
+            m.message_id = "async-" + std::to_string(i);
+            m.sender = EntityTarget::AUTOPILOT_AI;
+            m.receiver = EntityTarget::STADION_UI;
+            m.action = NusantaraAction::BROADCAST_MSG;
+            broker.send_message(m);
+        }
+
+        auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(2);
+        while (received.load() < 10 && std::chrono::steady_clock::now() < deadline) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        }
+        GARUDA_CHECK(received.load() == 10, "worker must process all 10 messages");
+        broker.stop();
+        std::cout << "  ✓ Test C: Async Broker PASS (" << received.load() << "/10 messages received)\n";
+    }
+
+    // === Test D: stop() Idempotency & Restart ===
+    std::cout << "\n=== TEST D: STOP IDEMPOTENCY & RESTART ===\n";
+    {
+        auto& broker = NusantaraBroker::get_instance();
+        broker.stop();
+        broker.stop(); // aman dipanggil dua kali
+        broker.start();
+        broker.stop();
+        std::cout << "  ✓ Test D: stop() Idempotency & Restart PASS\n";
+    }
+
+    std::cout << "\n=== EKOSISTEM GARUDA NUSANTARA FASE B BERJALAN SUKSES ===\n";
     return 0;
 }

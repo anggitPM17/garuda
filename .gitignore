@@ -83,3 +83,6 @@ desktop.ini
 *.bak-*
 *.orig
 *.rej
+
+# Raft temporary state files
+*.state
