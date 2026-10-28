@@ -1,9 +1,26 @@
 # 🦅 Garuda BEAM (G-BEAM) 🇮🇩
 
+[![Build Status](https://github.com/anggitPM17/garuda/actions/workflows/ci-linux.yml/badge.svg)](https://github.com/anggitPM17/garuda/actions)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Production](https://img.shields.io/badge/Production-Live-success)](https://richat.my.id)
+[![RAM Usage](https://img.shields.io/badge/RAM-536%20KB-brightgreen)](https://richat.my.id)
+
 > Runtime terdistribusi setara Erlang/OTP — dengan identitas Indonesia.
 > C++ header-only. Zero external dependencies (kecuali mbedTLS & SQLite3).
 
-## ✨ Fitur Lengkap (8 Fase, 100% PASS)
+---
+
+## 🌐 Live Production
+
+- **URL Production**: https://richat.my.id
+- **Status**: ✅ **Live & Primary Backend** (Garuda BEAM C++ Server)
+- **Runtime RAM Usage**: **~536 KB - 1.8 MB** (vs Erlang ~69.4 MB — **38x lebih hemat**)
+- **Stress Capability**: 191 RPS, 100% availability, 0 failed requests
+- **Auto-Recovery**: Systemd auto-restart < 5 detik
+
+---
+
+## ✨ Fitur Lengkap (8 Fase + Port Linux, 100% PASS)
 
 | Fase | Fokus | Status |
 |---|---|---|
@@ -16,6 +33,8 @@
 | **G7** | Telemetry (Metrics, Tracing, Logger, Aggregator) | ✅ |
 | **G8** | Application Layer RICHAT (App, GroupMember, Fanout, Dist, ColdDB) | ✅ |
 | **B**  | Port Linux & Cross-Platform (Build Scripts, CI, Docker, Deployment Guide) | ✅ |
+
+---
 
 ## 🚀 Build & Run
 
@@ -38,6 +57,8 @@ docker build -t garuda-beam .
 docker run --rm -p 9002:9002 garuda-beam
 ```
 
+---
+
 ## 📊 Benchmark & Production Metrics
 
 - **HTTP Flood**: 191 req/s, 0 failed (di VPS 1 vCPU, 1GB RAM)
@@ -45,6 +66,8 @@ docker run --rm -p 9002:9002 garuda-beam
 - **RAM Memory Usage**: **~1.8 MB** (vs Erlang ~69.4 MB — **38x lebih hemat**)
 - **Chaos (SIGKILL)**: Auto-restart < 5 detik (systemd)
 - **Security & Robustness**: Path traversal & SQL injection blocked
+
+---
 
 ## 📁 Struktur Directory
 
@@ -66,10 +89,14 @@ scripts/            # Build & test scripts
 docs/               # Panduan deployment Linux VPS
 ```
 
+---
+
 ## 📚 Dokumentasi
 
 - [Panduan Deployment Linux VPS](docs/DEPLOYMENT_LINUX.md)
 - [Roadmap Garuda BEAM](ROADMAP_GARUDA_BEAM.md)
+
+---
 
 ## 🏆 Pencapaian
 
@@ -78,9 +105,13 @@ docs/               # Panduan deployment Linux VPS
 - ✅ 38x lebih hemat RAM dibanding Erlang
 - ✅ Zero downtime migration & parallel fallback architecture
 
+---
+
 ## 📜 Lisensi
 
 [MIT](LICENSE) — bebas digunakan, dimodifikasi, dan didistribusikan.
+
+---
 
 ## 🇮🇩 Tentang
 
