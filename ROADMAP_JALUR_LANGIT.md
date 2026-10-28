@@ -91,6 +91,16 @@ Jangan minta agen mengerjakan semuanya sekaligus. Berikan instruksi bertahap (sa
 *   **Tes:** `test_richat_gateway.cpp`.
 *   **Verifikasi:** Handler WebSocket API RICHAT (`RICHAT_LOGIN`, `RICHAT_SEND_MESSAGE`, `RICHAT_GET_MESSAGES`, `RICHAT_ACK_DELIVERED`) terintegrasi dengan `JalurLangitUltimate`.
 
+### 📍 R2: RICHAT Grup & Room — Chat Multi-User - [x] SELESAI
+*   **Target:** `include/garuda/richat/richat_message_store.hpp`, `richat_gateway.hpp`.
+*   **Tes:** `test_richat_room.cpp`.
+*   **Verifikasi:** Manajemen room (`create_room`, `join_room`, `leave_room`, `send_room_message`).
+
+### 📍 R3: RICHAT Observability — Metrics & Tracing - [x] SELESAI
+*   **Target:** `include/garuda/richat/richat_metrics.hpp`, `richat_tracer.hpp`, `richat_gateway.hpp`.
+*   **Tes:** `test_richat_observability.cpp`.
+*   **Verifikasi:** Prometheus-compatible metrics (`richat_requests_total`, `richat_errors_total`, `richat_latency_ms_avg`) dan OTLP-like JSON tracing.
+
 ---
 
 ## 📋 PROMPT UNTUK AGEN AI (SALIN & TEMPEL BESOK)
