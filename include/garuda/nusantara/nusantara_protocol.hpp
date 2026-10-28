@@ -29,7 +29,11 @@ enum class NusantaraAction {
     JALUR_LANGIT_CREATE_TABLE,
     JALUR_LANGIT_INSERT,
     JALUR_LANGIT_QUERY,
-    JALUR_LANGIT_UPDATE_SCHEMA
+    JALUR_LANGIT_UPDATE_SCHEMA,
+    RICHAT_LOGIN,
+    RICHAT_SEND_MESSAGE,
+    RICHAT_GET_MESSAGES,
+    RICHAT_ACK_DELIVERED
 };
 
 inline const char* to_string(EntityTarget target) {
@@ -66,6 +70,10 @@ inline const char* to_string(NusantaraAction action) {
         case NusantaraAction::JALUR_LANGIT_INSERT: return "JALUR_LANGIT_INSERT";
         case NusantaraAction::JALUR_LANGIT_QUERY: return "JALUR_LANGIT_QUERY";
         case NusantaraAction::JALUR_LANGIT_UPDATE_SCHEMA: return "JALUR_LANGIT_UPDATE_SCHEMA";
+        case NusantaraAction::RICHAT_LOGIN: return "RICHAT_LOGIN";
+        case NusantaraAction::RICHAT_SEND_MESSAGE: return "RICHAT_SEND_MESSAGE";
+        case NusantaraAction::RICHAT_GET_MESSAGES: return "RICHAT_GET_MESSAGES";
+        case NusantaraAction::RICHAT_ACK_DELIVERED: return "RICHAT_ACK_DELIVERED";
     }
     return "UNKNOWN";
 }
@@ -81,6 +89,10 @@ inline bool from_string(const std::string& str, NusantaraAction& out) {
     if (str == "JALUR_LANGIT_INSERT") { out = NusantaraAction::JALUR_LANGIT_INSERT; return true; }
     if (str == "JALUR_LANGIT_QUERY") { out = NusantaraAction::JALUR_LANGIT_QUERY; return true; }
     if (str == "JALUR_LANGIT_UPDATE_SCHEMA") { out = NusantaraAction::JALUR_LANGIT_UPDATE_SCHEMA; return true; }
+    if (str == "RICHAT_LOGIN") { out = NusantaraAction::RICHAT_LOGIN; return true; }
+    if (str == "RICHAT_SEND_MESSAGE") { out = NusantaraAction::RICHAT_SEND_MESSAGE; return true; }
+    if (str == "RICHAT_GET_MESSAGES") { out = NusantaraAction::RICHAT_GET_MESSAGES; return true; }
+    if (str == "RICHAT_ACK_DELIVERED") { out = NusantaraAction::RICHAT_ACK_DELIVERED; return true; }
     return false;
 }
 

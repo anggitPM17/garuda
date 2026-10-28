@@ -86,6 +86,11 @@ Jangan minta agen mengerjakan semuanya sekaligus. Berikan instruksi bertahap (sa
 *   **Tes:** `test_richat_contract.cpp`.
 *   **Verifikasi:** Pembekuan spesifikasi API RICHAT, validasi skema payload valid & invalid.
 
+### 📍 R1: RICHAT Gateway — Integrasi Jalur Langit ke RICHAT - [x] SELESAI
+*   **Target:** `include/garuda/richat/richat_message_store.hpp`, `richat_gateway.hpp`.
+*   **Tes:** `test_richat_gateway.cpp`.
+*   **Verifikasi:** Handler WebSocket API RICHAT (`RICHAT_LOGIN`, `RICHAT_SEND_MESSAGE`, `RICHAT_GET_MESSAGES`, `RICHAT_ACK_DELIVERED`) terintegrasi dengan `JalurLangitUltimate`.
+
 ---
 
 ## 📋 PROMPT UNTUK AGEN AI (SALIN & TEMPEL BESOK)
