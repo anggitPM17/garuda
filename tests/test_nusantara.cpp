@@ -126,6 +126,93 @@ int main() {
         std::cout << "  ✓ Test D: stop() Idempotency & Restart PASS\n";
     }
 
-    std::cout << "\n=== EKOSISTEM GARUDA NUSANTARA FASE B BERJALAN SUKSES ===\n";
+    // === Test E: TCP Transport ===
+    std::cout << "\n=== TEST E: TCP TRANSPORT ===\n";
+    {
+        auto& broker = NusantaraBroker::get_instance();
+
+        std::atomic<int> received{0};
+        std::atomic<bool> payload_ok{false};
+        broker.register_entity(EntityTarget::STADION_UI, [&](const NusantaraMessage& m) {
+            if (m.payload.count("text") && m.payload.at("text") == "hello via tcp") {
+                payload_ok.store(true);
+            }
+            received.fetch_add(1);
+        });
+
+        const std::uint16_t port = 47823;
+        GARUDA_CHECK(broker.start_listener(port), "start_listener must succeed");
+        broker.start();
+
+        NusantaraMessage msg;
+        msg.message_id = "tcp-001";
+        msg.sender = EntityTarget::AUTOPILOT_AI;
+        msg.receiver = EntityTarget::STADION_UI;
+        msg.action = NusantaraAction::BROADCAST_MSG;
+        msg.payload["text"] = "hello via tcp";
+
+        GARUDA_CHECK(broker.send_remote("127.0.0.1", port, msg), "send_remote must succeed");
+
+        auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(3);
+        while (received.load() < 1 && std::chrono::steady_clock::now() < deadline) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(20));
+        }
+
+        GARUDA_CHECK(received.load() == 1, "listener must receive 1 message via TCP");
+        GARUDA_CHECK(payload_ok.load(), "payload must be preserved across TCP");
+
+        broker.stop();
+        broker.stop_listener();
+        std::cout << "  ✓ Test E: TCP Transport PASS\n";
+    }
+
+    // === Test F: Malformed JSON over TCP ===
+    std::cout << "\n=== TEST F: MALFORMED JSON OVER TCP ===\n";
+    {
+        auto& broker = NusantaraBroker::get_instance();
+        const std::uint16_t port = 47824;
+        GARUDA_CHECK(broker.start_listener(port), "start_listener must succeed");
+        broker.start();
+
+        auto sock = transport::connect_to("127.0.0.1", port);
+        GARUDA_CHECK(sock.has_value(), "connect_to must succeed");
+        GARUDA_CHECK(sock->send_all("{not valid json\n"), "send_all must succeed");
+        sock->close();
+
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+        std::atomic<int> received{0};
+        broker.register_entity(EntityTarget::ANDROID_STUDIO, [&](const NusantaraMessage&) {
+            received.fetch_add(1);
+        });
+
+        NusantaraMessage msg;
+        msg.message_id = "tcp-002";
+        msg.sender = EntityTarget::AUTOPILOT_AI;
+        msg.receiver = EntityTarget::ANDROID_STUDIO;
+        msg.action = NusantaraAction::BROADCAST_MSG;
+        GARUDA_CHECK(broker.send_remote("127.0.0.1", port, msg), "send_remote must succeed after malformed input");
+
+        auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(3);
+        while (received.load() < 1 && std::chrono::steady_clock::now() < deadline) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(20));
+        }
+        GARUDA_CHECK(received.load() == 1, "broker must survive malformed JSON and process subsequent message");
+
+        broker.stop();
+        broker.stop_listener();
+        std::cout << "  ✓ Test F: Malformed JSON over TCP PASS\n";
+    }
+
+    // === Test G: stop_listener() Idempotency ===
+    std::cout << "\n=== TEST G: STOP LISTENER IDEMPOTENCY ===\n";
+    {
+        auto& broker = NusantaraBroker::get_instance();
+        broker.stop_listener();
+        broker.stop_listener();
+        std::cout << "  ✓ Test G: stop_listener() Idempotency PASS\n";
+    }
+
+    std::cout << "\n=== EKOSISTEM GARUDA NUSANTARA FASE C BERJALAN SUKSES ===\n";
     return 0;
 }

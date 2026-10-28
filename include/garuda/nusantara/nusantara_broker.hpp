@@ -1,5 +1,6 @@
 #pragma once
 #include "nusantara_protocol.hpp"
+#include "nusantara_transport.hpp"
 #include <atomic>
 #include <condition_variable>
 #include <functional>
@@ -23,6 +24,10 @@ private:
     std::condition_variable cv_;
     std::atomic<bool> running_{false};
     std::thread worker_;
+
+    std::thread listener_thread_;
+    std::atomic<bool> listener_running_{false};
+    transport::Listener listener_;
 
     NusantaraBroker() = default; // Singleton
 
@@ -66,6 +71,35 @@ private:
         }
     }
 
+    void listener_loop() {
+        while (listener_running_.load()) {
+            auto client = listener_.accept();
+            if (!client.valid()) {
+                if (!listener_running_.load()) break;
+                continue;
+            }
+
+            std::thread([this, client_sock = std::move(client)]() mutable {
+                this->handle_client(std::move(client_sock));
+            }).detach();
+        }
+    }
+
+    void handle_client(transport::Socket client) {
+        while (true) {
+            auto line = client.recv_until('\n');
+            if (!line.has_value()) break;
+            if (line->empty()) continue;
+
+            auto msg = NusantaraMessage::from_json(*line);
+            if (msg.has_value()) {
+                send_message(*msg);
+            } else {
+                std::cerr << "[GARUDA NUSANTARA WARNING] Formulasi JSON TCP tidak valid: " << *line << "\n";
+            }
+        }
+    }
+
 public:
     static NusantaraBroker& get_instance() {
         static NusantaraBroker instance;
@@ -73,6 +107,7 @@ public:
     }
 
     ~NusantaraBroker() {
+        stop_listener();
         stop();
     }
 
@@ -95,6 +130,45 @@ public:
             worker_.join();
         }
         std::cout << "[GARUDA NUSANTARA] Async Worker Broker dihentikan.\n";
+    }
+
+    bool start_listener(std::uint16_t port) {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (listener_running_.load()) return false;
+        if (!listener_.listen("0.0.0.0", port)) return false;
+
+        listener_running_.store(true);
+        listener_thread_ = std::thread([this]() { this->listener_loop(); });
+        std::cout << "[GARUDA NUSANTARA] Listener TCP terpasang pada port: " << listener_.port() << "\n";
+        return true;
+    }
+
+    std::uint16_t listener_port() const {
+        return listener_.port();
+    }
+
+    bool listener_active() const {
+        return listener_running_.load();
+    }
+
+    void stop_listener() {
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            if (!listener_running_.load()) return;
+            listener_running_.store(false);
+            listener_.close();
+        }
+        if (listener_thread_.joinable()) {
+            listener_thread_.join();
+        }
+        std::cout << "[GARUDA NUSANTARA] Listener TCP dihentikan.\n";
+    }
+
+    bool send_remote(const std::string& host, std::uint16_t port, const NusantaraMessage& msg) {
+        auto sock = transport::connect_to(host, port);
+        if (!sock.has_value()) return false;
+        std::string payload = msg.to_json() + "\n";
+        return sock->send_all(payload);
     }
 
     // Mendaftarkan entitas (misal: Autopilot, Richat, GVM)
