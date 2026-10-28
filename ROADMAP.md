@@ -154,7 +154,7 @@ STATUS: Lapis 1 FUNGSIONAL SELESAI (Fondasi server & demo RICHAT terbukti). Gate
 - [x] Program kontributor & governance (dokumen CONTRIBUTING, CoC, Governance)
 
 ### 2.4 Scripting & Embedding
-- [ ] Mode scripting ringan (tanpa compile terpisah)
+- [x] Mode scripting ringan (ScriptEngine eval/eval_file teruji 100%)
 - [ ] Sandboxing script (batas resource, tanpa akses FS/jaringan secara default)
 
 **Gate keluar Lapis 2:** Minimal 3 aplikasi general-purpose nyata (CLI, desktop, script) dibuat oleh orang selain kamu, dengan feedback positif.
