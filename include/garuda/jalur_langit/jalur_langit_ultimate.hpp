@@ -265,6 +265,10 @@ public:
         index_.create_index(table, column);
         std::cout << "[JALUR LANGIT] Index dibuat pada " << table << "(" << column << ").\n";
     }
+
+    StorageEngine& get_storage() {
+        return *storage_;
+    }
 };
 
 } // namespace garuda::jalur_langit
