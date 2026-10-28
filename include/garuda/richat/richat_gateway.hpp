@@ -71,6 +71,16 @@ public:
                 success = handle_send_room_message(msg);
             } else if (msg.action == NusantaraAction::RICHAT_LEAVE_ROOM) {
                 success = handle_leave_room(msg);
+            } else if (msg.action == NusantaraAction::RICHAT_CREATE_STATUS) {
+                success = handle_create_status(msg);
+            } else if (msg.action == NusantaraAction::RICHAT_GET_STATUSES) {
+                success = handle_get_statuses(msg);
+            } else if (msg.action == NusantaraAction::RICHAT_CREATE_MOMENT) {
+                success = handle_create_moment(msg);
+            } else if (msg.action == NusantaraAction::RICHAT_GET_MOMENTS) {
+                success = handle_get_moments(msg);
+            } else if (msg.action == NusantaraAction::RICHAT_LIKE_MOMENT) {
+                success = handle_like_moment(msg);
             } else {
                 send_error(msg.sender, 403, "Action not allowed for RICHAT Gateway");
                 success = false;
@@ -333,6 +343,154 @@ private:
         resp.payload["status"] = "200";
         resp.payload["success"] = "true";
         resp.payload["message_id"] = message_id;
+        NusantaraBroker::get_instance().send_message(resp);
+        return true;
+    }
+
+    bool handle_create_status(const NusantaraMessage& msg) {
+        auto sess_it = msg.payload.find("session_token");
+        auto cnt_it = msg.payload.find("content");
+        auto media_it = msg.payload.find("media_url");
+
+        if (sess_it == msg.payload.end() || cnt_it == msg.payload.end()) {
+            send_error(msg.sender, 400, "Missing session_token or content");
+            return false;
+        }
+
+        std::string user_id;
+        if (!validate_session(sess_it->second, user_id)) {
+            send_error(msg.sender, 401, "Invalid session_token");
+            return false;
+        }
+
+        std::string media = (media_it != msg.payload.end()) ? media_it->second : "";
+        std::string status_id = store_.create_status(user_id, cnt_it->second, media);
+
+        NusantaraMessage resp;
+        resp.message_id = "resp_status";
+        resp.sender = EntityTarget::JALUR_LANGIT;
+        resp.receiver = msg.sender;
+        resp.action = NusantaraAction::BROADCAST_MSG;
+        resp.payload["status"] = "200";
+        resp.payload["success"] = "true";
+        resp.payload["status_id"] = status_id;
+        NusantaraBroker::get_instance().send_message(resp);
+        return true;
+    }
+
+    bool handle_get_statuses(const NusantaraMessage& msg) {
+        auto sess_it = msg.payload.find("session_token");
+        if (sess_it == msg.payload.end()) {
+            send_error(msg.sender, 400, "Missing session_token");
+            return false;
+        }
+
+        std::string user_id;
+        if (!validate_session(sess_it->second, user_id)) {
+            send_error(msg.sender, 401, "Invalid session_token");
+            return false;
+        }
+
+        auto statuses = store_.get_statuses(user_id);
+
+        NusantaraMessage resp;
+        resp.message_id = "resp_get_statuses";
+        resp.sender = EntityTarget::JALUR_LANGIT;
+        resp.receiver = msg.sender;
+        resp.action = NusantaraAction::BROADCAST_MSG;
+        resp.payload["status"] = "200";
+        resp.payload["success"] = "true";
+        resp.payload["count"] = std::to_string(statuses.size());
+        NusantaraBroker::get_instance().send_message(resp);
+        return true;
+    }
+
+    bool handle_create_moment(const NusantaraMessage& msg) {
+        auto sess_it = msg.payload.find("session_token");
+        auto media_it = msg.payload.find("media_url");
+        auto cap_it = msg.payload.find("caption");
+        auto vis_it = msg.payload.find("visibility");
+
+        if (sess_it == msg.payload.end() || media_it == msg.payload.end()) {
+            send_error(msg.sender, 400, "Missing session_token or media_url");
+            return false;
+        }
+
+        std::string user_id;
+        if (!validate_session(sess_it->second, user_id)) {
+            send_error(msg.sender, 401, "Invalid session_token");
+            return false;
+        }
+
+        std::string cap = (cap_it != msg.payload.end()) ? cap_it->second : "";
+        std::string vis = (vis_it != msg.payload.end()) ? vis_it->second : "public";
+        std::string moment_id = store_.create_moment(user_id, media_it->second, cap, vis);
+
+        NusantaraMessage resp;
+        resp.message_id = "resp_moment";
+        resp.sender = EntityTarget::JALUR_LANGIT;
+        resp.receiver = msg.sender;
+        resp.action = NusantaraAction::BROADCAST_MSG;
+        resp.payload["status"] = "200";
+        resp.payload["success"] = "true";
+        resp.payload["moment_id"] = moment_id;
+        NusantaraBroker::get_instance().send_message(resp);
+        return true;
+    }
+
+    bool handle_get_moments(const NusantaraMessage& msg) {
+        auto sess_it = msg.payload.find("session_token");
+        if (sess_it == msg.payload.end()) {
+            send_error(msg.sender, 400, "Missing session_token");
+            return false;
+        }
+
+        std::string user_id;
+        if (!validate_session(sess_it->second, user_id)) {
+            send_error(msg.sender, 401, "Invalid session_token");
+            return false;
+        }
+
+        auto moments = store_.get_moments(user_id);
+
+        NusantaraMessage resp;
+        resp.message_id = "resp_get_moments";
+        resp.sender = EntityTarget::JALUR_LANGIT;
+        resp.receiver = msg.sender;
+        resp.action = NusantaraAction::BROADCAST_MSG;
+        resp.payload["status"] = "200";
+        resp.payload["success"] = "true";
+        resp.payload["count"] = std::to_string(moments.size());
+        NusantaraBroker::get_instance().send_message(resp);
+        return true;
+    }
+
+    bool handle_like_moment(const NusantaraMessage& msg) {
+        auto sess_it = msg.payload.find("session_token");
+        auto mom_it = msg.payload.find("moment_id");
+
+        if (sess_it == msg.payload.end() || mom_it == msg.payload.end()) {
+            send_error(msg.sender, 400, "Missing session_token or moment_id");
+            return false;
+        }
+
+        std::string user_id;
+        if (!validate_session(sess_it->second, user_id)) {
+            send_error(msg.sender, 401, "Invalid session_token");
+            return false;
+        }
+
+        bool liked = store_.like_moment(user_id, mom_it->second);
+
+        NusantaraMessage resp;
+        resp.message_id = "resp_like";
+        resp.sender = EntityTarget::JALUR_LANGIT;
+        resp.receiver = msg.sender;
+        resp.action = NusantaraAction::BROADCAST_MSG;
+        resp.payload["status"] = "200";
+        resp.payload["success"] = "true";
+        resp.payload["liked"] = liked ? "true" : "false (already liked)";
+        resp.payload["like_count"] = std::to_string(store_.get_like_count(mom_it->second));
         NusantaraBroker::get_instance().send_message(resp);
         return true;
     }

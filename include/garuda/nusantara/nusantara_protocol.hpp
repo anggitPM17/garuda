@@ -37,7 +37,12 @@ enum class NusantaraAction {
     RICHAT_CREATE_ROOM,
     RICHAT_JOIN_ROOM,
     RICHAT_LEAVE_ROOM,
-    RICHAT_SEND_ROOM_MESSAGE
+    RICHAT_SEND_ROOM_MESSAGE,
+    RICHAT_CREATE_STATUS,
+    RICHAT_GET_STATUSES,
+    RICHAT_CREATE_MOMENT,
+    RICHAT_GET_MOMENTS,
+    RICHAT_LIKE_MOMENT
 };
 
 inline const char* to_string(EntityTarget target) {
@@ -82,6 +87,11 @@ inline const char* to_string(NusantaraAction action) {
         case NusantaraAction::RICHAT_JOIN_ROOM: return "RICHAT_JOIN_ROOM";
         case NusantaraAction::RICHAT_LEAVE_ROOM: return "RICHAT_LEAVE_ROOM";
         case NusantaraAction::RICHAT_SEND_ROOM_MESSAGE: return "RICHAT_SEND_ROOM_MESSAGE";
+        case NusantaraAction::RICHAT_CREATE_STATUS: return "RICHAT_CREATE_STATUS";
+        case NusantaraAction::RICHAT_GET_STATUSES: return "RICHAT_GET_STATUSES";
+        case NusantaraAction::RICHAT_CREATE_MOMENT: return "RICHAT_CREATE_MOMENT";
+        case NusantaraAction::RICHAT_GET_MOMENTS: return "RICHAT_GET_MOMENTS";
+        case NusantaraAction::RICHAT_LIKE_MOMENT: return "RICHAT_LIKE_MOMENT";
     }
     return "UNKNOWN";
 }
@@ -105,6 +115,11 @@ inline bool from_string(const std::string& str, NusantaraAction& out) {
     if (str == "RICHAT_JOIN_ROOM") { out = NusantaraAction::RICHAT_JOIN_ROOM; return true; }
     if (str == "RICHAT_LEAVE_ROOM") { out = NusantaraAction::RICHAT_LEAVE_ROOM; return true; }
     if (str == "RICHAT_SEND_ROOM_MESSAGE") { out = NusantaraAction::RICHAT_SEND_ROOM_MESSAGE; return true; }
+    if (str == "RICHAT_CREATE_STATUS") { out = NusantaraAction::RICHAT_CREATE_STATUS; return true; }
+    if (str == "RICHAT_GET_STATUSES") { out = NusantaraAction::RICHAT_GET_STATUSES; return true; }
+    if (str == "RICHAT_CREATE_MOMENT") { out = NusantaraAction::RICHAT_CREATE_MOMENT; return true; }
+    if (str == "RICHAT_GET_MOMENTS") { out = NusantaraAction::RICHAT_GET_MOMENTS; return true; }
+    if (str == "RICHAT_LIKE_MOMENT") { out = NusantaraAction::RICHAT_LIKE_MOMENT; return true; }
     return false;
 }
 

@@ -236,6 +236,109 @@ public:
         if (result.size() > static_cast<size_t>(limit)) result.resize(limit);
         return result;
     }
+
+    // =========================================================
+    // R4 - STATUS & MOMENT MANAGEMENT
+    // =========================================================
+
+    // --- Status (Hilang setelah 24 jam) ---
+    std::string create_status(const std::string& user_id, const std::string& content, const std::string& media_url) {
+        std::lock_guard<std::mutex> lock(mutex_);
+        std::string status_id = generate_id("status");
+        Row row;
+        row.columns["status_id"] = status_id;
+        row.columns["user_id"] = user_id;
+        row.columns["content"] = content;
+        row.columns["media_url"] = media_url;
+        row.columns["created_at"] = static_cast<std::int64_t>(std::time(nullptr));
+        row.columns["expires_at"] = static_cast<std::int64_t>(std::time(nullptr) + 86400); // 24 jam
+        db_.get_storage().put("statuses", status_id, row);
+        return status_id;
+    }
+
+    std::vector<Row> get_statuses(const std::string& user_id) {
+        std::lock_guard<std::mutex> lock(mutex_);
+        (void)user_id;
+        std::vector<Row> result;
+        auto all_statuses = db_.get_storage().scan("statuses");
+        std::int64_t now = static_cast<std::int64_t>(std::time(nullptr));
+
+        for (const auto& s : all_statuses) {
+            auto e_it = s.columns.find("expires_at");
+            if (e_it == s.columns.end()) continue;
+
+            if (std::get<std::int64_t>(e_it->second) > now) {
+                result.push_back(s);
+            }
+        }
+        return result;
+    }
+
+    // --- Moment (Feed/Story) ---
+    std::string create_moment(const std::string& user_id, const std::string& media_url,
+                              const std::string& caption, const std::string& visibility) {
+        std::lock_guard<std::mutex> lock(mutex_);
+        std::string moment_id = generate_id("moment");
+        Row row;
+        row.columns["moment_id"] = moment_id;
+        row.columns["user_id"] = user_id;
+        row.columns["media_url"] = media_url;
+        row.columns["caption"] = caption;
+        row.columns["visibility"] = visibility; // "public", "friends", "private"
+        row.columns["created_at"] = static_cast<std::int64_t>(std::time(nullptr));
+        db_.get_storage().put("moments", moment_id, row);
+        return moment_id;
+    }
+
+    std::vector<Row> get_moments(const std::string& user_id) {
+        std::lock_guard<std::mutex> lock(mutex_);
+        std::vector<Row> result;
+        auto all_moments = db_.get_storage().scan("moments");
+
+        for (const auto& m : all_moments) {
+            auto v_it = m.columns.find("visibility");
+            if (v_it == m.columns.end()) continue;
+
+            std::string vis = std::get<std::string>(v_it->second);
+            auto u_it = m.columns.find("user_id");
+            if (vis == "public" || (u_it != m.columns.end() && std::get<std::string>(u_it->second) == user_id)) {
+                result.push_back(m);
+            }
+        }
+
+        std::sort(result.begin(), result.end(), [](const Row& a, const Row& b) {
+            return std::get<std::int64_t>(a.columns.at("created_at")) > std::get<std::int64_t>(b.columns.at("created_at"));
+        });
+        return result;
+    }
+
+    bool like_moment(const std::string& user_id, const std::string& moment_id) {
+        std::lock_guard<std::mutex> lock(mutex_);
+        std::string like_key = moment_id + ":" + user_id;
+
+        auto existing = db_.get_storage().get("moment_likes", like_key);
+        if (existing.has_value()) return false;
+
+        Row row;
+        row.columns["moment_id"] = moment_id;
+        row.columns["user_id"] = user_id;
+        row.columns["created_at"] = static_cast<std::int64_t>(std::time(nullptr));
+        db_.get_storage().put("moment_likes", like_key, row);
+        return true;
+    }
+
+    int get_like_count(const std::string& moment_id) {
+        std::lock_guard<std::mutex> lock(mutex_);
+        int count = 0;
+        auto all_likes = db_.get_storage().scan("moment_likes");
+        for (const auto& l : all_likes) {
+            auto m_it = l.columns.find("moment_id");
+            if (m_it != l.columns.end() && std::get<std::string>(m_it->second) == moment_id) {
+                count++;
+            }
+        }
+        return count;
+    }
 };
 
 } // namespace garuda::richat

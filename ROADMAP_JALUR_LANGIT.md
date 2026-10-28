@@ -101,6 +101,11 @@ Jangan minta agen mengerjakan semuanya sekaligus. Berikan instruksi bertahap (sa
 *   **Tes:** `test_richat_observability.cpp`.
 *   **Verifikasi:** Prometheus-compatible metrics (`richat_requests_total`, `richat_errors_total`, `richat_latency_ms_avg`) dan OTLP-like JSON tracing.
 
+### 📍 R4: RICHAT Status & Moment — Story & Feed - [x] SELESAI
+*   **Target:** `include/garuda/richat/richat_message_store.hpp`, `richat_gateway.hpp`.
+*   **Tes:** `test_richat_status_moment.cpp`.
+*   **Verifikasi:** Status 24 jam (`create_status`, `get_statuses`) & Moment Feed (`create_moment`, `get_moments`, `like_moment`).
+
 ---
 
 ## 📋 PROMPT UNTUK AGEN AI (SALIN & TEMPEL BESOK)
