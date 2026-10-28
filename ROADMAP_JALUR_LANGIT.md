@@ -71,6 +71,11 @@ Jangan minta agen mengerjakan semuanya sekaligus. Berikan instruksi bertahap (sa
 *   **Target:** Menghubungkan Jalur Langit ke `NusantaraBroker`. 
 *   **Skenario:** Autopilot AI mengirim pesan ke Nusantara untuk meng- *update* skema Jalur Langit secara *live*, lalu RICHAT menerima notifikasi via JSON Serializer.
 
+### 📍 FASE 5.1: Autopilot AI — AdminGate + HealthMonitor - [x] SELESAI
+*   **Target:** `include/garuda/autopilot/admin_gate.hpp`, `health_monitor.hpp`.
+*   **Tes:** `test_admin_gate.cpp`, `test_health_monitor.cpp`.
+*   **Verifikasi:** Mode gate bekerja (MANUAL/AUTOPILOT/STOP), health check fail-safe.
+
 ---
 
 ## 📋 PROMPT UNTUK AGEN AI (SALIN & TEMPEL BESOK)
