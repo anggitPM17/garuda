@@ -5,6 +5,7 @@
 #include <thread>
 #include <chrono>
 #include <atomic>
+#include <set>
 
 using namespace garuda::nusantara;
 using namespace garuda::nusantara::entities;
@@ -428,6 +429,83 @@ int main() {
         std::cout << "  ✓ Test N: WS/WSS Stop Idempotency PASS\n";
     }
 
-    std::cout << "\n=== EKOSISTEM GARUDA NUSANTARA FASE D2 BERJALAN SUKSES ===\n";
+    // === Test O: Mask Key Random ===
+    std::cout << "\n=== TEST O: MASK KEY RANDOM ===\n";
+    {
+        using namespace garuda::nusantara::transport;
+
+        WsFrame f;
+        f.fin = true;
+        f.opcode = WsOpcode::Text;
+        f.payload = "hello";
+
+        std::set<std::string> observed_keys;
+        for (int i = 0; i < 10; ++i) {
+            std::string encoded = ws_encode_frame(f, /*mask=*/true);
+            GARUDA_CHECK(encoded.size() >= 6, "encoded frame must have at least 6 bytes");
+            std::string key = encoded.substr(2, 4);
+            observed_keys.insert(key);
+        }
+        GARUDA_CHECK(observed_keys.size() >= 8, "mask key must be random (>=8 unique in 10 tries)");
+        std::cout << "  ✓ Test O: Mask Key Random PASS (" << observed_keys.size() << "/10 unique)\n";
+    }
+
+    // === Test P: Client Key Random ===
+    std::cout << "\n=== TEST P: CLIENT KEY RANDOM ===\n";
+    {
+        using namespace garuda::nusantara::transport;
+
+        std::set<std::string> observed_keys;
+        for (int i = 0; i < 10; ++i) {
+            std::string key = ws_generate_client_key();
+            GARUDA_CHECK(key.size() == 24, "client key must be 24 chars (16-byte base64)");
+            observed_keys.insert(key);
+        }
+        GARUDA_CHECK(observed_keys.size() == 10, "client key must be random (10 unique in 10 tries)");
+        std::cout << "  ✓ Test P: Client Key Random PASS (10/10 unique)\n";
+    }
+
+    // === Test Q: Server Rejects Non-WS Request ===
+    std::cout << "\n=== TEST Q: SERVER REJECTS NON-WS REQUEST ===\n";
+    {
+        auto& broker = NusantaraBroker::get_instance();
+
+        const std::uint16_t port = 47829;
+        GARUDA_CHECK(broker.start_ws_listener(port), "start_ws_listener must succeed");
+
+        auto sock = transport::connect_to("127.0.0.1", port);
+        GARUDA_CHECK(sock.has_value(), "connect_to must succeed");
+        std::string bad_req = "GET / HTTP/1.1\r\nHost: 127.0.0.1\r\n"
+                              "Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n"
+                              "Sec-WebSocket-Version: 13\r\n\r\n";
+        sock->send_all(bad_req);
+
+        auto line = sock->recv_until('\n');
+        GARUDA_CHECK(line.has_value(), "server must respond");
+        GARUDA_CHECK(line->find("101") == std::string::npos, "server must NOT return 101 for non-WS request");
+        GARUDA_CHECK(line->find("400") != std::string::npos || line->find("426") != std::string::npos,
+                     "server must return 400 or 426");
+
+        sock->close();
+        broker.stop_ws_listener();
+        std::cout << "  ✓ Test Q: Server Rejects Non-WS Request PASS\n";
+    }
+
+    // === Test R: Connect Timeout ===
+    std::cout << "\n=== TEST R: CONNECT TIMEOUT ===\n";
+    {
+        using namespace garuda::nusantara::transport;
+
+        auto start = std::chrono::steady_clock::now();
+        auto sock = connect_ws_to("127.0.0.1", 47999, /*timeout_ms=*/1000);
+        auto elapsed = std::chrono::steady_clock::now() - start;
+
+        GARUDA_CHECK(!sock.has_value(), "connect_ws_to to empty port must fail");
+        auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count();
+        GARUDA_CHECK(elapsed_ms < 3000, "connect_ws_to must fail within 3s (not hang)");
+        std::cout << "  ✓ Test R: Connect Timeout PASS (failed in " << elapsed_ms << " ms)\n";
+    }
+
+    std::cout << "\n=== EKOSISTEM GARUDA NUSANTARA FASE C CLEANUP BERJALAN SUKSES ===\n";
     return 0;
 }

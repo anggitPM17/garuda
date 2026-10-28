@@ -6,6 +6,9 @@
 #include <iostream>
 #include <cstdint>
 #include <cstring>
+#include <cctype>
+#include <random>
+#include <array>
 
 #ifdef _WIN32
   #ifndef WIN32_LEAN_AND_MEAN
@@ -64,6 +67,19 @@ inline void close_fd(socket_t fd) {
     }
 }
 
+inline bool set_socket_recv_timeout(socket_t fd, int timeout_ms) {
+    if (fd == INVALID_SOCK) return false;
+#ifdef _WIN32
+    DWORD tv = static_cast<DWORD>(timeout_ms);
+    return ::setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, reinterpret_cast<const char*>(&tv), sizeof(tv)) == 0;
+#else
+    struct timeval tv;
+    tv.tv_sec = timeout_ms / 1000;
+    tv.tv_usec = (timeout_ms % 1000) * 1000;
+    return ::setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, reinterpret_cast<const char*>(&tv), sizeof(tv)) == 0;
+#endif
+}
+
 class Socket {
 private:
     socket_t fd_ = INVALID_SOCK;
@@ -93,6 +109,10 @@ public:
 
     socket_t fd() const { return fd_; }
     bool valid() const { return fd_ != INVALID_SOCK; }
+
+    bool set_recv_timeout(int timeout_ms) {
+        return set_socket_recv_timeout(fd_, timeout_ms);
+    }
 
     void close() {
         if (fd_ != INVALID_SOCK) {
@@ -262,7 +282,7 @@ public:
     std::uint16_t port() const { return port_; }
 };
 
-inline std::optional<Socket> connect_to(const std::string& host, std::uint16_t port, int /*timeout_ms*/ = 5000) {
+inline std::optional<Socket> connect_to(const std::string& host, std::uint16_t port, int timeout_ms = 5000) {
     init_sockets();
 
     struct addrinfo hints{}, *res = nullptr;
@@ -280,6 +300,8 @@ inline std::optional<Socket> connect_to(const std::string& host, std::uint16_t p
         freeaddrinfo(res);
         return std::nullopt;
     }
+
+    set_socket_recv_timeout(fd, timeout_ms);
 
     if (::connect(fd, res->ai_addr, static_cast<int>(res->ai_addrlen)) != 0) {
         close_fd(fd);
@@ -527,6 +549,11 @@ public:
 
     bool valid() const { return impl_ && impl_->ssl_initialized && impl_->raw_sock.valid(); }
 
+    bool set_recv_timeout(int timeout_ms) {
+        if (!valid()) return false;
+        return impl_->raw_sock.set_recv_timeout(timeout_ms);
+    }
+
     int recv_raw(void* buf, std::size_t len) {
         if (!valid()) return -1;
         while (true) {
@@ -671,7 +698,7 @@ inline std::optional<TlsSocket> connect_tls_to(const std::string& host, std::uin
     return tls_sock;
 }
 
-// === FASE D2: WEBSOCKET (WS & WSS) TRANSPORT LAYER ===
+// === FASE D2 & C CLEANUP: WEBSOCKET (WS & WSS) TRANSPORT LAYER ===
 
 enum class WsOpcode : std::uint8_t {
     Continuation = 0x0,
@@ -688,6 +715,83 @@ struct WsFrame {
     bool masked = false;
     std::string payload;
 };
+
+inline std::array<std::uint8_t, 4> ws_generate_mask_key() {
+    thread_local static mbedtls_entropy_context entropy;
+    thread_local static mbedtls_ctr_drbg_context ctr_drbg;
+    thread_local static bool initialized = false;
+
+    if (!initialized) {
+        mbedtls_entropy_init(&entropy);
+        mbedtls_ctr_drbg_init(&ctr_drbg);
+        const char* pers = "ws_mask_key_gen";
+        int rc = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy,
+                                       reinterpret_cast<const unsigned char*>(pers), std::strlen(pers));
+        initialized = (rc == 0);
+    }
+
+    std::array<std::uint8_t, 4> key;
+    if (initialized) {
+        if (mbedtls_ctr_drbg_random(&ctr_drbg, key.data(), key.size()) == 0) {
+            return key;
+        }
+    }
+
+    thread_local static std::random_device rd;
+    std::uint32_t val = rd();
+    std::memcpy(key.data(), &val, 4);
+    return key;
+}
+
+inline std::string ws_generate_client_key() {
+    thread_local static mbedtls_entropy_context entropy;
+    thread_local static mbedtls_ctr_drbg_context ctr_drbg;
+    thread_local static bool initialized = false;
+
+    if (!initialized) {
+        mbedtls_entropy_init(&entropy);
+        mbedtls_ctr_drbg_init(&ctr_drbg);
+        const char* pers = "ws_client_key_gen";
+        int rc = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy,
+                                       reinterpret_cast<const unsigned char*>(pers), std::strlen(pers));
+        initialized = (rc == 0);
+    }
+
+    unsigned char raw_key[16];
+    if (initialized) {
+        mbedtls_ctr_drbg_random(&ctr_drbg, raw_key, sizeof(raw_key));
+    } else {
+        thread_local static std::random_device rd;
+        for (int i = 0; i < 16; ++i) raw_key[i] = static_cast<unsigned char>(rd());
+    }
+
+    unsigned char b64_out[64];
+    std::size_t olen = 0;
+    mbedtls_base64_encode(b64_out, sizeof(b64_out), &olen, raw_key, sizeof(raw_key));
+    return std::string(reinterpret_cast<char*>(b64_out), olen);
+}
+
+inline std::string ws_to_lower(std::string s) {
+    for (char& c : s) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
+    return s;
+}
+
+inline std::string ws_parse_header(const std::string& raw, const std::string& name) {
+    std::string lower_raw = ws_to_lower(raw);
+    std::string lower_name = ws_to_lower(name) + ":";
+
+    auto pos = lower_raw.find(lower_name);
+    if (pos == std::string::npos) return "";
+
+    auto end_line = lower_raw.find("\n", pos);
+    if (end_line == std::string::npos) end_line = lower_raw.size();
+
+    std::string val = raw.substr(pos + lower_name.length(), end_line - (pos + lower_name.length()));
+    while (!val.empty() && (val.front() == ' ' || val.front() == '\t')) val.erase(0, 1);
+    while (!val.empty() && (val.back() == '\r' || val.back() == ' ' || val.back() == '\t')) val.pop_back();
+
+    return val;
+}
 
 inline std::string ws_encode_frame(const WsFrame& frame, bool mask) {
     std::string out;
@@ -711,8 +815,8 @@ inline std::string ws_encode_frame(const WsFrame& frame, bool mask) {
     }
 
     if (mask) {
-        std::uint8_t mask_key[4] = { 0x12, 0x34, 0x56, 0x78 };
-        out.append(reinterpret_cast<char*>(mask_key), 4);
+        auto mask_key = ws_generate_mask_key();
+        out.append(reinterpret_cast<const char*>(mask_key.data()), 4);
 
         std::string masked_payload;
         masked_payload.reserve(len);
@@ -805,6 +909,10 @@ public:
 
     bool valid() const { return raw_sock_.valid() && !closed_; }
 
+    void set_recv_timeout(int timeout_ms) {
+        raw_sock_.set_recv_timeout(timeout_ms);
+    }
+
     void close() {
         if (!closed_) {
             if (raw_sock_.valid()) {
@@ -876,6 +984,10 @@ public:
         : tls_sock_(std::move(tls_sock)), is_client_(is_client) {}
 
     bool valid() const { return tls_sock_.valid() && !closed_; }
+
+    void set_recv_timeout(int timeout_ms) {
+        tls_sock_.set_recv_timeout(timeout_ms);
+    }
 
     void close() {
         if (!closed_) {
@@ -952,6 +1064,8 @@ public:
         auto raw_conn = raw_listener_.accept();
         if (!raw_conn.valid()) return WsSocket();
 
+        raw_conn.set_recv_timeout(5000); // 5s timeout during handshake
+
         auto http_req = raw_conn.recv_until('\n');
         if (!http_req.has_value()) {
             raw_conn.close();
@@ -965,22 +1079,17 @@ public:
             req_buf += *line + "\n";
         }
 
-        auto pos = req_buf.find("Sec-WebSocket-Key:");
-        if (pos == std::string::npos) {
-            pos = req_buf.find("sec-websocket-key:");
-        }
+        std::string upgrade = ws_to_lower(ws_parse_header(req_buf, "Upgrade"));
+        std::string connection = ws_to_lower(ws_parse_header(req_buf, "Connection"));
+        std::string version = ws_parse_header(req_buf, "Sec-WebSocket-Version");
+        std::string key = ws_parse_header(req_buf, "Sec-WebSocket-Key");
 
-        if (pos == std::string::npos) {
+        if (upgrade != "websocket" || connection.find("upgrade") == std::string::npos || version != "13" || key.empty()) {
+            std::string reject = "HTTP/1.1 400 Bad Request\r\nConnection: close\r\nContent-Type: text/plain\r\n\r\nBad Request: Missing or invalid WebSocket headers\r\n";
+            raw_conn.send_all(reject);
             raw_conn.close();
             return WsSocket();
         }
-
-        auto end_line = req_buf.find("\n", pos);
-        std::string key_line = req_buf.substr(pos, end_line - pos);
-        auto colon = key_line.find(':');
-        std::string key = (colon != std::string::npos) ? key_line.substr(colon + 1) : "";
-        while (!key.empty() && (key.front() == ' ' || key.front() == '\t')) key.erase(0, 1);
-        while (!key.empty() && (key.back() == '\r' || key.back() == ' ' || key.back() == '\t')) key.pop_back();
 
         std::string accept_key = ws_compute_accept_key(key);
         std::string response = "HTTP/1.1 101 Switching Protocols\r\n"
@@ -993,6 +1102,7 @@ public:
             return WsSocket();
         }
 
+        raw_conn.set_recv_timeout(0); // Reset to blocking after handshake
         return WsSocket(std::move(raw_conn), /*is_client=*/false);
     }
 
@@ -1018,6 +1128,8 @@ public:
         auto tls_conn = tls_listener_.accept();
         if (!tls_conn.valid()) return WssSocket();
 
+        tls_conn.set_recv_timeout(5000); // 5s timeout during handshake
+
         auto http_req = tls_conn.recv_until('\n');
         if (!http_req.has_value()) {
             tls_conn.close();
@@ -1031,22 +1143,17 @@ public:
             req_buf += *line + "\n";
         }
 
-        auto pos = req_buf.find("Sec-WebSocket-Key:");
-        if (pos == std::string::npos) {
-            pos = req_buf.find("sec-websocket-key:");
-        }
+        std::string upgrade = ws_to_lower(ws_parse_header(req_buf, "Upgrade"));
+        std::string connection = ws_to_lower(ws_parse_header(req_buf, "Connection"));
+        std::string version = ws_parse_header(req_buf, "Sec-WebSocket-Version");
+        std::string key = ws_parse_header(req_buf, "Sec-WebSocket-Key");
 
-        if (pos == std::string::npos) {
+        if (upgrade != "websocket" || connection.find("upgrade") == std::string::npos || version != "13" || key.empty()) {
+            std::string reject = "HTTP/1.1 400 Bad Request\r\nConnection: close\r\nContent-Type: text/plain\r\n\r\nBad Request: Missing or invalid WebSocket headers\r\n";
+            tls_conn.send_all(reject);
             tls_conn.close();
             return WssSocket();
         }
-
-        auto end_line = req_buf.find("\n", pos);
-        std::string key_line = req_buf.substr(pos, end_line - pos);
-        auto colon = key_line.find(':');
-        std::string key = (colon != std::string::npos) ? key_line.substr(colon + 1) : "";
-        while (!key.empty() && (key.front() == ' ' || key.front() == '\t')) key.erase(0, 1);
-        while (!key.empty() && (key.back() == '\r' || key.back() == ' ' || key.back() == '\t')) key.pop_back();
 
         std::string accept_key = ws_compute_accept_key(key);
         std::string response = "HTTP/1.1 101 Switching Protocols\r\n"
@@ -1059,6 +1166,7 @@ public:
             return WssSocket();
         }
 
+        tls_conn.set_recv_timeout(0); // Reset to blocking after handshake
         return WssSocket(std::move(tls_conn), /*is_client=*/false);
     }
 
@@ -1071,7 +1179,7 @@ inline std::optional<WsSocket> connect_ws_to(const std::string& host, std::uint1
     auto raw_sock = connect_to(host, port, timeout_ms);
     if (!raw_sock.has_value()) return std::nullopt;
 
-    std::string key = "dGhlIHNhbXBsZSBub25jZQ==";
+    std::string key = ws_generate_client_key();
     std::string req = "GET / HTTP/1.1\r\n"
                       "Host: " + host + ":" + std::to_string(port) + "\r\n"
                       "Upgrade: websocket\r\n"
@@ -1098,6 +1206,7 @@ inline std::optional<WsSocket> connect_ws_to(const std::string& host, std::uint1
         return std::nullopt;
     }
 
+    raw_sock->set_recv_timeout(0); // Reset to blocking
     return WsSocket(std::move(*raw_sock), /*is_client=*/true);
 }
 
@@ -1105,7 +1214,7 @@ inline std::optional<WssSocket> connect_wss_to(const std::string& host, std::uin
     auto tls_sock = connect_tls_to(host, port, ca_cert_path, timeout_ms);
     if (!tls_sock.has_value()) return std::nullopt;
 
-    std::string key = "dGhlIHNhbXBsZSBub25jZQ==";
+    std::string key = ws_generate_client_key();
     std::string req = "GET / HTTP/1.1\r\n"
                       "Host: " + host + ":" + std::to_string(port) + "\r\n"
                       "Upgrade: websocket\r\n"
@@ -1132,6 +1241,7 @@ inline std::optional<WssSocket> connect_wss_to(const std::string& host, std::uin
         return std::nullopt;
     }
 
+    tls_sock->set_recv_timeout(0); // Reset to blocking
     return WssSocket(std::move(*tls_sock), /*is_client=*/true);
 }
 
