@@ -186,6 +186,30 @@ public:
             recv_buf_.append(chunk, static_cast<std::size_t>(n));
         }
     }
+
+    std::string read_body_bytes(std::size_t content_len) {
+        std::string body = "";
+        if (!recv_buf_.empty()) {
+            if (content_len > 0 && recv_buf_.size() >= content_len) {
+                body = recv_buf_.substr(0, content_len);
+                recv_buf_.erase(0, content_len);
+                return body;
+            } else {
+                body = std::move(recv_buf_);
+                recv_buf_.clear();
+            }
+        }
+
+        while (body.size() < content_len && content_len > 0 && valid()) {
+            char chunk[1024];
+            std::size_t to_read = std::min<std::size_t>(sizeof(chunk), content_len - body.size());
+            int n = recv_raw(chunk, to_read);
+            if (n <= 0) break;
+            body.append(chunk, n);
+        }
+
+        return body;
+    }
 };
 
 class Listener {
@@ -1113,31 +1137,20 @@ public:
 
         // 1. POST /api/register or POST /api/auth/register
         if (req_buf.find("POST /api/register") != std::string::npos || req_buf.find("POST /api/auth/register") != std::string::npos) {
-            auto header_end = req_buf.find("\r\n\r\n");
-            std::string body_str = "";
-            if (header_end != std::string::npos && header_end + 4 < req_buf.size()) {
-                body_str = req_buf.substr(header_end + 4);
-            }
+            std::string lower_buf = req_buf;
+            for (char& c : lower_buf) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
 
             std::size_t content_len = 0;
-            auto cl_pos = req_buf.find("Content-Length:");
-            if (cl_pos == std::string::npos) cl_pos = req_buf.find("content-length:");
+            auto cl_pos = lower_buf.find("content-length");
             if (cl_pos != std::string::npos) {
-                auto val_start = req_buf.find_first_of("0123456789", cl_pos);
+                auto val_start = lower_buf.find_first_of("0123456789", cl_pos + 14);
                 if (val_start != std::string::npos) {
-                    try { content_len = std::stoul(req_buf.substr(val_start)); } catch (...) {}
+                    try { content_len = std::stoul(lower_buf.substr(val_start)); } catch (...) {}
                 }
             }
 
-            while (body_str.size() < content_len && content_len > 0) {
-                char chunk[1024];
-                std::size_t to_read = std::min<std::size_t>(sizeof(chunk), content_len - body_str.size());
-                int n = raw_conn.recv_raw(chunk, to_read);
-                if (n <= 0) break;
-                body_str.append(chunk, n);
-            }
-
-            std::string full_req = req_buf + body_str;
+            std::string body_str = raw_conn.read_body_bytes(content_len);
+            std::string full_req = body_str;
             auto parse_val = [&](const std::string& key) {
                 // 1. Quoted key: "key" : "value" or "key":"value"
                 std::string k1 = "\"" + key + "\"";
@@ -1176,6 +1189,8 @@ public:
             std::string user = parse_val("username");
             std::string pass = parse_val("password");
 
+            garuda::sys::JsonLogger::info("PARSED REGISTER USER: '" + user + "' PASS: '" + pass + "' | BODY: " + body_str);
+
             auto [ok, err] = garuda::auth::AuthManager::get_instance().register_user(user, pass);
             std::string resp_body;
             if (ok) {
@@ -1193,31 +1208,20 @@ public:
 
         // 2. POST /api/login
         if (req_buf.find("POST /api/login") != std::string::npos || req_buf.find("POST /api/auth/login") != std::string::npos) {
-            auto header_end = req_buf.find("\r\n\r\n");
-            std::string body_str = "";
-            if (header_end != std::string::npos && header_end + 4 < req_buf.size()) {
-                body_str = req_buf.substr(header_end + 4);
-            }
+            std::string lower_buf = req_buf;
+            for (char& c : lower_buf) c = static_cast<char>(std::tolower(static_cast<unsigned char>(c)));
 
             std::size_t content_len = 0;
-            auto cl_pos = req_buf.find("Content-Length:");
-            if (cl_pos == std::string::npos) cl_pos = req_buf.find("content-length:");
+            auto cl_pos = lower_buf.find("content-length");
             if (cl_pos != std::string::npos) {
-                auto val_start = req_buf.find_first_of("0123456789", cl_pos);
+                auto val_start = lower_buf.find_first_of("0123456789", cl_pos + 14);
                 if (val_start != std::string::npos) {
-                    try { content_len = std::stoul(req_buf.substr(val_start)); } catch (...) {}
+                    try { content_len = std::stoul(lower_buf.substr(val_start)); } catch (...) {}
                 }
             }
 
-            while (body_str.size() < content_len && content_len > 0) {
-                char chunk[1024];
-                std::size_t to_read = std::min<std::size_t>(sizeof(chunk), content_len - body_str.size());
-                int n = raw_conn.recv_raw(chunk, to_read);
-                if (n <= 0) break;
-                body_str.append(chunk, n);
-            }
-
-            std::string full_req = req_buf + body_str;
+            std::string body_str = raw_conn.read_body_bytes(content_len);
+            std::string full_req = body_str;
             auto parse_val = [&](const std::string& key) {
                 // 1. Quoted key: "key" : "value" or "key":"value"
                 std::string k1 = "\"" + key + "\"";
