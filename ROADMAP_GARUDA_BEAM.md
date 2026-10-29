@@ -87,6 +87,6 @@
 
 ## 📍 FASE E.6: Dokumentasi API & Stadion Garuda Web — ✅ SELESAI
 - [x] `OpenAPI 3.0 & Swagger UI` — Spesifikasi OpenAPI & Swagger UI interaktif (`docs/openapi.yaml`, `docs/swagger-ui/index.html`, `docs/API.md`)
-- [x] `Stadion Garuda Web Playground` — Halaman web playground interaktif (`site/playground.html`, `docs/PLAYGROUND.md`)
+- [x] `Stadion Garuda Web Playground` — Halaman web playground interaktif terintegrasi compiler backend (`site/playground.html`, `docs/PLAYGROUND.md`)
 - [x] `Landing Page & Logo` — Web portal utama proyek (`site/index.html`, `site/assets/logo.svg`)
 - [x] `Developer Tutorials` — Panduan pengguna & tutorial (`docs/GETTING_STARTED.md`, `docs/TUTORIAL_CHAT_APP.md`)
