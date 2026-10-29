@@ -263,6 +263,32 @@ private:
                 continue;
             }
 
+            if (text->find("\"action\":\"chat\"") != std::string::npos || text->find("\"action\": \"chat\"") != std::string::npos) {
+                std::string chat_msg = "";
+                auto msg_pos = text->find("\"msg\":\"");
+                if (msg_pos != std::string::npos) {
+                    auto msg_end = text->find("\"", msg_pos + 7);
+                    if (msg_end != std::string::npos) {
+                        chat_msg = text->substr(msg_pos + 7, msg_end - (msg_pos + 7));
+                    }
+                }
+
+                std::string clean_chat = "";
+                for (char c : chat_msg) {
+                    if (c != '<' && c != '>' && c != '"' && c != '\\') {
+                        clean_chat += c;
+                    }
+                }
+                clean_chat = clean_chat.substr(0, 100);
+
+                if (!clean_chat.empty()) {
+                    std::string sender_name = "Pilot_" + player_id.substr(0, 4);
+                    std::string broadcast_json = "{\"type\":\"chat\",\"sender\":\"" + sender_name + "\",\"msg\":\"" + clean_chat + "\"}";
+                    broadcast_ws_text(broadcast_json);
+                }
+                continue;
+            }
+
             if (text->find("\"action\"") != std::string::npos) {
                 garuda::game::ArenaEngine::get_instance().handle_json_input(player_id, *text);
             }
@@ -303,6 +329,32 @@ private:
 
             if (text->find("\"type\":\"ping\"") != std::string::npos || *text == "ping" || text->find("\"action\":\"ping\"") != std::string::npos) {
                 client->send_text("{\"type\":\"pong\"}");
+                continue;
+            }
+
+            if (text->find("\"action\":\"chat\"") != std::string::npos || text->find("\"action\": \"chat\"") != std::string::npos) {
+                std::string chat_msg = "";
+                auto msg_pos = text->find("\"msg\":\"");
+                if (msg_pos != std::string::npos) {
+                    auto msg_end = text->find("\"", msg_pos + 7);
+                    if (msg_end != std::string::npos) {
+                        chat_msg = text->substr(msg_pos + 7, msg_end - (msg_pos + 7));
+                    }
+                }
+
+                std::string clean_chat = "";
+                for (char c : chat_msg) {
+                    if (c != '<' && c != '>' && c != '"' && c != '\\') {
+                        clean_chat += c;
+                    }
+                }
+                clean_chat = clean_chat.substr(0, 100);
+
+                if (!clean_chat.empty()) {
+                    std::string sender_name = "Pilot_" + player_id.substr(0, 4);
+                    std::string broadcast_json = "{\"type\":\"chat\",\"sender\":\"" + sender_name + "\",\"msg\":\"" + clean_chat + "\"}";
+                    broadcast_ws_text(broadcast_json);
+                }
                 continue;
             }
 

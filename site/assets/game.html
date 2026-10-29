@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🎮 GARUDA ARENA — Real-Time Multiplayer Actor Game (GVM Engine)</title>
+  <title>🎮 GARUDA ARENA — Super Dewa Multiplayer Game (GVM Engine)</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -99,14 +99,14 @@
       top: 15px;
       right: 15px;
       width: 240px;
-      max-height: 600px;
+      max-height: 520px;
       background: rgba(15, 23, 42, 0.9);
       border: 1px solid #334155;
       border-radius: 8px;
       padding: 12px;
       backdrop-filter: blur(6px);
       box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-      pointer-events: none;
+      z-index: 5;
       overflow-y: auto;
     }
     .score-section-title {
@@ -139,33 +139,122 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      max-width: 140px;
+      max-width: 120px;
     }
     .score-item .p-score {
       font-weight: bold;
       color: #f59e0b;
     }
+    .cheer-btn {
+      background: #38bdf8;
+      color: #0f172a;
+      border: none;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-left: 4px;
+    }
+    .cheer-btn:hover { background: #7dd3fc; }
 
-    /* Controls overlay */
+    /* Global Chat Overlay */
+    .chat-overlay {
+      position: absolute;
+      bottom: 50px;
+      left: 15px;
+      width: 280px;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 10px;
+      backdrop-filter: blur(6px);
+      z-index: 5;
+    }
+    .chat-messages {
+      height: 110px;
+      overflow-y: auto;
+      font-size: 12px;
+      line-height: 1.4;
+      margin-bottom: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .chat-msg {
+      word-break: break-word;
+      animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+    .chat-sender { font-weight: bold; color: #38bdf8; }
+    .chat-input-row {
+      display: flex;
+      gap: 6px;
+    }
+    .chat-input {
+      flex: 1;
+      padding: 6px 10px;
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 4px;
+      color: #fff;
+      font-size: 12px;
+      outline: none;
+    }
+    .chat-input:focus { border-color: #38bdf8; }
+    .chat-send-btn {
+      background: #dc2626;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .chat-send-btn:hover { background: #ef4444; }
+
+    /* Controls hint */
     .controls-hint {
       position: absolute;
       bottom: 12px;
       left: 15px;
       background: rgba(15, 23, 42, 0.75);
-      padding: 8px 14px;
+      padding: 6px 12px;
       border-radius: 6px;
       border: 1px solid #334155;
-      font-size: 12px;
+      font-size: 11px;
       color: #94a3b8;
       pointer-events: none;
+      z-index: 4;
     }
     .controls-hint kbd {
       background: #334155;
       color: #f8fafc;
-      padding: 2px 6px;
+      padding: 1px 5px;
       border-radius: 4px;
       font-family: monospace;
       font-weight: bold;
+    }
+
+    /* Spectator Banner */
+    .spectator-banner {
+      position: absolute;
+      top: 15px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(220, 38, 38, 0.9);
+      color: white;
+      padding: 10px 24px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: bold;
+      border: 1px solid #f87171;
+      box-shadow: 0 0 15px rgba(220, 38, 38, 0.6);
+      display: none;
+      align-items: center;
+      gap: 10px;
+      z-index: 6;
     }
 
     /* Join Modal overlay */
@@ -181,12 +270,12 @@
     }
     .join-box {
       background: #1e293b;
-      padding: 30px;
+      padding: 28px;
       border-radius: 12px;
       border: 1px solid #dc2626;
       text-align: center;
       box-shadow: 0 0 25px rgba(220, 38, 38, 0.4);
-      max-width: 380px;
+      max-width: 400px;
       width: 90%;
     }
     .join-box h2 {
@@ -197,52 +286,75 @@
     .join-box p {
       font-size: 13px;
       color: #94a3b8;
-      margin-bottom: 18px;
+      margin-bottom: 16px;
     }
     .join-input {
       width: 100%;
-      padding: 12px;
+      padding: 10px 14px;
       background: #0f172a;
       border: 1px solid #334155;
       border-radius: 6px;
       color: #fff;
-      font-size: 16px;
-      margin-bottom: 16px;
+      font-size: 15px;
+      margin-bottom: 14px;
       outline: none;
       text-align: center;
     }
-    .join-input:focus {
-      border-color: #dc2626;
-    }
+    .join-input:focus { border-color: #dc2626; }
 
-    /* Color picker swatches */
-    .color-picker-title {
+    .selector-title {
       font-size: 12px;
       color: #94a3b8;
       margin-bottom: 8px;
       font-weight: bold;
     }
+
+    /* Color picker swatches */
     .color-swatches {
       display: flex;
       justify-content: center;
       gap: 12px;
-      margin-bottom: 20px;
+      margin-bottom: 16px;
     }
     .color-swatch {
-      width: 36px;
-      height: 36px;
+      width: 32px;
+      height: 32px;
       border-radius: 50%;
       cursor: pointer;
       border: 2px solid transparent;
-      transition: transform 0.2s, border-color 0.2s;
+      transition: transform 0.2s;
     }
-    .color-swatch:hover {
-      transform: scale(1.15);
-    }
+    .color-swatch:hover { transform: scale(1.15); }
     .color-swatch.active {
       border-color: #ffffff;
       box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
       transform: scale(1.15);
+    }
+
+    /* Skin selector */
+    .skin-options {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .skin-btn {
+      flex: 1;
+      padding: 8px 10px;
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      color: #94a3b8;
+      font-size: 12px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .skin-btn:hover { color: #fff; border-color: #38bdf8; }
+    .skin-btn.active {
+      background: #38bdf8;
+      color: #0f172a;
+      border-color: #38bdf8;
     }
 
     .join-btn {
@@ -266,7 +378,7 @@
 <body>
 
   <header>
-    <h1>🦅 GARUDA <span>ARENA</span> <span class="badge">GVM ACTOR MODEL</span></h1>
+    <h1>🦅 GARUDA <span>ARENA</span> <span class="badge">SUPER DEWA</span></h1>
     <div class="status-box">
       <div id="statusDot" class="status-dot"></div>
       <span id="statusText">Menghubungkan ke WebSocket...</span>
@@ -275,6 +387,12 @@
 
   <div class="game-container">
     <canvas id="gameCanvas" width="1000" height="700"></canvas>
+
+    <!-- Spectator Mode Banner -->
+    <div id="spectatorBanner" class="spectator-banner">
+      <span>💀 Anda Tertembak! Mode Spectator Aktif — Berikan Cheer 📣 untuk pemain lain!</span>
+      <button class="cheer-btn" style="padding: 4px 10px; font-size: 12px;" onclick="rejoinGame()">🔄 Respawn</button>
+    </div>
 
     <!-- Scoreboard & Hall of Fame -->
     <div class="scoreboard">
@@ -294,6 +412,17 @@
       </ul>
     </div>
 
+    <!-- Global Chat Panel -->
+    <div class="chat-overlay">
+      <div id="chatMessages" class="chat-messages">
+        <div class="chat-msg"><span class="chat-sender">[GARUDA]</span> Selamat datang di Garuda Arena!</div>
+      </div>
+      <div class="chat-input-row">
+        <input type="text" id="chatInput" class="chat-input" placeholder="Obrolan global..." maxlength="100" aria-label="Chat Message">
+        <button id="sendChatBtn" class="chat-send-btn">Kirim</button>
+      </div>
+    </div>
+
     <!-- Controls hint -->
     <div class="controls-hint">
       Kontrol: <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> Gerak | <kbd>Mouse</kbd> Arahkan | <kbd>Klik Kiri</kbd> / <kbd>Spasi</kbd> Tembak
@@ -307,12 +436,19 @@
 
         <input type="text" id="playerNameInput" class="join-input" placeholder="Masukkan Nama Pilot" aria-label="Nama Pilot" maxlength="15" value="PilotGaruda">
 
-        <div class="color-picker-title">PILIH WARNA PESAWAT:</div>
+        <div class="selector-title">PILIH WARNA PESAWAT:</div>
         <div class="color-swatches">
           <div class="color-swatch active" style="background: #ef4444;" data-color="#ef4444" title="Merah"></div>
           <div class="color-swatch" style="background: #3b82f6;" data-color="#3b82f6" title="Biru"></div>
           <div class="color-swatch" style="background: #10b981;" data-color="#10b981" title="Hijau"></div>
           <div class="color-swatch" style="background: #f59e0b;" data-color="#f59e0b" title="Kuning"></div>
+        </div>
+
+        <div class="selector-title">PILIH SKIN PESAWAT:</div>
+        <div class="skin-options">
+          <button class="skin-btn active" data-skin="default">🚀 Default</button>
+          <button class="skin-btn" data-skin="stealth">🥷 Stealth</button>
+          <button class="skin-btn" data-skin="heavy">🛡️ Heavy</button>
         </div>
 
         <button id="joinBtn" class="join-btn">🚀 MASUK ARENA</button>
@@ -333,14 +469,29 @@
     const scoreList = document.getElementById('scoreList');
     const hallOfFameList = document.getElementById('hallOfFameList');
     const playerCount = document.getElementById('playerCount');
+    const spectatorBanner = document.getElementById('spectatorBanner');
 
-    // Color picker
+    const chatMessages = document.getElementById('chatMessages');
+    const chatInput = document.getElementById('chatInput');
+    const sendChatBtn = document.getElementById('sendChatBtn');
+
+    // Selection State
     let selectedColor = "#ef4444";
+    let selectedSkin = "default";
+
     document.querySelectorAll('.color-swatch').forEach(swatch => {
       swatch.addEventListener('click', () => {
         document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
         swatch.classList.add('active');
         selectedColor = swatch.getAttribute('data-color');
+      });
+    });
+
+    document.querySelectorAll('.skin-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.skin-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedSkin = btn.getAttribute('data-skin');
       });
     });
 
@@ -357,14 +508,37 @@
     // Server State Cache
     let gameState = {
       players: [],
-      bullets: []
+      bullets: [],
+      powerups: []
     };
+
+    // Particles array
+    const particles = [];
 
     // Client Input Tracking
     const keys = { w: false, a: false, s: false, d: false, space: false };
     let mouseX = 500;
     let mouseY = 350;
     let lastShootTime = 0;
+
+    // --- WEB AUDIO API LASER SFX ---
+    let audioCtx = null;
+    function playLaserSound() {
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(150, audioCtx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.1);
+      } catch (e) {}
+    }
 
     // --- WEBSOCKET CONNECTION ---
     function getWebSocketUrl() {
@@ -405,6 +579,9 @@
             if (data.type === 'arena_state') {
               gameState = data;
               updateScoreboard();
+              checkSpectatorState();
+            } else if (data.type === 'chat') {
+              appendChatMessage(data.sender, data.msg);
             }
           } catch (e) {
             // Non-JSON or ping/pong frame
@@ -435,6 +612,54 @@
       }
     }, 5000);
 
+    // --- GLOBAL CHAT FUNCTIONS ---
+    function sendChat() {
+      const text = chatInput.value.trim();
+      if (!text || !socket || socket.readyState !== WebSocket.OPEN) return;
+      socket.send(JSON.stringify({
+        action: "chat",
+        msg: text
+      }));
+      chatInput.value = '';
+    }
+
+    function appendChatMessage(sender, msg) {
+      const el = document.createElement('div');
+      el.className = 'chat-msg';
+      el.innerHTML = `<span class="chat-sender">${escapeHtml(sender)}:</span> ${escapeHtml(msg)}`;
+      chatMessages.appendChild(el);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    sendChatBtn.addEventListener('click', sendChat);
+    chatInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') sendChat();
+    });
+
+    // --- SPECTATOR & CHEER ---
+    function checkSpectatorState() {
+      const myPlayer = gameState.players.find(p => p.id === playerId);
+      if (myPlayer && myPlayer.is_spectator) {
+        spectatorBanner.style.display = 'flex';
+      } else {
+        spectatorBanner.style.display = 'none';
+      }
+    }
+
+    function sendCheer(targetId) {
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({
+          action: "cheer",
+          target_id: targetId,
+          player_id: playerId
+        }));
+      }
+    }
+
+    function rejoinGame() {
+      sendJoinMsg();
+    }
+
     // --- HALL OF FAME FETCHING ---
     async function fetchHallOfFame() {
       try {
@@ -458,11 +683,11 @@
     }
 
     fetchHallOfFame();
-    setInterval(fetchHallOfFame, 10000); // Sync every 10 seconds
+    setInterval(fetchHallOfFame, 10000);
 
     // --- INPUT LISTENERS ---
     window.addEventListener('keydown', (e) => {
-      if (!inGame) return;
+      if (!inGame || document.activeElement === chatInput) return;
       const k = e.key.toLowerCase();
       if (k === 'w' || k === 'arrowup') keys.w = true;
       if (k === 'a' || k === 'arrowleft') keys.a = true;
@@ -477,7 +702,7 @@
     });
 
     window.addEventListener('keyup', (e) => {
-      if (!inGame) return;
+      if (!inGame || document.activeElement === chatInput) return;
       const k = e.key.toLowerCase();
       if (k === 'w' || k === 'arrowup') keys.w = false;
       if (k === 'a' || k === 'arrowleft') keys.a = false;
@@ -493,7 +718,7 @@
     });
 
     canvas.addEventListener('mousedown', (e) => {
-      if (!inGame) return;
+      if (!inGame || document.activeElement === chatInput) return;
       if (e.button === 0) {
         shoot();
       }
@@ -505,6 +730,7 @@
           action: "join",
           name: playerName,
           color: selectedColor,
+          skin: selectedSkin,
           player_id: playerId
         }));
       }
@@ -523,9 +749,14 @@
     });
 
     function shoot() {
+      const myPlayer = gameState.players.find(p => p.id === playerId);
+      if (myPlayer && myPlayer.is_spectator) return;
+
       const now = Date.now();
-      if (now - lastShootTime < 150) return; // Rate limit 150ms
+      if (now - lastShootTime < 150) return;
       lastShootTime = now;
+
+      playLaserSound();
 
       if (socket && socket.readyState === WebSocket.OPEN) {
         socket.send(JSON.stringify({
@@ -538,6 +769,8 @@
     // --- GAME LOOP & MOVEMENT SYNC ---
     function processInputAndSync() {
       if (!inGame || !socket || socket.readyState !== WebSocket.OPEN) return;
+      const myPlayer = gameState.players.find(p => p.id === playerId);
+      if (myPlayer && myPlayer.is_spectator) return;
 
       let dx = 0;
       let dy = 0;
@@ -547,17 +780,13 @@
       if (keys.a) dx -= 1;
       if (keys.d) dx += 1;
 
-      // Normalize diagonal movement
       if (dx !== 0 && dy !== 0) {
         dx *= 0.7071;
         dy *= 0.7071;
       }
 
-      // Calculate aiming angle based on my player position vs mouse
       let angle = 0;
-      const myPlayer = gameState.players.find(p => p.id === playerId);
       if (myPlayer) {
-        // Map my world pos to screen pos
         const renderX = myPlayer.x * (canvas.width / WORLD_WIDTH);
         const renderY = myPlayer.y * (canvas.height / WORLD_HEIGHT);
         angle = Math.atan2(mouseY - renderY, mouseX - renderX);
@@ -574,7 +803,7 @@
       }
     }
 
-    setInterval(processInputAndSync, 33); // 30 FPS client sync loop
+    setInterval(processInputAndSync, 33);
 
     // --- SCOREBOARD UPDATE ---
     function updateScoreboard() {
@@ -586,27 +815,27 @@
         return;
       }
 
-      // Sort by score descending
+      const myPlayer = gameState.players.find(p => p.id === playerId);
+      const isSpectator = myPlayer && myPlayer.is_spectator;
+
       const sorted = [...players].sort((a, b) => b.score - a.score);
       scoreList.innerHTML = sorted.map((p, idx) => `
         <li class="score-item" style="color: ${p.color}">
-          <span class="p-name">${idx + 1}. ${escapeHtml(p.name)} ${p.id === playerId ? '⭐' : ''}</span>
-          <span class="p-score">${p.score}</span>
+          <span class="p-name">${idx + 1}. ${escapeHtml(p.name)} ${p.is_spectator ? '💀' : ''} ${p.id === playerId ? '⭐' : ''}</span>
+          <span class="p-score">${p.score} ${isSpectator && !p.is_spectator ? `<button class="cheer-btn" onclick="sendCheer('${p.id}')">📣 Cheer</button>` : ''}</span>
         </li>
       `).join('');
     }
 
     function escapeHtml(str) {
-      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      return (str || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     }
 
     // --- RENDERING LOOP ---
     function render() {
-      // Clear background
       ctx.fillStyle = '#020617';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Scale factors from world (1000x1000) to canvas
       const scaleX = canvas.width / WORLD_WIDTH;
       const scaleY = canvas.height / WORLD_HEIGHT;
 
@@ -632,6 +861,39 @@
       ctx.lineWidth = 4;
       ctx.strokeRect(2, 2, canvas.width - 4, canvas.height - 4);
 
+      // Draw Power-Ups
+      const powerups = gameState.powerups || [];
+      for (const pup of powerups) {
+        const px = pup.x * scaleX;
+        const py = pup.y * scaleY;
+
+        ctx.save();
+        ctx.translate(px, py);
+
+        let glowColor = '#38bdf8';
+        let icon = '🛡️';
+        if (pup.type === 'heal') { glowColor = '#10b981'; icon = '💚'; }
+        if (pup.type === 'rapid_fire') { glowColor = '#ec4899'; icon = '⚡'; }
+
+        ctx.shadowColor = glowColor;
+        ctx.shadowBlur = 12;
+
+        ctx.fillStyle = '#1e293b';
+        ctx.strokeStyle = glowColor;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(0, 0, 12 * scaleX, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.font = '12px Segoe UI, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(icon, 0, 0);
+
+        ctx.restore();
+      }
+
       // Draw Bullets
       const bullets = gameState.bullets || [];
       for (const b of bullets) {
@@ -651,24 +913,53 @@
       // Draw Players
       const players = gameState.players || [];
       for (const p of players) {
+        if (p.is_spectator) continue; // Don't draw spectators on canvas
+
         const px = p.x * scaleX;
         const py = p.y * scaleY;
         const size = 16 * scaleX;
 
         ctx.save();
         ctx.translate(px, py);
+
+        // Draw Shield Aura
+        if (p.shield > 0) {
+          ctx.strokeStyle = '#38bdf8';
+          ctx.shadowColor = '#38bdf8';
+          ctx.shadowBlur = 10;
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.arc(0, 0, size * 1.6, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+
         ctx.rotate(p.angle || 0);
 
-        // Draw Spaceship (Triangle with custom color)
+        // Draw Spaceship Skin
         ctx.fillStyle = p.color || '#ef4444';
         ctx.strokeStyle = '#ffffff';
         ctx.lineWidth = 2;
 
         ctx.beginPath();
-        ctx.moveTo(size * 1.3, 0);            // Nose
-        ctx.lineTo(-size, -size * 0.8);       // Left wing
-        ctx.lineTo(-size * 0.4, 0);           // Engine indent
-        ctx.lineTo(-size, size * 0.8);        // Right wing
+        if (p.skin === 'stealth') {
+          // Stealth skin: Sleek needle
+          ctx.moveTo(size * 1.6, 0);
+          ctx.lineTo(-size * 1.1, -size * 0.5);
+          ctx.lineTo(-size * 0.3, 0);
+          ctx.lineTo(-size * 1.1, size * 0.5);
+        } else if (p.skin === 'heavy') {
+          // Heavy skin: Wide armored cruiser
+          ctx.moveTo(size * 1.2, 0);
+          ctx.lineTo(-size * 0.8, -size * 1.2);
+          ctx.lineTo(-size * 0.6, 0);
+          ctx.lineTo(-size * 0.8, size * 1.2);
+        } else {
+          // Default skin
+          ctx.moveTo(size * 1.3, 0);
+          ctx.lineTo(-size, -size * 0.8);
+          ctx.lineTo(-size * 0.4, 0);
+          ctx.lineTo(-size, size * 0.8);
+        }
         ctx.closePath();
         ctx.fill();
         ctx.stroke();
