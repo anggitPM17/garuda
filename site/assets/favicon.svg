@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="16" height="16">
+  <title>GARUDA BEAM Favicon 16x16</title>
+
+  <circle cx="8" cy="8" r="7.5" fill="#0f172a" stroke="#dc2626" stroke-width="0.8"/>
+
+  <!-- Left Wing -->
+  <path d="M 8 4 C 5 1, 1 2, 1 6 C 1 8, 3 9, 5 8 Z" fill="#dc2626"/>
+  <!-- Right Wing -->
+  <path d="M 8 4 C 11 1, 15 2, 15 6 C 15 8, 13 9, 11 8 Z" fill="#dc2626"/>
+
+  <!-- Tail Stack -->
+  <polygon points="8,10 5,13 11,13" fill="#0f172a" stroke="#f8fafc" stroke-width="0.4"/>
+  <polygon points="8,11.5 6,14.5 10,14.5" fill="#dc2626"/>
+
+  <!-- Head & Beak -->
+  <polygon points="8,1.5 6.8,3.8 9.2,3.8" fill="#f8fafc"/>
+  <polygon points="8,4.8 7,5.8 9,5.8" fill="#fbbf24"/>
+
+  <!-- Core Star -->
+  <circle cx="8" cy="8" r="1.2" fill="#fbbf24"/>
+</svg>

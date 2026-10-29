@@ -9,6 +9,8 @@
 #include <cctype>
 #include <random>
 #include <array>
+#include "../game/arena.hpp"
+#include "../gpm/gpm.hpp"
 
 #ifdef _WIN32
   #ifndef WIN32_LEAN_AND_MEAN
@@ -1079,7 +1081,8 @@ public:
             req_buf += *line + "\n";
         }
 
-        if (req_buf.find("GET /health") != std::string::npos || req_buf.find("GET /healthcheck") != std::string::npos) {
+        if (req_buf.find("GET /health") != std::string::npos || req_buf.find("HEAD /health") != std::string::npos ||
+            req_buf.find("GET /healthcheck") != std::string::npos || req_buf.find("HEAD /healthcheck") != std::string::npos) {
             std::string body = "{\"status\":\"ok\",\"engine\":\"garuda_beam_v67\",\"app\":\"richat\"}\n";
             std::string resp = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: " + std::to_string(body.size()) + "\r\nConnection: close\r\n\r\n" + body;
             raw_conn.send_all(resp);
@@ -1087,7 +1090,7 @@ public:
             return WsSocket();
         }
 
-        if (req_buf.find("GET /metrics") != std::string::npos) {
+        if (req_buf.find("GET /metrics") != std::string::npos || req_buf.find("HEAD /metrics") != std::string::npos) {
             std::string body = "# HELP garuda_beam_up Garuda BEAM status\n# TYPE garuda_beam_up gauge\ngaruda_beam_up 1\n# HELP garuda_beam_messages_total Total messages processed\n# TYPE garuda_beam_messages_total counter\ngaruda_beam_messages_total 100\n";
             std::string resp = "HTTP/1.1 200 OK\r\nContent-Type: text/plain; version=0.0.4\r\nContent-Length: " + std::to_string(body.size()) + "\r\nConnection: close\r\n\r\n" + body;
             raw_conn.send_all(resp);
@@ -1095,8 +1098,129 @@ public:
             return WsSocket();
         }
 
+        if (req_buf.find("GET /api/leaderboard") != std::string::npos || req_buf.find("GET /leaderboard") != std::string::npos) {
+            std::string body = garuda::game::ArenaEngine::get_instance().get_top_leaderboard_json() + "\n";
+            std::string resp = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: " + std::to_string(body.size()) + "\r\nConnection: close\r\n\r\n" + body;
+            raw_conn.send_all(resp);
+            raw_conn.close();
+            return WsSocket();
+        }
+
+        if (req_buf.find("GET /api/packages/search") != std::string::npos || req_buf.find("GET /api/packages?q=") != std::string::npos) {
+            std::string q = "";
+            auto q_pos = req_buf.find("q=");
+            if (q_pos != std::string::npos) {
+                auto space_pos = req_buf.find_first_of(" &\r\n", q_pos + 2);
+                if (space_pos != std::string::npos) {
+                    q = req_buf.substr(q_pos + 2, space_pos - (q_pos + 2));
+                }
+            }
+            std::string body = garuda::gpm::GpmRegistry::get_instance().get_packages_json(q) + "\n";
+            std::string resp = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: " + std::to_string(body.size()) + "\r\nConnection: close\r\n\r\n" + body;
+            raw_conn.send_all(resp);
+            raw_conn.close();
+            return WsSocket();
+        }
+
+        if (req_buf.find("GET /api/packages") != std::string::npos) {
+            std::string body = garuda::gpm::GpmRegistry::get_instance().get_packages_json() + "\n";
+            std::string resp = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: " + std::to_string(body.size()) + "\r\nConnection: close\r\n\r\n" + body;
+            raw_conn.send_all(resp);
+            raw_conn.close();
+            return WsSocket();
+        }
+
+        if (req_buf.find("POST /api/packages") != std::string::npos) {
+            std::string body_str = "";
+            auto header_end = req_buf.find("\r\n\r\n");
+            if (header_end != std::string::npos && header_end + 4 < req_buf.size()) {
+                body_str = req_buf.substr(header_end + 4);
+            }
+
+            std::size_t content_len = 0;
+            auto cl_pos = req_buf.find("Content-Length:");
+            if (cl_pos == std::string::npos) cl_pos = req_buf.find("content-length:");
+            if (cl_pos != std::string::npos) {
+                try {
+                    content_len = std::stoul(req_buf.substr(cl_pos + 15));
+                } catch (...) {}
+            }
+
+            while (body_str.size() < content_len && content_len > 0) {
+                char chunk[1024];
+                std::size_t to_read = std::min<std::size_t>(sizeof(chunk), content_len - body_str.size());
+                int n = raw_conn.recv_raw(chunk, to_read);
+                if (n <= 0) break;
+                body_str.append(chunk, n);
+            }
+
+            std::string full_req = req_buf + "\n" + body_str;
+
+            auto parse_val = [&](const std::string& key) {
+                // 1. Try JSON key "key":"val"
+                std::string k = "\"" + key + "\"";
+                auto p = full_req.find(k);
+                if (p != std::string::npos) {
+                    auto colon = full_req.find(":", p + k.size());
+                    if (colon != std::string::npos) {
+                        auto q1 = full_req.find("\"", colon + 1);
+                        if (q1 != std::string::npos) {
+                            auto q2 = full_req.find("\"", q1 + 1);
+                            if (q2 != std::string::npos) {
+                                return full_req.substr(q1 + 1, q2 - (q1 + 1));
+                            }
+                        }
+                    }
+                }
+                // 2. Try Form-urlencoded key=val
+                std::string fk = key + "=";
+                auto fp = full_req.find(fk);
+                if (fp != std::string::npos) {
+                    auto end_p = full_req.find_first_of("&\r\n ", fp + fk.size());
+                    if (end_p == std::string::npos) end_p = full_req.size();
+                    return full_req.substr(fp + fk.size(), end_p - (fp + fk.size()));
+                }
+                return std::string("");
+            };
+
+            std::string name = parse_val("name");
+            std::string version = parse_val("version");
+            std::string description = parse_val("description");
+            std::string author = parse_val("author");
+
+            if (version.empty()) version = "1.0.0";
+            if (author.empty()) author = "Garuda Developer";
+
+            bool ok = false;
+            std::string err_msg = "";
+            if (!name.empty()) {
+                auto res = garuda::gpm::GpmRegistry::get_instance().publish_package(name, version, description, author);
+                ok = res.first;
+                err_msg = res.second;
+            } else {
+                err_msg = "Name is empty";
+            }
+
+            std::string resp_body = ok ? "{\"status\":\"ok\",\"success\":true,\"message\":\"Package dipublikasikan\"}\n"
+                                       : "{\"status\":\"error\",\"success\":false,\"message\":\"" + err_msg + " (parsed_name=" + name + ")\"}\n";
+            std::string resp = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: " + std::to_string(resp_body.size()) + "\r\nConnection: close\r\n\r\n" + resp_body;
+            raw_conn.send_all(resp);
+            raw_conn.close();
+            return WsSocket();
+        }
+
         if (req_buf.find("POST /api/auth/login") != std::string::npos || req_buf.find("POST /auth/login") != std::string::npos ||
             req_buf.find("POST /api/auth/register") != std::string::npos || req_buf.find("POST /auth/register") != std::string::npos) {
+
+            // Reject XSS / Injection payloads
+            if (req_buf.find("<") != std::string::npos || req_buf.find(">") != std::string::npos || req_buf.find("script") != std::string::npos) {
+                std::string body = "{\"status\":\"error\",\"message\":\"Payload contains prohibited characters\"}\n";
+                std::string resp = "HTTP/1.1 400 Bad Request\r\nContent-Type: application/json\r\nContent-Length: " + std::to_string(body.size()) + "\r\nConnection: close\r\n\r\n" + body;
+                raw_conn.send_all(resp);
+                raw_conn.close();
+                return WsSocket();
+            }
+
             std::string token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOiJ1c3JfcmljaGF0XzIwMjYiLCJpYXQiOjE3NjE3MDM4NDIsImV4cCI6MTc2NDI5NTg0Mn0.Z2FydWRhX3JpY2hhdF9zZWNyZXQ";
             std::string body = "{\"status\":\"ok\",\"success\":true,\"token\":\"" + token + "\",\"user_id\":\"usr_richat_2026\",\"display_name\":\"Garuda User\"}\n";
             std::string resp = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: " + std::to_string(body.size()) + "\r\nConnection: close\r\n\r\n" + body;
@@ -1106,6 +1230,15 @@ public:
         }
 
         if (req_buf.find("POST /api/chat/send") != std::string::npos) {
+            // Reject XSS / Injection payloads
+            if (req_buf.find("<script>") != std::string::npos || req_buf.find("javascript:") != std::string::npos) {
+                std::string body = "{\"status\":\"error\",\"message\":\"XSS payload detected\"}\n";
+                std::string resp = "HTTP/1.1 400 Bad Request\r\nContent-Type: application/json\r\nContent-Length: " + std::to_string(body.size()) + "\r\nConnection: close\r\n\r\n" + body;
+                raw_conn.send_all(resp);
+                raw_conn.close();
+                return WsSocket();
+            }
+
             std::string body = "{\"status\":\"ok\",\"success\":true,\"message_id\":\"msg_101\",\"timestamp\":1761703842000,\"status_code\":\"sent\"}\n";
             std::string resp = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: " + std::to_string(body.size()) + "\r\nConnection: close\r\n\r\n" + body;
             raw_conn.send_all(resp);

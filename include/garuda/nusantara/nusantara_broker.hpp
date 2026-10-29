@@ -3,6 +3,7 @@
 #include "nusantara_transport.hpp"
 #include "nusantara_store.hpp"
 #include "nusantara_metrics.hpp"
+#include "../game/arena.hpp"
 #include <atomic>
 #include <condition_variable>
 #include <functional>
@@ -48,6 +49,37 @@ private:
     std::thread wss_listener_thread_;
     std::atomic<bool> wss_listener_running_{false};
     transport::WssListener wss_listener_;
+
+    // Active WebSocket Connections for Arena Game & Realtime Broadcasts
+    std::vector<std::shared_ptr<transport::WsSocket>> active_ws_clients_;
+    std::vector<std::shared_ptr<transport::WssSocket>> active_wss_clients_;
+    std::mutex ws_clients_mutex_;
+
+    void add_ws_client(std::shared_ptr<transport::WsSocket> client) {
+        std::lock_guard<std::mutex> lock(ws_clients_mutex_);
+        active_ws_clients_.push_back(client);
+    }
+
+    void remove_ws_client(std::shared_ptr<transport::WsSocket> client) {
+        std::lock_guard<std::mutex> lock(ws_clients_mutex_);
+        active_ws_clients_.erase(
+            std::remove(active_ws_clients_.begin(), active_ws_clients_.end(), client),
+            active_ws_clients_.end()
+        );
+    }
+
+    void add_wss_client(std::shared_ptr<transport::WssSocket> client) {
+        std::lock_guard<std::mutex> lock(ws_clients_mutex_);
+        active_wss_clients_.push_back(client);
+    }
+
+    void remove_wss_client(std::shared_ptr<transport::WssSocket> client) {
+        std::lock_guard<std::mutex> lock(ws_clients_mutex_);
+        active_wss_clients_.erase(
+            std::remove(active_wss_clients_.begin(), active_wss_clients_.end(), client),
+            active_wss_clients_.end()
+        );
+    }
 
     // Persistensi SQLite WAL
     std::unique_ptr<NusantaraMessageStore> store_;
@@ -215,27 +247,33 @@ private:
         }
     }
 
-    void handle_ws_client(transport::WsSocket client) {
+    void handle_ws_client(transport::WsSocket raw_client) {
+        auto client = std::make_shared<transport::WsSocket>(std::move(raw_client));
+        add_ws_client(client);
+
+        std::string player_id = "p_" + std::to_string(reinterpret_cast<uintptr_t>(client.get()) % 100000);
+
         while (true) {
-            auto text = client.recv_text();
+            auto text = client->recv_text();
             if (!text.has_value()) break;
             if (text->empty()) continue;
 
-            if (text->find("\"type\":\"ping\"") != std::string::npos || *text == "ping") {
-                client.send_text("{\"type\":\"pong\"}");
+            if (text->find("\"type\":\"ping\"") != std::string::npos || *text == "ping" || text->find("\"action\":\"ping\"") != std::string::npos) {
+                client->send_text("{\"type\":\"pong\"}");
                 continue;
+            }
+
+            if (text->find("\"action\"") != std::string::npos) {
+                garuda::game::ArenaEngine::get_instance().handle_json_input(player_id, *text);
             }
 
             auto msg = NusantaraMessage::from_json(*text);
             if (msg.has_value()) {
                 send_message(*msg);
-            } else {
-                std::cerr << "[GARUDA NUSANTARA WARNING] Formulasi JSON WS tidak valid: " << *text << "\n";
-                if (metrics_ && metrics_->is_enabled()) {
-                    metrics_->inc_transport_error("ws");
-                }
             }
         }
+
+        remove_ws_client(client);
     }
 
     void wss_listener_loop() {
@@ -252,28 +290,64 @@ private:
         }
     }
 
-    void handle_wss_client(transport::WssSocket client) {
+    void handle_wss_client(transport::WssSocket raw_client) {
+        auto client = std::make_shared<transport::WssSocket>(std::move(raw_client));
+        add_wss_client(client);
+
+        std::string player_id = "p_" + std::to_string(reinterpret_cast<uintptr_t>(client.get()) % 100000);
+
         while (true) {
-            auto text = client.recv_text();
+            auto text = client->recv_text();
             if (!text.has_value()) break;
             if (text->empty()) continue;
+
+            if (text->find("\"type\":\"ping\"") != std::string::npos || *text == "ping" || text->find("\"action\":\"ping\"") != std::string::npos) {
+                client->send_text("{\"type\":\"pong\"}");
+                continue;
+            }
+
+            if (text->find("\"action\"") != std::string::npos) {
+                garuda::game::ArenaEngine::get_instance().handle_json_input(player_id, *text);
+            }
 
             auto msg = NusantaraMessage::from_json(*text);
             if (msg.has_value()) {
                 send_message(*msg);
-            } else {
-                std::cerr << "[GARUDA NUSANTARA WARNING] Formulasi JSON WSS tidak valid: " << *text << "\n";
-                if (metrics_ && metrics_->is_enabled()) {
-                    metrics_->inc_transport_error("wss");
-                }
             }
         }
+
+        remove_wss_client(client);
     }
 
 public:
     static NusantaraBroker& get_instance() {
         static NusantaraBroker instance;
         return instance;
+    }
+
+    void broadcast_ws_text(const std::string& text) {
+        std::lock_guard<std::mutex> lock(ws_clients_mutex_);
+        for (auto it = active_ws_clients_.begin(); it != active_ws_clients_.end(); ) {
+            if ((*it)->valid()) {
+                bool ok = (*it)->send_text(text);
+                if (!ok) {
+                    it = active_ws_clients_.erase(it);
+                    continue;
+                }
+            }
+            ++it;
+        }
+
+        for (auto it = active_wss_clients_.begin(); it != active_wss_clients_.end(); ) {
+            if ((*it)->valid()) {
+                bool ok = (*it)->send_text(text);
+                if (!ok) {
+                    it = active_wss_clients_.erase(it);
+                    continue;
+                }
+            }
+            ++it;
+        }
     }
 
     ~NusantaraBroker() {
@@ -590,10 +664,10 @@ public:
     }
 
     // Mendaftarkan entitas (misal: Autopilot, Richat, GVM)
-    void register_entity(EntityTarget target, EntityReceiver receiver) {
+    void register_entity(garuda::nusantara::EntityTarget target, EntityReceiver receiver) {
         std::lock_guard<std::mutex> lock(mutex_);
         receivers_[target] = receiver;
-        std::cout << "[GARUDA NUSANTARA] Entitas terdaftar: " << (int)target << "\n";
+        std::cout << "[GARUDA NUSANTARA] Entitas terdaftar: " << static_cast<int>(target) << "\n";
     }
 
     // Registrasi Jalur Langit Bridge

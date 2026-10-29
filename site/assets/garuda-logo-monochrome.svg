@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="100%" height="100%">
+  <title>GARUDA BEAM Monochrome White Logo</title>
+  <desc>Monochrome White Vector Emblem for Dark Mode</desc>
+
+  <circle cx="12" cy="12" r="11" fill="none" stroke="#f8fafc" stroke-width="0.8"/>
+
+  <path d="M 12 7 C 8 3, 2 5, 2 10 C 2 12, 5 14, 8 13 Z" fill="none" stroke="#f8fafc" stroke-width="0.5"/>
+  <path d="M 12 9 C 9 6, 4 7, 3.5 11.5 C 5 13, 8 13.5, 9.5 12.5 Z" fill="none" stroke="#f8fafc" stroke-width="0.5"/>
+  <path d="M 12 11 C 10 8.5, 6 9, 5 12.5 C 6.5 13.5, 8.5 13.5, 10 12.8 Z" fill="none" stroke="#f8fafc" stroke-width="0.5"/>
+
+  <path d="M 12 7 C 16 3, 22 5, 22 10 C 22 12, 19 14, 16 13 Z" fill="none" stroke="#f8fafc" stroke-width="0.5"/>
+  <path d="M 12 9 C 15 6, 20 7, 20.5 11.5 C 19 13, 16 13.5, 14.5 12.5 Z" fill="none" stroke="#f8fafc" stroke-width="0.5"/>
+  <path d="M 12 11 C 14 8.5, 18 9, 19 12.5 C 17.5 13.5, 15.5 13.5, 14 12.8 Z" fill="none" stroke="#f8fafc" stroke-width="0.5"/>
+
+  <polygon points="12,15 8,18.5 16,18.5" fill="none" stroke="#f8fafc" stroke-width="0.5"/>
+  <polygon points="12,16.5 9,20 15,20" fill="none" stroke="#f8fafc" stroke-width="0.5"/>
+
+  <polygon points="12,2 10.2,5.5 13.8,5.5" fill="#f8fafc"/>
+  <polygon points="12,7.5 10.5,9.2 13.5,9.2" fill="#f8fafc"/>
+
+  <circle cx="10" cy="3" r="0.6" fill="#f8fafc"/>
+  <circle cx="12" cy="1.8" r="0.7" fill="#f8fafc"/>
+  <circle cx="14" cy="3" r="0.6" fill="#f8fafc"/>
+
+  <circle cx="12" cy="12" r="1.5" fill="#f8fafc"/>
+</svg>

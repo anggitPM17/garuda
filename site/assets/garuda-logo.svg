@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="100%" height="100%">
+  <title>GARUDA BEAM (G-BEAM) Logo</title>
+  <desc>Iconic Symmetrical Emblem for Garuda BEAM Distributed Runtime Engine</desc>
+
+  <defs>
+    <linearGradient id="beamGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ef4444"/>
+      <stop offset="100%" stop-color="#b91c1c"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Base Glow / Backing Circle -->
+  <circle cx="12" cy="12" r="11" fill="#0f172a" stroke="#dc2626" stroke-width="0.5"/>
+
+  <!-- Wing Blades Left (5 Blades - Red & Navy with White Outlines) -->
+  <path d="M 12 7 C 8 3, 2 5, 2 10 C 2 12, 5 14, 8 13 Z" fill="url(#beamGrad)" stroke="#f8fafc" stroke-width="0.3"/>
+  <path d="M 12 9 C 9 6, 4 7, 3.5 11.5 C 5 13, 8 13.5, 9.5 12.5 Z" fill="#0f172a" stroke="#f8fafc" stroke-width="0.3"/>
+  <path d="M 12 11 C 10 8.5, 6 9, 5 12.5 C 6.5 13.5, 8.5 13.5, 10 12.8 Z" fill="#dc2626" stroke="#f8fafc" stroke-width="0.3"/>
+  <path d="M 12 12.5 C 10.5 10.5, 7.5 11, 6.5 13.2 C 8 14, 9.5 13.8, 10.8 13 Z" fill="#0f172a" stroke="#f8fafc" stroke-width="0.3"/>
+  <path d="M 12 14 C 11 12.2, 8.8 12.5, 8 14 C 9 14.5, 10.2 14.3, 11.2 13.6 Z" fill="#dc2626" stroke="#f8fafc" stroke-width="0.3"/>
+
+  <!-- Wing Blades Right (5 Blades - Symmetrical) -->
+  <path d="M 12 7 C 16 3, 22 5, 22 10 C 22 12, 19 14, 16 13 Z" fill="url(#beamGrad)" stroke="#f8fafc" stroke-width="0.3"/>
+  <path d="M 12 9 C 15 6, 20 7, 20.5 11.5 C 19 13, 16 13.5, 14.5 12.5 Z" fill="#0f172a" stroke="#f8fafc" stroke-width="0.3"/>
+  <path d="M 12 11 C 14 8.5, 18 9, 19 12.5 C 17.5 13.5, 15.5 13.5, 14 12.8 Z" fill="#dc2626" stroke="#f8fafc" stroke-width="0.3"/>
+  <path d="M 12 12.5 C 13.5 10.5, 16.5 11, 17.5 13.2 C 16 14, 14.5 13.8, 13.2 13 Z" fill="#0f172a" stroke="#f8fafc" stroke-width="0.3"/>
+  <path d="M 12 14 C 13 12.2, 15.2 12.5, 16 14 C 15 14.5, 13.8 14.3, 12.8 13.6 Z" fill="#dc2626" stroke="#f8fafc" stroke-width="0.3"/>
+
+  <!-- 3-Tier Stacked Tail (OTP Layer, C++ Engine, App Layer) -->
+  <polygon points="12,15 8,18.5 16,18.5" fill="#0f172a" stroke="#f8fafc" stroke-width="0.3"/>
+  <polygon points="12,16.5 9,20 15,20" fill="#dc2626" stroke="#f8fafc" stroke-width="0.3"/>
+  <polygon points="12,18 10,21.5 14,21.5" fill="#f8fafc" stroke="#dc2626" stroke-width="0.3"/>
+
+  <!-- Head & Beak Silhouette -->
+  <polygon points="12,2 10.2,5.5 13.8,5.5" fill="#f8fafc"/>
+  <polygon points="12,5.5 10.8,8.5 13.2,8.5" fill="#dc2626"/>
+  <!-- Sharp Sharp Beak -->
+  <polygon points="12,7.5 10.5,9.2 13.5,9.2" fill="#fbbf24"/>
+
+  <!-- Crown Circuit Nodes (3 Distributed Nodes) -->
+  <circle cx="10" cy="3" r="0.6" fill="#fbbf24"/>
+  <circle cx="12" cy="1.8" r="0.7" fill="#fbbf24"/>
+  <circle cx="14" cy="3" r="0.6" fill="#fbbf24"/>
+  <line x1="10" y1="3" x2="12" y2="4" stroke="#fbbf24" stroke-width="0.4"/>
+  <line x1="14" y1="3" x2="12" y2="4" stroke="#fbbf24" stroke-width="0.4"/>
+  <line x1="12" y1="1.8" x2="12" y2="4" stroke="#fbbf24" stroke-width="0.4"/>
+
+  <!-- Eyes -->
+  <circle cx="11.2" cy="6.2" r="0.35" fill="#0f172a"/>
+  <circle cx="12.8" cy="6.2" r="0.35" fill="#0f172a"/>
+
+  <!-- Chest Core Scheduler Star (6 Radial Rays in Gold #fbbf24) -->
+  <circle cx="12" cy="12" r="1.8" fill="#fbbf24" stroke="#f8fafc" stroke-width="0.3"/>
+  <line x1="12" y1="9.5" x2="12" y2="14.5" stroke="#fbbf24" stroke-width="0.5"/>
+  <line x1="9.8" y1="10.8" x2="14.2" y2="13.2" stroke="#fbbf24" stroke-width="0.5"/>
+  <line x1="9.8" y1="13.2" x2="14.2" y2="10.8" stroke="#fbbf24" stroke-width="0.5"/>
+  <circle cx="12" cy="12" r="0.8" fill="#f8fafc"/>
+</svg>

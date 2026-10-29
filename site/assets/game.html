@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎮 GARUDA ARENA — Real-Time Multiplayer Actor Game (GVM Engine)</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0f172a;
+      color: #f8fafc;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      overflow: hidden;
+      user-select: none;
+    }
+    header {
+      width: 100%;
+      max-width: 1100px;
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #1e293b;
+      border-bottom: 2px solid #dc2626;
+      border-radius: 8px 8px 0 0;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    }
+    h1 {
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing: 1px;
+      color: #f8fafc;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    h1 span { color: #dc2626; }
+    .badge {
+      font-size: 12px;
+      font-weight: bold;
+      background: #dc2626;
+      color: #fff;
+      padding: 3px 8px;
+      border-radius: 12px;
+      letter-spacing: 0.5px;
+    }
+    .status-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      background: #0f172a;
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid #334155;
+    }
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #ef4444;
+      box-shadow: 0 0 8px #ef4444;
+    }
+    .status-dot.online {
+      background: #22c55e;
+      box-shadow: 0 0 8px #22c55e;
+      animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+    .game-container {
+      position: relative;
+      width: 1000px;
+      height: 700px;
+      background: #020617;
+      border: 2px solid #334155;
+      border-top: none;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+      overflow: hidden;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      cursor: crosshair;
+    }
+
+    /* Scoreboard Overlay & Hall of Fame */
+    .scoreboard {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      width: 240px;
+      max-height: 600px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 12px;
+      backdrop-filter: blur(6px);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+      pointer-events: none;
+      overflow-y: auto;
+    }
+    .score-section-title {
+      font-size: 13px;
+      color: #38bdf8;
+      margin-bottom: 6px;
+      border-bottom: 1px solid #334155;
+      padding-bottom: 4px;
+      display: flex;
+      justify-content: space-between;
+      font-weight: bold;
+    }
+    .score-section-title.fame {
+      color: #f59e0b;
+      margin-top: 12px;
+    }
+    .score-list {
+      list-style: none;
+      font-size: 12px;
+      margin-bottom: 8px;
+    }
+    .score-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 3px 0;
+    }
+    .score-item .p-name {
+      font-weight: 600;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 140px;
+    }
+    .score-item .p-score {
+      font-weight: bold;
+      color: #f59e0b;
+    }
+
+    /* Controls overlay */
+    .controls-hint {
+      position: absolute;
+      bottom: 12px;
+      left: 15px;
+      background: rgba(15, 23, 42, 0.75);
+      padding: 8px 14px;
+      border-radius: 6px;
+      border: 1px solid #334155;
+      font-size: 12px;
+      color: #94a3b8;
+      pointer-events: none;
+    }
+    .controls-hint kbd {
+      background: #334155;
+      color: #f8fafc;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-weight: bold;
+    }
+
+    /* Join Modal overlay */
+    .join-overlay {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(2, 6, 23, 0.92);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+    }
+    .join-box {
+      background: #1e293b;
+      padding: 30px;
+      border-radius: 12px;
+      border: 1px solid #dc2626;
+      text-align: center;
+      box-shadow: 0 0 25px rgba(220, 38, 38, 0.4);
+      max-width: 380px;
+      width: 90%;
+    }
+    .join-box h2 {
+      font-size: 24px;
+      color: #f8fafc;
+      margin-bottom: 6px;
+    }
+    .join-box p {
+      font-size: 13px;
+      color: #94a3b8;
+      margin-bottom: 18px;
+    }
+    .join-input {
+      width: 100%;
+      padding: 12px;
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      color: #fff;
+      font-size: 16px;
+      margin-bottom: 16px;
+      outline: none;
+      text-align: center;
+    }
+    .join-input:focus {
+      border-color: #dc2626;
+    }
+
+    /* Color picker swatches */
+    .color-picker-title {
+      font-size: 12px;
+      color: #94a3b8;
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+    .color-swatches {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .color-swatch {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .color-swatch:hover {
+      transform: scale(1.15);
+    }
+    .color-swatch.active {
+      border-color: #ffffff;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+      transform: scale(1.15);
+    }
+
+    .join-btn {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .join-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(220, 38, 38, 0.5);
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>🦅 GARUDA <span>ARENA</span> <span class="badge">GVM ACTOR MODEL</span></h1>
+    <div class="status-box">
+      <div id="statusDot" class="status-dot"></div>
+      <span id="statusText">Menghubungkan ke WebSocket...</span>
+    </div>
+  </header>
+
+  <div class="game-container">
+    <canvas id="gameCanvas" width="1000" height="700"></canvas>
+
+    <!-- Scoreboard & Hall of Fame -->
+    <div class="scoreboard">
+      <div class="score-section-title">
+        <span>🏆 Live Players</span>
+        <span id="playerCount">(0)</span>
+      </div>
+      <ul id="scoreList" class="score-list">
+        <li class="score-item"><span class="p-name">Menunggu pemain...</span></li>
+      </ul>
+
+      <div class="score-section-title fame">
+        <span>📜 Hall of Fame (Abadi)</span>
+      </div>
+      <ul id="hallOfFameList" class="score-list">
+        <li class="score-item"><span class="p-name">Memuat data...</span></li>
+      </ul>
+    </div>
+
+    <!-- Controls hint -->
+    <div class="controls-hint">
+      Kontrol: <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> Gerak | <kbd>Mouse</kbd> Arahkan | <kbd>Klik Kiri</kbd> / <kbd>Spasi</kbd> Tembak
+    </div>
+
+    <!-- Join Overlay -->
+    <div id="joinOverlay" class="join-overlay">
+      <div class="join-box">
+        <h2>🔥 GARUDA ARENA</h2>
+        <p>Real-Time Multiplayer Actor Game on GVM Engine (30 FPS)</p>
+
+        <input type="text" id="playerNameInput" class="join-input" placeholder="Masukkan Nama Pilot" aria-label="Nama Pilot" maxlength="15" value="PilotGaruda">
+
+        <div class="color-picker-title">PILIH WARNA PESAWAT:</div>
+        <div class="color-swatches">
+          <div class="color-swatch active" style="background: #ef4444;" data-color="#ef4444" title="Merah"></div>
+          <div class="color-swatch" style="background: #3b82f6;" data-color="#3b82f6" title="Biru"></div>
+          <div class="color-swatch" style="background: #10b981;" data-color="#10b981" title="Hijau"></div>
+          <div class="color-swatch" style="background: #f59e0b;" data-color="#f59e0b" title="Kuning"></div>
+        </div>
+
+        <button id="joinBtn" class="join-btn">🚀 MASUK ARENA</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- CANVAS & STATE SETUP ---
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const statusDot = document.getElementById('statusDot');
+    const statusText = document.getElementById('statusText');
+    const joinOverlay = document.getElementById('joinOverlay');
+    const playerNameInput = document.getElementById('playerNameInput');
+    const joinBtn = document.getElementById('joinBtn');
+    const scoreList = document.getElementById('scoreList');
+    const hallOfFameList = document.getElementById('hallOfFameList');
+    const playerCount = document.getElementById('playerCount');
+
+    // Color picker
+    let selectedColor = "#ef4444";
+    document.querySelectorAll('.color-swatch').forEach(swatch => {
+      swatch.addEventListener('click', () => {
+        document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+        swatch.classList.add('active');
+        selectedColor = swatch.getAttribute('data-color');
+      });
+    });
+
+    // Arena World Size
+    const WORLD_WIDTH = 1000;
+    const WORLD_HEIGHT = 1000;
+
+    let socket = null;
+    let playerId = "p_" + Math.floor(Math.random() * 8999 + 1000);
+    let playerName = "PilotGaruda";
+    let isConnected = false;
+    let inGame = false;
+
+    // Server State Cache
+    let gameState = {
+      players: [],
+      bullets: []
+    };
+
+    // Client Input Tracking
+    const keys = { w: false, a: false, s: false, d: false, space: false };
+    let mouseX = 500;
+    let mouseY = 350;
+    let lastShootTime = 0;
+
+    // --- WEBSOCKET CONNECTION ---
+    function getWebSocketUrl() {
+      const loc = window.location;
+      if (loc.protocol === 'https:') {
+        return `wss://${loc.host}/ws`;
+      } else if (loc.hostname === 'richat.my.id') {
+        return 'wss://richat.my.id/ws';
+      } else if (loc.port === '9001' || loc.port === '9002') {
+        return `ws://${loc.hostname}:${loc.port}`;
+      } else {
+        return `ws://${loc.hostname}:9001`;
+      }
+    }
+
+    function connectWebSocket() {
+      const wsUrl = getWebSocketUrl();
+      console.log("[GARUDA ARENA] Connecting to WebSocket:", wsUrl);
+      statusText.textContent = "Menghubungkan ke " + wsUrl + "...";
+
+      try {
+        socket = new WebSocket(wsUrl);
+
+        socket.onopen = () => {
+          console.log("[GARUDA ARENA] WebSocket Connected!");
+          isConnected = true;
+          statusDot.classList.add('online');
+          statusText.textContent = "ONLINE (GVM WebSocket Active)";
+
+          if (inGame) {
+            sendJoinMsg();
+          }
+        };
+
+        socket.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            if (data.type === 'arena_state') {
+              gameState = data;
+              updateScoreboard();
+            }
+          } catch (e) {
+            // Non-JSON or ping/pong frame
+          }
+        };
+
+        socket.onerror = (err) => {
+          console.error("[GARUDA ARENA] WebSocket Error:", err);
+        };
+
+        socket.onclose = () => {
+          console.warn("[GARUDA ARENA] WebSocket Closed. Reconnecting in 2s...");
+          isConnected = false;
+          statusDot.classList.remove('online');
+          statusText.textContent = "TERPUTUS — Mencoba menghubungkan ulang...";
+          setTimeout(connectWebSocket, 2000);
+        };
+      } catch (e) {
+        console.error("[GARUDA ARENA] WS Connection failed:", e);
+        setTimeout(connectWebSocket, 3000);
+      }
+    }
+
+    // Ping/Pong Keep-Alive every 5s
+    setInterval(() => {
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({ type: "ping" }));
+      }
+    }, 5000);
+
+    // --- HALL OF FAME FETCHING ---
+    async function fetchHallOfFame() {
+      try {
+        const res = await fetch('/api/leaderboard');
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data) && data.length > 0) {
+            hallOfFameList.innerHTML = data.map((item, idx) => `
+              <li class="score-item">
+                <span class="p-name">${idx + 1}. ${escapeHtml(item.name)}</span>
+                <span class="p-score">${item.score}</span>
+              </li>
+            `).join('');
+            return;
+          }
+        }
+        hallOfFameList.innerHTML = '<li class="score-item"><span class="p-name">Belum ada rekor</span></li>';
+      } catch (e) {
+        hallOfFameList.innerHTML = '<li class="score-item"><span class="p-name">Gagal memuat rekor</span></li>';
+      }
+    }
+
+    fetchHallOfFame();
+    setInterval(fetchHallOfFame, 10000); // Sync every 10 seconds
+
+    // --- INPUT LISTENERS ---
+    window.addEventListener('keydown', (e) => {
+      if (!inGame) return;
+      const k = e.key.toLowerCase();
+      if (k === 'w' || k === 'arrowup') keys.w = true;
+      if (k === 'a' || k === 'arrowleft') keys.a = true;
+      if (k === 's' || k === 'arrowdown') keys.s = true;
+      if (k === 'd' || k === 'arrowright') keys.d = true;
+      if (k === ' ' || e.code === 'Space') {
+        if (!keys.space) {
+          shoot();
+        }
+        keys.space = true;
+      }
+    });
+
+    window.addEventListener('keyup', (e) => {
+      if (!inGame) return;
+      const k = e.key.toLowerCase();
+      if (k === 'w' || k === 'arrowup') keys.w = false;
+      if (k === 'a' || k === 'arrowleft') keys.a = false;
+      if (k === 's' || k === 'arrowdown') keys.s = false;
+      if (k === 'd' || k === 'arrowright') keys.d = false;
+      if (k === ' ' || e.code === 'Space') keys.space = false;
+    });
+
+    canvas.addEventListener('mousemove', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      mouseX = (e.clientX - rect.left) * (canvas.width / rect.width);
+      mouseY = (e.clientY - rect.top) * (canvas.height / rect.height);
+    });
+
+    canvas.addEventListener('mousedown', (e) => {
+      if (!inGame) return;
+      if (e.button === 0) {
+        shoot();
+      }
+    });
+
+    function sendJoinMsg() {
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({
+          action: "join",
+          name: playerName,
+          color: selectedColor,
+          player_id: playerId
+        }));
+      }
+    }
+
+    joinBtn.addEventListener('click', () => {
+      const val = playerNameInput.value.trim();
+      if (val) playerName = val;
+      inGame = true;
+      joinOverlay.style.display = 'none';
+      sendJoinMsg();
+    });
+
+    playerNameInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') joinBtn.click();
+    });
+
+    function shoot() {
+      const now = Date.now();
+      if (now - lastShootTime < 150) return; // Rate limit 150ms
+      lastShootTime = now;
+
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({
+          action: "shoot",
+          player_id: playerId
+        }));
+      }
+    }
+
+    // --- GAME LOOP & MOVEMENT SYNC ---
+    function processInputAndSync() {
+      if (!inGame || !socket || socket.readyState !== WebSocket.OPEN) return;
+
+      let dx = 0;
+      let dy = 0;
+
+      if (keys.w) dy -= 1;
+      if (keys.s) dy += 1;
+      if (keys.a) dx -= 1;
+      if (keys.d) dx += 1;
+
+      // Normalize diagonal movement
+      if (dx !== 0 && dy !== 0) {
+        dx *= 0.7071;
+        dy *= 0.7071;
+      }
+
+      // Calculate aiming angle based on my player position vs mouse
+      let angle = 0;
+      const myPlayer = gameState.players.find(p => p.id === playerId);
+      if (myPlayer) {
+        // Map my world pos to screen pos
+        const renderX = myPlayer.x * (canvas.width / WORLD_WIDTH);
+        const renderY = myPlayer.y * (canvas.height / WORLD_HEIGHT);
+        angle = Math.atan2(mouseY - renderY, mouseX - renderX);
+      }
+
+      if (dx !== 0 || dy !== 0 || Math.abs(angle) > 0.001) {
+        socket.send(JSON.stringify({
+          action: "move",
+          player_id: playerId,
+          dx: dx,
+          dy: dy,
+          angle: angle
+        }));
+      }
+    }
+
+    setInterval(processInputAndSync, 33); // 30 FPS client sync loop
+
+    // --- SCOREBOARD UPDATE ---
+    function updateScoreboard() {
+      const players = gameState.players || [];
+      playerCount.textContent = `(${players.length})`;
+
+      if (players.length === 0) {
+        scoreList.innerHTML = '<li class="score-item"><span class="p-name">Tidak ada pemain...</span></li>';
+        return;
+      }
+
+      // Sort by score descending
+      const sorted = [...players].sort((a, b) => b.score - a.score);
+      scoreList.innerHTML = sorted.map((p, idx) => `
+        <li class="score-item" style="color: ${p.color}">
+          <span class="p-name">${idx + 1}. ${escapeHtml(p.name)} ${p.id === playerId ? '⭐' : ''}</span>
+          <span class="p-score">${p.score}</span>
+        </li>
+      `).join('');
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    // --- RENDERING LOOP ---
+    function render() {
+      // Clear background
+      ctx.fillStyle = '#020617';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Scale factors from world (1000x1000) to canvas
+      const scaleX = canvas.width / WORLD_WIDTH;
+      const scaleY = canvas.height / WORLD_HEIGHT;
+
+      // Draw Grid Background
+      ctx.strokeStyle = '#1e293b';
+      ctx.lineWidth = 1;
+      const gridSize = 50 * scaleX;
+      for (let x = 0; x < canvas.width; x += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, canvas.height);
+        ctx.stroke();
+      }
+      for (let y = 0; y < canvas.height; y += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(canvas.width, y);
+        ctx.stroke();
+      }
+
+      // Draw Arena Outer Border
+      ctx.strokeStyle = '#dc2626';
+      ctx.lineWidth = 4;
+      ctx.strokeRect(2, 2, canvas.width - 4, canvas.height - 4);
+
+      // Draw Bullets
+      const bullets = gameState.bullets || [];
+      for (const b of bullets) {
+        const bx = b.x * scaleX;
+        const by = b.y * scaleY;
+
+        ctx.save();
+        ctx.shadowColor = '#f59e0b';
+        ctx.shadowBlur = 8;
+        ctx.fillStyle = '#fef08a';
+        ctx.beginPath();
+        ctx.arc(bx, by, 5 * scaleX, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      // Draw Players
+      const players = gameState.players || [];
+      for (const p of players) {
+        const px = p.x * scaleX;
+        const py = p.y * scaleY;
+        const size = 16 * scaleX;
+
+        ctx.save();
+        ctx.translate(px, py);
+        ctx.rotate(p.angle || 0);
+
+        // Draw Spaceship (Triangle with custom color)
+        ctx.fillStyle = p.color || '#ef4444';
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 2;
+
+        ctx.beginPath();
+        ctx.moveTo(size * 1.3, 0);            // Nose
+        ctx.lineTo(-size, -size * 0.8);       // Left wing
+        ctx.lineTo(-size * 0.4, 0);           // Engine indent
+        ctx.lineTo(-size, size * 0.8);        // Right wing
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+
+        // Cockpit window
+        ctx.fillStyle = '#38bdf8';
+        ctx.beginPath();
+        ctx.arc(size * 0.2, 0, size * 0.3, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+
+        // Draw Player Name
+        ctx.font = 'bold 12px Segoe UI, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#f8fafc';
+        ctx.fillText(p.name + (p.id === playerId ? ' (Anda)' : ''), px, py - size - 16);
+
+        // Draw HP Bar
+        const barW = 36 * scaleX;
+        const barH = 5;
+        const barX = px - barW / 2;
+        const barY = py - size - 10;
+
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(barX, barY, barW, barH);
+
+        const hpPct = Math.max(0, Math.min(100, p.hp)) / 100;
+        ctx.fillStyle = hpPct > 0.5 ? '#22c55e' : (hpPct > 0.25 ? '#f59e0b' : '#ef4444');
+        ctx.fillRect(barX, barY, barW * hpPct, barH);
+
+        ctx.strokeStyle = '#0f172a';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(barX, barY, barW, barH);
+      }
+
+      requestAnimationFrame(render);
+    }
+
+    // --- INITIALIZATION ---
+    connectWebSocket();
+    requestAnimationFrame(render);
+  </script>
+</body>
+</html>

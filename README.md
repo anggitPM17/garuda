@@ -1,57 +1,122 @@
-# 🦅 Garuda BEAM (G-BEAM) 🇮🇩
+# 🦅 GVM — Garuda Virtual Machine
 
-[![Build Status](https://github.com/anggitPM17/garuda/actions/workflows/ci-linux.yml/badge.svg)](https://github.com/anggitPM17/garuda/actions)
+> **Runtime Terdistribusi C++ Setara Erlang/OTP. 100% Karya Anak Bangsa 🇮🇩**
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Production](https://img.shields.io/badge/Production-Live-success)](https://richat.my.id)
-[![RAM Usage](https://img.shields.io/badge/RAM-536%20KB-brightgreen)](https://richat.my.id)
-
-> Runtime terdistribusi setara Erlang/OTP — dengan identitas Indonesia.
-> C++ header-only. Zero external dependencies (kecuali mbedTLS & SQLite3).
-
----
-
-## 🌐 Live Production & Portal Resmi
-
-- **Web Portal Utama**: https://richat.my.id/ (Landing Page Portal, WASM Playground & Docs)
-- **Primary Backend URL**: https://richat.my.id/ (Garuda BEAM C++ Server)
-- **Interactive Swagger UI**: https://richat.my.id/docs/
-- **WASM Web Playground**: https://richat.my.id/playground_wasm
-- **Status**: ✅ **Live Production**
-- **Runtime RAM Usage**: **~536 KB - 1.8 MB** (vs Erlang ~69.4 MB — **38x lebih hemat**)
-- **Stress Capability**: 191 RPS, 100% availability, 0 failed requests
-- **Auto-Recovery**: Systemd auto-restart < 5 detik
+[![Platform](https://img.shields.io/badge/Platform-C%2B%2B17%20%7C%20Android%20NDK%20%7C%20WASM-blue)](https://richat.my.id)
+[![Production Status](https://img.shields.io/badge/Production-Live%20ONLINE-22c55e)](https://richat.my.id)
+[![RAM Usage](https://img.shields.io/badge/RAM-536%20KB%20--%201.8%20MB-brightgreen)](https://richat.my.id)
+[![Performance](https://img.shields.io/badge/RPS-3.8x%20vs%20Erlang-orange)](https://richat.my.id)
 
 ---
 
-## ✨ Fitur Lengkap (8 Fase + Port Linux, 100% PASS)
+<p align="center">
+  <img src="site/assets/garuda-logo.svg" alt="Garuda Logo" width="140" height="140">
+</p>
 
-| Fase | Fokus | Status |
-|---|---|---|
-| **G1** | OTP Behaviours (GenServer, Supervisor, Application, PubSub, GenStatem) | ✅ |
-| **G2** | Distributed Nodes (DistNode, GlobalRegistry, ClusterManager, PG) | ✅ |
-| **G3** | Mnesia Setara (Core, Tier, Sweep, Cluster) | ✅ |
-| **G4** | Crypto (SHA256, Merkle Tree, Sealed Sender, E2E Session) | ✅ |
-| **G5** | WebRTC & Presence (Signaling, Presence, Typing, Receipt, Reaction) | ✅ |
-| **G6** | Shell & REPL (Shell, RPC, Observer) | ✅ |
-| **G7** | Telemetry (Metrics, Tracing, Logger, Aggregator) | ✅ |
-| **G8** | Application Layer RICHAT (App, GroupMember, Fanout, Dist, ColdDB) | ✅ |
-| **B**  | Port Linux & Cross-Platform (Build Scripts, CI, Docker, Deployment Guide) | ✅ |
+## 🌐 Ringkasan Proyek
+
+**Garuda Virtual Machine (GVM)** adalah *distributed actor-model runtime* C++17 berkinerja tinggi yang dirancang sebagai alternatif **Erlang/OTP** yang jauh lebih hemat memori dan berlatensi ultra-rendah. 
+
+GVM dibangun tanpa dependensi berat, mengusung arsitektur *header-only*, serta mendukung eksekusi terdistribusi di server Linux, WebAssembly (WASM) di browser, hingga C++ Native Layer pada aplikasi **RICHAT (Android)**.
+
+Portal Resmi & Live Production aktif di **[https://richat.my.id/](https://richat.my.id/)**.
 
 ---
 
-## 🚀 Build & Run
+## 🏛️ Ekosistem Portal Utama (Live Demo)
 
-### Linux / macOS
-```bash
-./scripts/build_linux.sh
-./scripts/run_tests.sh
+Portal utama di **[richat.my.id](https://richat.my.id/)** menyediakan 7 modul ekosistem terpadu:
+
+| Destinasi Modul | Deskripsi & Kegunaan | URL Akses |
+| :--- | :--- | :--- |
+| 🏟️ **Stadion Garuda** | Interactive Web Playground untuk mengeksekusi kode Garuda. | [Masuk Stadion](https://richat.my.id/stadion/) |
+| 🌐 **WASM Client** | Execution Environment berbasis WebAssembly langsung di browser. | [Buka WASM](https://richat.my.id/playground_wasm) |
+| 🎮 **Garuda Arena** | Game multiplayer real-time 30 FPS berbasis Actor Model & SQLite Leaderboard. | [Mainkan Game](https://richat.my.id/assets/game.html) |
+| 📊 **Dashboard GVM** | Dashboard monitoring Prometheus metrics, RAM/CPU, dan RPS real-time. | [Buka Dashboard](https://richat.my.id/dashboard) |
+| 📦 **GPM Packages** | Katalog pustaka resmi & modul package manager bahasa Garuda. | [Lihat Packages](https://richat.my.id/packages) |
+| 🐙 **Repository** | Kode sumber resmi di GitHub. | [GitHub Repo](https://github.com/anggitPM17/garuda) |
+| 📱 **Unduh RICHAT** | Aplikasi Android resmi dengan fitur Auto-Update terpadu. | [Unduh APK](https://update.richat.my.id/) |
+
+---
+
+## ✨ Fitur Utama Runtime
+
+* **⚡ OTP Behaviours**: Implementasi lengkap `GenServer`, `Supervisor` trees, `Application`, `PubSub`, dan `GenStatem` state machines.
+* **🌐 Cluster Terdistribusi**: `DistNode`, `GlobalRegistry` berbasis Raft consensus, `ClusterManager`, dan `ProcessGroup (PG)`.
+* **🗄️ Storage Mnesia & SQLite**: In-memory & DiscCopies Set/Bag tables, Tiered Storage (Hot/Warm/Cold), TTL Sweeper, dan integrasi SQLite WAL.
+* **🔒 End-to-End Cryptography**: AES-GCM 256, X25519 DH, Key Transparency Merkle Tree, Sealed Sender, & JWT Auth.
+* **🎮 Garuda Arena Game Engine**: Real-time 30 FPS multiplayer game engine berbasis Actor Model dengan Papan Skor Abadi SQLite.
+* **📊 Live Monitoring Dashboard**: Web Dashboard visualisasi Prometheus metrics dengan grafik pergerakan pesan dan konsumsi RAM real-time.
+* **📦 GPM Package Manager**: Registry katalog package resmi untuk modul bahasa Garuda.
+* **📱 Android NDK Engine**: C++ Native Layer untuk sinkronisasi offline dan komunikasi real-time pada aplikasi RICHAT.
+
+---
+
+## 📊 Benchmark Performa Produksi (VPS Ubuntu 1GB RAM)
+
+| Metrik Performa | Erlang/OTP Server | Garuda BEAM C++ Engine | Tingkat Efisiensi |
+| :--- | :---: | :---: | :---: |
+| **RAM Usage (Idle)** | ~69.4 MB - 92.8 MB | **~536 KB - 1.8 MB** | **38x - 50x Lebih Hemat** |
+| **Requests / Sec (RPS)** | ~50 req/s | **191.65 req/s** | **3.8x Lebih Cepat** |
+| **Availability (Load Test)** | 99.2% | **100.00% (0 Failed)** | **100% Zero Error** |
+| **Chaos Recovery (SIGKILL)** | ~10 detik | **< 5 detik** | **2x Lebih Tangguh** |
+
+---
+
+## 📐 Arsitektur Sistem
+
+```
+                 +-----------------------------------+
+                 |     Android RICHAT App (Kotlin)   |
+                 |     + C++ Native Layer (NDK)      |
+                 +-----------------+-----------------+
+                                   | WebSocket (WSS) / REST
+                                   v
++----------------------------------+----------------------------------+
+|                   NGINX Reverse Proxy (HTTPS/WSS)                   |
+|                      Domain: richat.my.id                           |
++----+--------------------+-------------------+-------------------+---+
+     |                    |                   |                   |
+     v                    v                   v                   v
+/dashboard            /packages          /assets/game.html       /api/ & /ws
+  (HTML5/Chart.js)      (GPM Catalogue)    (HTML5 Canvas)       (Port 9002)
+     |                    |                   |                   |
+     +--------------------+-------------------+-------------------+
+                                   |
+                                   v
+                 +-----------------------------------+
+                 |    Garuda BEAM C++ Server (GVM)   |
+                 |  - OTP Scheduler & GenServer      |
+                 |  - Garuda Arena Game Engine       |
+                 |  - GPM Registry & SQLite DB       |
+                 +-----------------------------------+
 ```
 
-### Windows (MSVC / Ninja)
+---
+
+## 🚀 Cara Build & Menjalankan
+
+### Linux / macOS (CMake & Make)
+```bash
+# 1. Clone repository
+git clone https://github.com/anggitPM17/garuda.git
+cd garuda/garuda_v67_0_production/garuda_v67.0.0
+
+# 2. Build via CMake
+mkdir -p build && cd build
+cmake .. -DCMAKE_BUILD_TYPE=Release
+make garuda_richat_server -j$(nproc)
+
+# 3. Jalankan server
+./garuda_richat_server 9002
+```
+
+### Windows (PowerShell & CMake)
 ```powershell
-cmake -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+cmake -B build -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release
 cmake --build build --config Release
-powershell -ExecutionPolicy Bypass -File scripts/run_tests.ps1
+.\build\garuda_richat_server.exe 9002
 ```
 
 ### Docker Container
@@ -62,75 +127,11 @@ docker run --rm -p 9002:9002 garuda-beam
 
 ---
 
-## 📊 Benchmark & Production Metrics
+## 📜 Lisensi & Kontribusi
 
-- **HTTP Flood**: 191 req/s, 0 failed (di VPS 1 vCPU, 1GB RAM)
-- **1000 User Load**: 2000 transaksi, 100% availability
-- **RAM Memory Usage**: **~1.8 MB** (vs Erlang ~69.4 MB — **38x lebih hemat**)
-- **Chaos (SIGKILL)**: Auto-restart < 5 detik (systemd)
-- **Security & Robustness**: Path traversal & SQL injection blocked
+Proyek ini dilesensikan di bawah **[MIT License](LICENSE)** — bebas digunakan, dimodifikasi, dan didistribusikan untuk keperluan personal maupun komersial.
+
+Kontribusi sangat disambut baik! Silakan ajukan *Issue* atau *Pull Request* di repositori resmi **[GitHub anggitPM17/garuda](https://github.com/anggitPM17/garuda)**.
 
 ---
-
-## 📁 Struktur Directory
-
-```
-include/garuda/
-├── beam/           # Runtime inti
-│   ├── core/       # Scheduler, Actor, GC, Term
-│   ├── otp/        # GenServer, Supervisor, Mnesia, dll
-│   ├── dist/       # Distributed Nodes
-│   ├── crypto/     # Crypto & E2E
-│   ├── webrtc/     # WebRTC & Presence
-│   ├── shell/      # Shell, RPC, Observer
-│   └── telemetry/  # Metrics, Tracing, Logger
-├── richat/         # Application Layer RICHAT
-└── jalur_langit/   # Database Engine
-
-tests/              # 50+ test executable, semua PASS
-scripts/            # Build & test scripts
-docs/               # Panduan deployment Linux VPS
-```
-
----
-
-## 📚 Dokumentasi & Web Portal
-
-- [🌐 Live Web Landing Page](site/index.html)
-- [🏟️ Stadion Garuda Web Playground](site/playground.html)
-- [🌐 Stadion Garuda WASM Web Playground](site/playground_wasm.html)
-- [📖 RICHAT API Reference Guide](docs/API.md)
-- [📝 OpenAPI 3.0 Specification](docs/openapi.yaml)
-- [🚀 Getting Started Guide](docs/GETTING_STARTED.md)
-- [💬 Tutorial Chat App Real-time](docs/TUTORIAL_CHAT_APP.md)
-- [🐧 Panduan Deployment Linux VPS](docs/DEPLOYMENT_LINUX.md)
-- [🛡️ Laporan Keamanan & Benchmark](docs/BENCHMARK.md)
-- [🤖 Arsitektur Autopilot AI Self-Healing](docs/AUTOPILOT_AI.md)
-- [📱 Panduan Android NDK C++ Engine](docs/ANDROID_NDK.md)
-- [🌐 Panduan WebAssembly (WASM) Target](docs/WASM.md)
-- [🗺️ Roadmap Garuda BEAM](ROADMAP_GARUDA_BEAM.md)
-
----
-
-## 🏆 Pencapaian
-
-- ✅ 8 fase + Port Linux, 35+ sub-fase, 50+ test executables, semua PASS
-- ✅ Production-tested & deployed di VPS Ubuntu Linux (`https://richat.my.id`)
-- ✅ 38x lebih hemat RAM dibanding Erlang
-- ✅ Zero downtime migration & parallel fallback architecture
-
----
-
-## 📜 Lisensi
-
-[MIT](LICENSE) — bebas digunakan, dimodifikasi, dan didistribusikan.
-
----
-
-## 🇮🇩 Tentang
-
-Garuda BEAM adalah runtime terdistribusi berkinerja tinggi karya bangsa.
-Dibuat dengan visi: **"Erlang/OTP versi Indonesia, dengan identitas dan efisiensi memori yang jauh lebih baik."**
-
----
-**Dibuat dengan ❤️ di Indonesia. 🦅**
+**Dibuat dengan ❤️ di Indonesia. &copy; 2026 Garuda BEAM Contributors. 🇮🇩**
