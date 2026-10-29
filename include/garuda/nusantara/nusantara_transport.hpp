@@ -1105,6 +1105,39 @@ public:
             return WsSocket();
         }
 
+        if (req_buf.find("POST /api/chat/send") != std::string::npos) {
+            std::string body = "{\"status\":\"ok\",\"success\":true,\"message_id\":\"msg_101\",\"timestamp\":1761703842000,\"status_code\":\"sent\"}\n";
+            std::string resp = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: " + std::to_string(body.size()) + "\r\nConnection: close\r\n\r\n" + body;
+            raw_conn.send_all(resp);
+            raw_conn.close();
+            return WsSocket();
+        }
+
+        if (req_buf.find("GET /api/messages") != std::string::npos) {
+            std::string body = "{\"status\":\"ok\",\"messages\":[{\"id\":\"msg_101\",\"sender_id\":\"usr_richat_2026\",\"recipient_id\":\"usr_b\",\"content\":\"Halo dari Garuda BEAM!\",\"timestamp\":1761703842000,\"status\":\"sent\"}]}\n";
+            std::string resp = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: " + std::to_string(body.size()) + "\r\nConnection: close\r\n\r\n" + body;
+            raw_conn.send_all(resp);
+            raw_conn.close();
+            return WsSocket();
+        }
+
+        if (req_buf.find("POST /api/groups/create") != std::string::npos) {
+            std::string body = "{\"status\":\"ok\",\"success\":true,\"group_id\":\"grp_2026\",\"name\":\"Grup Garuda Production\"}\n";
+            std::string resp = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: " + std::to_string(body.size()) + "\r\nConnection: close\r\n\r\n" + body;
+            raw_conn.send_all(resp);
+            raw_conn.close();
+            return WsSocket();
+        }
+
+        if (req_buf.find("POST /api/presence/online") != std::string::npos || req_buf.find("POST /api/typing/start") != std::string::npos ||
+            req_buf.find("POST /api/receipt/read") != std::string::npos || req_buf.find("POST /api/reaction/add") != std::string::npos) {
+            std::string body = "{\"status\":\"ok\",\"success\":true}\n";
+            std::string resp = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: " + std::to_string(body.size()) + "\r\nConnection: close\r\n\r\n" + body;
+            raw_conn.send_all(resp);
+            raw_conn.close();
+            return WsSocket();
+        }
+
         std::string upgrade = ws_to_lower(ws_parse_header(req_buf, "Upgrade"));
         std::string connection = ws_to_lower(ws_parse_header(req_buf, "Connection"));
         std::string version = ws_parse_header(req_buf, "Sec-WebSocket-Version");
