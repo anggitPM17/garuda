@@ -5,7 +5,29 @@
 
 #include <iostream>
 #include <string>
-#include <cstdlib>
+#include <cstdio>
+#include <memory>
+#include <array>
+
+std::string exec_command(const std::string& cmd) {
+    std::array<char, 256> buffer;
+    std::string result;
+#ifdef _WIN32
+    FILE* pipe = _popen(cmd.c_str(), "r");
+#else
+    FILE* pipe = popen(cmd.c_str(), "r");
+#endif
+    if (!pipe) return "Error: pipe failed";
+    while (fgets(buffer.data(), static_cast<int>(buffer.size()), pipe) != nullptr) {
+        result += buffer.data();
+    }
+#ifdef _WIN32
+    _pclose(pipe);
+#else
+    pclose(pipe);
+#endif
+    return result;
+}
 
 int main(int argc, char** argv) {
     std::string cmd = (argc > 1) ? argv[1] : "help";
@@ -14,27 +36,32 @@ int main(int argc, char** argv) {
         std::cout << "========================================\n";
         std::cout << "  GVM STATUS & HEALTHCHECK\n";
         std::cout << "========================================\n\n";
+
         std::cout << "--- [/health Endpoint] ---\n";
-        int r1 = std::system("curl -s http://127.0.0.1:9002/health");
-        std::cout << "\n\n--- [/metrics Summary] ---\n";
-        int r2 = std::system("curl -s http://127.0.0.1:9002/metrics");
-        std::cout << "\n";
-        (void)r1; (void)r2;
+        std::string health = exec_command("curl -s http://127.0.0.1:9002/health");
+        std::cout << (health.empty() ? "(No output)\n" : health);
+        if (!health.empty() && health.back() != '\n') std::cout << "\n";
+
+        std::cout << "\n--- [/metrics Summary] ---\n";
+        std::string metrics = exec_command("curl -s http://127.0.0.1:9002/metrics");
+        std::cout << (metrics.empty() ? "(No output)\n" : metrics);
+        if (!metrics.empty() && metrics.back() != '\n') std::cout << "\n";
     }
     else if (cmd == "log") {
         std::cout << "========================================\n";
         std::cout << "  GVM RECENT JOURNAL LOGS (JSON)\n";
         std::cout << "========================================\n\n";
-        int r = std::system("journalctl -u richat-garuda -n 20 --no-pager");
-        (void)r;
+        std::string logs = exec_command("journalctl -u richat-garuda -n 20 --no-pager -o cat");
+        std::cout << (logs.empty() ? "(No logs found)\n" : logs);
+        if (!logs.empty() && logs.back() != '\n') std::cout << "\n";
     }
     else if (cmd == "metrics") {
         std::cout << "========================================\n";
         std::cout << "  GVM PROMETHEUS METRICS\n";
         std::cout << "========================================\n\n";
-        int r = std::system("curl -s http://127.0.0.1:9002/metrics");
-        std::cout << "\n";
-        (void)r;
+        std::string metrics = exec_command("curl -s http://127.0.0.1:9002/metrics");
+        std::cout << (metrics.empty() ? "(No output)\n" : metrics);
+        if (!metrics.empty() && metrics.back() != '\n') std::cout << "\n";
     }
     else {
         std::cout << "GVM Admin CLI v67.0 — Garuda Virtual Machine Management\n";
