@@ -10,10 +10,11 @@
 
 ---
 
-## 🌐 Live Production
+## 🌐 Live Production & Portal Resmi
 
-- **URL Production**: https://richat.my.id
-- **Status**: ✅ **Live & Primary Backend** (Garuda BEAM C++ Server)
+- **Web Portal Resmi**: https://garuda.my.id
+- **Primary Backend URL**: https://richat.my.id (Garuda BEAM C++ Server)
+- **Status**: ✅ **Live Production**
 - **Runtime RAM Usage**: **~536 KB - 1.8 MB** (vs Erlang ~69.4 MB — **38x lebih hemat**)
 - **Stress Capability**: 191 RPS, 100% availability, 0 failed requests
 - **Auto-Recovery**: Systemd auto-restart < 5 detik

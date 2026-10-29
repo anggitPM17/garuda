@@ -104,3 +104,9 @@
 - [x] `Stadion Garuda Web Playground` — Halaman web playground interaktif terintegrasi compiler backend (`site/playground.html`, `docs/PLAYGROUND.md`)
 - [x] `Landing Page & Logo` — Web portal utama proyek (`site/index.html`, `site/assets/logo.svg`)
 - [x] `Developer Tutorials` — Panduan pengguna & tutorial (`docs/GETTING_STARTED.md`, `docs/TUTORIAL_CHAT_APP.md`)
+
+## 📍 FASE E.7: Deploy Web Portal ke Domain garuda.my.id — ✅ SELESAI
+- [x] `Static Asset Sync` — Sync `/var/www/garuda/site/` & `/var/www/garuda/docs/` ke VPS (`36.50.77.230`)
+- [x] `Nginx Server Block` — Pemasangan server block Nginx `/etc/nginx/sites-available/garuda.my.id`
+- [x] `Routes Verification` — Verifikasi rute `/`, `/playground_wasm`, `/docs/`, & `/openapi.yaml` (200 OK)
+- [x] `Production Safety` — Verification of `richat.my.id` production server active & untouched
