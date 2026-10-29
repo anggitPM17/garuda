@@ -1082,6 +1082,18 @@ public:
             req_buf += *line + "\n";
         }
 
+        if (req_buf.find("OPTIONS ") == 0 || req_buf.find("OPTIONS /") != std::string::npos) {
+            std::string resp = "HTTP/1.1 200 OK\r\n"
+                               "Access-Control-Allow-Origin: *\r\n"
+                               "Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
+                               "Access-Control-Allow-Headers: Content-Type, Authorization\r\n"
+                               "Content-Length: 0\r\n"
+                               "Connection: close\r\n\r\n";
+            raw_conn.send_all(resp);
+            raw_conn.close();
+            return WsSocket();
+        }
+
         if (req_buf.find("GET /health") != std::string::npos || req_buf.find("HEAD /health") != std::string::npos ||
             req_buf.find("GET /healthcheck") != std::string::npos || req_buf.find("HEAD /healthcheck") != std::string::npos) {
             std::string body = "{\"status\":\"ok\",\"engine\":\"garuda_beam_v67\",\"app\":\"richat\"}\n";

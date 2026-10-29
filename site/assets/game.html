@@ -648,18 +648,22 @@
         return;
       }
 
+      const formData = new URLSearchParams();
+      formData.append('username', user);
+      formData.append('password', pass);
+
       const endpoint = currentAuthMode === 'login' ? '/api/login' : '/api/register';
       try {
         const res = await fetch(endpoint, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username: user, password: pass })
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: formData.toString()
         });
         const data = await res.json();
 
-        if (res.ok && data.status === 'ok') {
+        if (data.status === 'ok') {
           if (currentAuthMode === 'register') {
-            showAuthAlert('Registrasi berhasil! Mengalihkan ke Login...', 'success');
+            showAuthAlert(data.message || 'Registrasi berhasil! Mengalihkan ke Login...', 'success');
             setTimeout(() => switchAuthMode('login'), 1200);
           } else {
             jwtToken = data.token;
