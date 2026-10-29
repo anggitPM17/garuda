@@ -95,6 +95,7 @@ docs/               # Panduan deployment Linux VPS
 
 - [🌐 Live Web Landing Page](site/index.html)
 - [🏟️ Stadion Garuda Web Playground](site/playground.html)
+- [🌐 Stadion Garuda WASM Web Playground](site/playground_wasm.html)
 - [📖 RICHAT API Reference Guide](docs/API.md)
 - [📝 OpenAPI 3.0 Specification](docs/openapi.yaml)
 - [🚀 Getting Started Guide](docs/GETTING_STARTED.md)
@@ -103,6 +104,7 @@ docs/               # Panduan deployment Linux VPS
 - [🛡️ Laporan Keamanan & Benchmark](docs/BENCHMARK.md)
 - [🤖 Arsitektur Autopilot AI Self-Healing](docs/AUTOPILOT_AI.md)
 - [📱 Panduan Android NDK C++ Engine](docs/ANDROID_NDK.md)
+- [🌐 Panduan WebAssembly (WASM) Target](docs/WASM.md)
 - [🗺️ Roadmap Garuda BEAM](ROADMAP_GARUDA_BEAM.md)
 
 ---

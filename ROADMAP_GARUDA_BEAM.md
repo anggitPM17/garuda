@@ -85,6 +85,13 @@
 - [x] `dsl.hpp` — Native call DSL `panggil_c` for Garuda scripts (`dsl.hpp` & `test_dsl.cpp`)
 - [x] `CABI.md` — Dokumentasi C-ABI vs Erlang NIF (`docs/CABI.md`)
 
+## 📍 FASE D.3: WASM Target (Garuda BEAM di Browser) — ✅ SELESAI
+- [x] `garuda_wasm.cpp` — Entry point C++ WASM target (`wasm/garuda_wasm.cpp`)
+- [x] `bindings.cpp` — Emscripten embind C++ ↔ JS exports (`wasm/bindings.cpp`)
+- [x] `CMakeLists.txt & build_wasm.sh` — Emscripten build pipeline config (`wasm/CMakeLists.txt` & `scripts/build_wasm.sh`)
+- [x] `playground_wasm.html` — Stadion Garuda WebAssembly Client-Side Playground (`site/playground_wasm.html`)
+- [x] `WASM.md` — Dokumentasi WASM build instructions & browser integration (`docs/WASM.md`)
+
 ## 📍 FASE D.4: Android NDK Native Engine — ✅ SELESAI
 - [x] `native_websocket.hpp` — C++ Native WebSocket client (`native_websocket.h` & `test_native_websocket.cpp`)
 - [x] `native_crypto.hpp` — C++ Native AES-GCM 256, X25519 & SHA-256 (`native_crypto.h` & `test_native_crypto.cpp`)
