@@ -64,6 +64,13 @@
 - [x] `Security Audit` — JWT HS256, TLS 1.3, input validation, SIGKILL recovery
 - [x] `BENCHMARK.md` — Dokumentasi laporan keamanan & performa (`docs/BENCHMARK.md`)
 
+## 📍 FASE C.5: Advanced Security Layer — ✅ SELESAI
+- [x] `rate_limiter.hpp` — Sliding window rate limiter per-IP/user (`rate_limiter.hpp` & `test_rate_limiter.cpp`)
+- [x] `totp_2fa.hpp` — TOTP 2FA Google Authenticator compatible (`totp_2fa.hpp` & `test_totp_2fa.cpp`)
+- [x] `captcha_pow.hpp` — Proof-of-Work CAPTCHA Hashcash style (`captcha_pow.hpp` & `test_captcha_pow.cpp`)
+- [x] `audit_log.hpp` — Ring buffer JSON audit log (`audit_log.hpp` & `test_audit_log.cpp`)
+- [x] `SECURITY.md` — Dokumentasi kebijakan keamanan (`docs/SECURITY.md`)
+
 ## 📍 FASE D.1: Autopilot AI Self-Healing Runtime — ✅ SELESAI
 - [x] `anomaly_detector.hpp` — Rule-based anomaly detection (`anomaly_detector.hpp` & `test_anomaly_detector.cpp`)
 - [x] `rca_engine.hpp` — Log-correlated Root Cause Analysis (`rca_engine.hpp` & `test_rca_engine.cpp`)
