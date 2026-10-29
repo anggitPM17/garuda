@@ -78,6 +78,13 @@
 - [x] `autopilot_runtime.hpp` — End-to-end self-healing runtime & dashboard (`autopilot_runtime.hpp` & `test_autopilot_runtime.cpp`)
 - [x] `AUTOPILOT_AI.md` — Dokumentasi arsitektur self-healing (`docs/AUTOPILOT_AI.md`)
 
+## 📍 FASE D.2: C-ABI Native Interop (FFI) — ✅ SELESAI
+- [x] `ffi.hpp` — Zero-copy, RAII, type-safe CFunction & DlHandle (`ffi.hpp` & `test_ffi.cpp`)
+- [x] `registry.hpp` — C function registry (`registry.hpp` & `test_registry.cpp`)
+- [x] `native_binding.hpp` — Tolerant bindings for libcurl & zlib (`native_binding.hpp` & `test_native_binding.cpp`)
+- [x] `dsl.hpp` — Native call DSL `panggil_c` for Garuda scripts (`dsl.hpp` & `test_dsl.cpp`)
+- [x] `CABI.md` — Dokumentasi C-ABI vs Erlang NIF (`docs/CABI.md`)
+
 ## 📍 FASE D.4: Android NDK Native Engine — ✅ SELESAI
 - [x] `native_websocket.hpp` — C++ Native WebSocket client (`native_websocket.h` & `test_native_websocket.cpp`)
 - [x] `native_crypto.hpp` — C++ Native AES-GCM 256, X25519 & SHA-256 (`native_crypto.h` & `test_native_crypto.cpp`)
