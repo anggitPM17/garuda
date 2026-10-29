@@ -453,6 +453,9 @@
 </head>
 <body>
 
+  <!-- Hidden Iframe for Zero-CORS Form Submit Processing -->
+  <iframe name="auth_iframe" id="auth_iframe" style="display:none;" onload="handleIframeAuthResponse()"></iframe>
+
   <header>
     <h1>🦅 GARUDA <span>ARENA</span> <span class="badge">TRUE IDENTITY</span></h1>
     <div class="user-status-area">
@@ -502,31 +505,33 @@
             <p>Akun Abadi & Autentikasi JWT HMAC-SHA256</p>
 
             <div class="auth-tabs">
-              <button id="tabLoginBtn" class="auth-tab active" onclick="switchAuthMode('login')">🔑 Login</button>
-              <button id="tabRegisterBtn" class="auth-tab" onclick="switchAuthMode('register')">📝 Register</button>
+              <button type="button" id="tabLoginBtn" class="auth-tab active" onclick="switchAuthMode('login')">🔑 Login</button>
+              <button type="button" id="tabRegisterBtn" class="auth-tab" onclick="switchAuthMode('register')">📝 Register</button>
             </div>
 
             <div id="authAlert" class="auth-alert"></div>
 
-            <input type="text" id="authUserInput" class="join-input" placeholder="Username" aria-label="Username" maxlength="20">
-            <input type="password" id="authPassInput" class="join-input" placeholder="Password" aria-label="Password">
+            <form id="authForm" target="auth_iframe" method="POST" action="/api/login">
+              <input type="text" id="authUserInput" name="username" class="join-input" placeholder="Username" aria-label="Username" maxlength="20" required>
+              <input type="password" id="authPassInput" name="password" class="join-input" placeholder="Password" aria-label="Password" required>
 
-            <div class="selector-title">PILIH WARNA PESAWAT:</div>
-            <div class="color-swatches">
-              <div class="color-swatch active" style="background: #ef4444;" data-color="#ef4444" title="Merah"></div>
-              <div class="color-swatch" style="background: #3b82f6;" data-color="#3b82f6" title="Biru"></div>
-              <div class="color-swatch" style="background: #10b981;" data-color="#10b981" title="Hijau"></div>
-              <div class="color-swatch" style="background: #f59e0b;" data-color="#f59e0b" title="Kuning"></div>
-            </div>
+              <div class="selector-title">PILIH WARNA PESAWAT:</div>
+              <div class="color-swatches">
+                <div class="color-swatch active" style="background: #ef4444;" data-color="#ef4444" title="Merah"></div>
+                <div class="color-swatch" style="background: #3b82f6;" data-color="#3b82f6" title="Biru"></div>
+                <div class="color-swatch" style="background: #10b981;" data-color="#10b981" title="Hijau"></div>
+                <div class="color-swatch" style="background: #f59e0b;" data-color="#f59e0b" title="Kuning"></div>
+              </div>
 
-            <div class="selector-title">PILIH SKIN PESAWAT:</div>
-            <div class="skin-options">
-              <button class="skin-btn active" data-skin="default">🚀 Default</button>
-              <button class="skin-btn" data-skin="stealth">🥷 Stealth</button>
-              <button class="skin-btn" data-skin="heavy">🛡️ Heavy</button>
-            </div>
+              <div class="selector-title">PILIH SKIN PESAWAT:</div>
+              <div class="skin-options">
+                <button type="button" class="skin-btn active" data-skin="default">🚀 Default</button>
+                <button type="button" class="skin-btn" data-skin="stealth">🥷 Stealth</button>
+                <button type="button" class="skin-btn" data-skin="heavy">🛡️ Heavy</button>
+              </div>
 
-            <button id="authSubmitBtn" class="join-btn" onclick="submitAuth()">🔑 MASUK GAME</button>
+              <button type="submit" id="authSubmitBtn" class="join-btn">🔑 MASUK GAME</button>
+            </form>
           </div>
         </div>
       </div>
@@ -571,6 +576,7 @@
     const userInfo = document.getElementById('userInfo');
     const usernameDisplay = document.getElementById('usernameDisplay');
 
+    const authForm = document.getElementById('authForm');
     const authUserInput = document.getElementById('authUserInput');
     const authPassInput = document.getElementById('authPassInput');
     const authAlert = document.getElementById('authAlert');
@@ -585,12 +591,14 @@
     const chatInput = document.getElementById('chatInput');
     const sendChatBtn = document.getElementById('sendChatBtn');
 
-    let currentAuthMode = 'login'; // 'login' or 'register'
+    let currentAuthMode = 'login';
     let jwtToken = localStorage.getItem('garuda_jwt_token') || '';
     let currentUsername = localStorage.getItem('garuda_player_name') || '';
 
     let selectedColor = localStorage.getItem('garuda_player_color') || "#ef4444";
     let selectedSkin = localStorage.getItem('garuda_player_skin') || "default";
+
+    let authSubmitting = false;
 
     // Set swatch & skin active states
     document.querySelectorAll('.color-swatch').forEach(s => {
@@ -630,44 +638,39 @@
     let mouseY = 310;
     let lastShootTime = 0;
 
-    // --- AUTH MODE SWITCHER ---
+    // --- AUTH MODE SWITCHER & FORM SUBMIT ---
     function switchAuthMode(mode) {
       currentAuthMode = mode;
       document.getElementById('tabLoginBtn').classList.toggle('active', mode === 'login');
       document.getElementById('tabRegisterBtn').classList.toggle('active', mode === 'register');
+      authForm.action = mode === 'login' ? '/api/login' : '/api/register';
       authSubmitBtn.textContent = mode === 'login' ? '🔑 MASUK GAME' : '📝 DAFTAR AKUN';
       authAlert.style.display = 'none';
     }
 
-    async function submitAuth() {
-      const user = authUserInput.value.trim();
-      const pass = authPassInput.value.trim();
+    authForm.addEventListener('submit', () => {
+      authSubmitting = true;
+    });
 
-      if (!user || !pass) {
-        showAuthAlert('Username dan password harus diisi', 'error');
-        return;
-      }
+    function handleIframeAuthResponse() {
+      if (!authSubmitting) return;
+      authSubmitting = false;
 
-      const formData = new URLSearchParams();
-      formData.append('username', user);
-      formData.append('password', pass);
-
-      const endpoint = currentAuthMode === 'login' ? '/api/login' : '/api/register';
       try {
-        const res = await fetch(endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: formData.toString()
-        });
-        const data = await res.json();
+        const iframe = document.getElementById('auth_iframe');
+        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+        const text = iframeDoc.body ? iframeDoc.body.innerText : '';
 
+        if (!text) return;
+
+        const data = JSON.parse(text);
         if (data.status === 'ok') {
           if (currentAuthMode === 'register') {
             showAuthAlert(data.message || 'Registrasi berhasil! Mengalihkan ke Login...', 'success');
             setTimeout(() => switchAuthMode('login'), 1200);
           } else {
             jwtToken = data.token;
-            currentUsername = data.username || user;
+            currentUsername = data.username || authUserInput.value.trim();
 
             localStorage.setItem('garuda_jwt_token', jwtToken);
             localStorage.setItem('garuda_player_name', currentUsername);
@@ -679,7 +682,7 @@
           showAuthAlert(data.message || 'Gagal memproses otentikasi', 'error');
         }
       } catch (e) {
-        showAuthAlert('Gagal terhubung ke server auth', 'error');
+        showAuthAlert('Gagal membaca respons otentikasi server', 'error');
       }
     }
 
@@ -703,12 +706,9 @@
           localStorage.setItem('garuda_player_name', currentUsername);
           enterGameAfterAuth();
         } else {
-          // Token expired or invalid
           logout();
         }
-      } catch (e) {
-        // Fallback: stay in login screen
-      }
+      } catch (e) {}
     }
 
     function enterGameAfterAuth() {
@@ -940,13 +940,6 @@
         }));
       }
     }
-
-    authUserInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') authPassInput.focus();
-    });
-    authPassInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') submitAuth();
-    });
 
     function shoot() {
       const myPlayer = gameState.players.find(p => p.name === currentUsername);
