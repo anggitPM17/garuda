@@ -12,8 +12,10 @@
 
 ## 🌐 Live Production & Portal Resmi
 
-- **Web Portal Resmi**: https://garuda.my.id
-- **Primary Backend URL**: https://richat.my.id (Garuda BEAM C++ Server)
+- **Web Portal Utama**: https://richat.my.id/ (Landing Page Portal, WASM Playground & Docs)
+- **Primary Backend URL**: https://richat.my.id/ (Garuda BEAM C++ Server)
+- **Interactive Swagger UI**: https://richat.my.id/docs/
+- **WASM Web Playground**: https://richat.my.id/playground_wasm
 - **Status**: ✅ **Live Production**
 - **Runtime RAM Usage**: **~536 KB - 1.8 MB** (vs Erlang ~69.4 MB — **38x lebih hemat**)
 - **Stress Capability**: 191 RPS, 100% availability, 0 failed requests
