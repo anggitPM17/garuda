@@ -70,3 +70,10 @@
 - [x] `action_engine.hpp` — Propose & execute action engine with MANUAL/AUTOPILOT safety modes (`action_engine.hpp` & `test_action_engine.cpp`)
 - [x] `autopilot_runtime.hpp` — End-to-end self-healing runtime & dashboard (`autopilot_runtime.hpp` & `test_autopilot_runtime.cpp`)
 - [x] `AUTOPILOT_AI.md` — Dokumentasi arsitektur self-healing (`docs/AUTOPILOT_AI.md`)
+
+## 📍 FASE D.4: Android NDK Native Engine — ✅ SELESAI
+- [x] `native_websocket.hpp` — C++ Native WebSocket client (`native_websocket.h` & `test_native_websocket.cpp`)
+- [x] `native_crypto.hpp` — C++ Native AES-GCM 256, X25519 & SHA-256 (`native_crypto.h` & `test_native_crypto.cpp`)
+- [x] `native_sync.hpp` — C++ Native offline queue & SQLite storage engine (`native_sync.h` & `test_native_sync.cpp`)
+- [x] `jni_bridge.cpp` — JNI Bridge layer bridging Kotlin to C++ Native calls (`jni_bridge.cpp` & `test_jni_bridge.cpp`)
+- [x] `ANDROID_NDK.md` — Dokumentasi arsitektur NDK, build instructions & benchmark metrics (`docs/ANDROID_NDK.md`)
