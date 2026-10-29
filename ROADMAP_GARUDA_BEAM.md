@@ -63,3 +63,10 @@
 - [x] `Load Testing` — 1,000 - 5,000 requests, 100% availability, 0 failed
 - [x] `Security Audit` — JWT HS256, TLS 1.3, input validation, SIGKILL recovery
 - [x] `BENCHMARK.md` — Dokumentasi laporan keamanan & performa (`docs/BENCHMARK.md`)
+
+## 📍 FASE D.1: Autopilot AI Self-Healing Runtime — ✅ SELESAI
+- [x] `anomaly_detector.hpp` — Rule-based anomaly detection (`anomaly_detector.hpp` & `test_anomaly_detector.cpp`)
+- [x] `rca_engine.hpp` — Log-correlated Root Cause Analysis (`rca_engine.hpp` & `test_rca_engine.cpp`)
+- [x] `action_engine.hpp` — Propose & execute action engine with MANUAL/AUTOPILOT safety modes (`action_engine.hpp` & `test_action_engine.cpp`)
+- [x] `autopilot_runtime.hpp` — End-to-end self-healing runtime & dashboard (`autopilot_runtime.hpp` & `test_autopilot_runtime.cpp`)
+- [x] `AUTOPILOT_AI.md` — Dokumentasi arsitektur self-healing (`docs/AUTOPILOT_AI.md`)
