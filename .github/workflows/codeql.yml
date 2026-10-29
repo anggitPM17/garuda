@@ -1,0 +1,36 @@
+name: "CodeQL Security Scan"
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: '0 0 * * 0'
+
+jobs:
+  analyze:
+    name: Analyze C++ Codebase
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: cpp
+
+      - name: Build C++ Server
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake build-essential libssl-dev libsqlite3-dev
+          cmake -B build -DCMAKE_BUILD_TYPE=Release -DGARUDA_BUILD_TESTS=OFF
+          cmake --build build --target garuda_richat_server -j$(nproc)
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3

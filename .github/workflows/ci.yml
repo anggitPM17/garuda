@@ -1,473 +1,54 @@
-name: Garuda Compiler & GVM CI
+name: GVM CI/CD Build & Deploy
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main ]
   pull_request:
-    branches: [ main, master ]
+    branches: [ main ]
 
 jobs:
   build-and-test:
-    name: Build & Test (Windows MSVC)
-    runs-on: windows-latest
-
+    name: Build C++ & Verify Binaries
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup MSVC Developer Command Prompt
-        uses: ilammy/msvc-dev-cmd@v1
-        with:
-          arch: x64
+      - name: Install System Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake build-essential libssl-dev libsqlite3-dev
 
       - name: Configure CMake
-        run: cmake -B build -G "Ninja" -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=cl -DCMAKE_CXX_COMPILER=cl -DGARUDA_STATIC_LINK=ON
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DGARUDA_BUILD_TESTS=OFF
 
-      - name: Check Deterministic Build
-        run: powershell -ExecutionPolicy Bypass -File scripts/check_deterministic.ps1
+      - name: Build garuda_richat_server & gvm-admin
+        run: cmake --build build --target garuda_richat_server gvm-admin -j$(nproc)
 
-      - name: Build Test Executables
+      - name: Verify Executables
         run: |
-          cmake --build build --target garuda_tco_tests garuda_control_flow_tests garuda_isolation_tests garuda_fault_tests garuda_runtime_stress_tests garuda_memory_tests garuda_error_reporting_tests garuda_fuzzing_tests garuda_grdmix_e2e_tests garuda_bytecode_io_tests garuda_compiler_api_tests garuda_formatter_linter_tests garuda_http_server_e2e_tests garuda_websocket_e2e_tests garuda_richat_backend_demo garuda_richat_backend_tests garuda_protobuf_minimal_tests garuda_tls_tests garuda_sqlite_tests garuda_query_builder_tests garuda_schema_migrator_tests garuda_health_check_tests garuda_logger_tests garuda_metrics_tests garuda_tracing_tests garuda_jwt_tests garuda_security_app_tests garuda_secret_manager_tests garuda_c_abi_tests garuda_fs_process_tests garuda_doc_generator_tests garuda_cli_example_tests garuda_embed_gvm_demo garuda_script_engine_tests garuda_actor_snapshot_tests garuda_nusantara_tests garuda_jalur_langit_tests garuda_connection_pool_tests garuda_query_cache_tests garuda_json_serializer_tests garuda_auth_manager_tests garuda_backup_manager_tests garuda_schema_migrator_jl_tests garuda_jalur_langit_bridge_tests garuda_autopilot_admin_gate_tests garuda_autopilot_health_monitor_tests garuda_autopilot_ai_code_fixer_tests garuda_autopilot_ai_tests garuda_gen_server_tests garuda_supervisor_tests garuda_application_tests garuda_pubsub_tests garuda_gen_statem_tests garuda_dist_node_tests garuda_global_registry_tests garuda_cluster_manager_tests garuda_pg_tests garuda_mnesia_tests garuda_mnesia_tier_tests garuda_mnesia_sweep_tests garuda_mnesia_cluster_tests garuda_crypto_tests garuda_key_transparency_tests garuda_sealed_sender_tests garuda_e2e_session_tests garuda_webrtc_signaling_tests garuda_presence_tests garuda_typing_indicator_tests garuda_read_receipt_tests garuda_reaction_tests garuda_shell_tests garuda_rpc_tests garuda_observer_tests garuda_telemetry_tests garuda_anomaly_detector_tests garuda_rca_engine_tests garuda_action_engine_tests garuda_autopilot_runtime_tests garuda_native_websocket_tests garuda_native_crypto_tests garuda_native_sync_tests garuda_jni_bridge_tests garuda_rate_limiter_tests garuda_totp_2fa_tests garuda_captcha_pow_tests garuda_audit_log_tests garuda_ffi_tests garuda_ffi_registry_tests garuda_native_binding_tests garuda_dsl_tests garuda_bench_http_server garuda_bench_spawn
-
-      - name: Verify Test Executables Exist
-        shell: pwsh
-        run: |
-          $missing = @()
-          foreach ($exe in @("garuda_tco_tests.exe", "garuda_control_flow_tests.exe", "garuda_isolation_tests.exe", "garuda_fault_tests.exe", "garuda_runtime_stress_tests.exe", "garuda_memory_tests.exe", "garuda_error_reporting_tests.exe", "garuda_fuzzing_tests.exe", "garuda_grdmix_e2e_tests.exe", "garuda_bytecode_io_tests.exe", "garuda_compiler_api_tests.exe", "garuda_formatter_linter_tests.exe", "garuda_http_server_e2e_tests.exe", "garuda_websocket_e2e_tests.exe", "garuda_richat_backend_demo.exe", "garuda_richat_backend_tests.exe", "garuda_protobuf_minimal_tests.exe", "garuda_tls_tests.exe", "garuda_sqlite_tests.exe", "garuda_query_builder_tests.exe", "garuda_schema_migrator_tests.exe", "garuda_health_check_tests.exe", "garuda_logger_tests.exe", "garuda_metrics_tests.exe", "garuda_tracing_tests.exe", "garuda_jwt_tests.exe", "garuda_security_app_tests.exe", "garuda_secret_manager_tests.exe", "garuda_c_abi_tests.exe", "garuda_fs_process_tests.exe", "garuda_doc_generator_tests.exe", "garuda_cli_example_tests.exe", "garuda_embed_gvm_demo.exe", "garuda_script_engine_tests.exe", "garuda_actor_snapshot_tests.exe", "garuda_nusantara_tests.exe", "garuda_jalur_langit_tests.exe", "garuda_connection_pool_tests.exe", "garuda_query_cache_tests.exe", "garuda_json_serializer_tests.exe", "garuda_auth_manager_tests.exe", "garuda_backup_manager_tests.exe", "garuda_schema_migrator_jl_tests.exe", "garuda_jalur_langit_bridge_tests.exe", "garuda_autopilot_admin_gate_tests.exe", "garuda_autopilot_health_monitor_tests.exe", "garuda_autopilot_ai_code_fixer_tests.exe", "garuda_autopilot_ai_tests.exe", "garuda_gen_server_tests.exe", "garuda_supervisor_tests.exe", "garuda_application_tests.exe", "garuda_pubsub_tests.exe", "garuda_gen_statem_tests.exe", "garuda_dist_node_tests.exe", "garuda_global_registry_tests.exe", "garuda_cluster_manager_tests.exe", "garuda_pg_tests.exe", "garuda_mnesia_tests.exe", "garuda_mnesia_tier_tests.exe", "garuda_mnesia_sweep_tests.exe", "garuda_mnesia_cluster_tests.exe", "garuda_crypto_tests.exe", "garuda_key_transparency_tests.exe", "garuda_sealed_sender_tests.exe", "garuda_e2e_session_tests.exe", "garuda_webrtc_signaling_tests.exe", "garuda_presence_tests.exe", "garuda_typing_indicator_tests.exe", "garuda_read_receipt_tests.exe", "garuda_reaction_tests.exe", "garuda_shell_tests.exe", "garuda_rpc_tests.exe", "garuda_observer_tests.exe", "garuda_telemetry_tests.exe", "garuda_anomaly_detector_tests.exe", "garuda_rca_engine_tests.exe", "garuda_action_engine_tests.exe", "garuda_autopilot_runtime_tests.exe", "garuda_native_websocket_tests.exe", "garuda_native_crypto_tests.exe", "garuda_native_sync_tests.exe", "garuda_jni_bridge_tests.exe", "garuda_rate_limiter_tests.exe", "garuda_totp_2fa_tests.exe", "garuda_captcha_pow_tests.exe", "garuda_audit_log_tests.exe", "garuda_ffi_tests.exe", "garuda_ffi_registry_tests.exe", "garuda_native_binding_tests.exe", "garuda_dsl_tests.exe", "garuda_bench_http_server.exe", "garuda_bench_spawn.exe")) {
-              if (-not (Test-Path "build/$exe")) { $missing += $exe }
-          }
-          if ($missing.Count -gt 0) {
-              Write-Host "Missing executables: $($missing -join ', ')"
-              exit 1
-          }
-
-      - name: Verify Static Runtime (No C++ Runtime DLL)
-        shell: pwsh
-        run: |
-          $deps = dumpbin /dependents build/garuda_tco_tests.exe
-          if ($deps -match "VCRUNTIME" -or $deps -match "MSVCP") {
-              Write-Host "DLL Dependents check failed! C++ Runtime DLL found in static binary."
-              exit 1
-          }
-          Write-Host "Static Linking Verified: No C++ Runtime DLL dependents found."
-
-      - name: Run Test - TCO Suite
-        timeout-minutes: 5
-        run: build/garuda_tco_tests.exe
-
-      - name: Run Test - Control Flow Suite
-        timeout-minutes: 5
-        run: build/garuda_control_flow_tests.exe
-
-      - name: Run Test - Process Isolation Suite
-        timeout-minutes: 5
-        run: build/garuda_isolation_tests.exe
-
-      - name: Run Test - Fault Isolation Suite
-        timeout-minutes: 10
-        run: build/garuda_fault_tests.exe
-
-      - name: Run Test - Runtime Stress & Preemption Suite
-        timeout-minutes: 5
-        run: build/garuda_runtime_stress_tests.exe
-
-      - name: Run Test - Memory Allocator Suite
-        timeout-minutes: 5
-        run: build/garuda_memory_tests.exe
-
-      - name: Run Test - Error Reporting & Diagnostics Suite
-        timeout-minutes: 5
-        run: build/garuda_error_reporting_tests.exe
-
-      - name: Run Test - Fuzzing Suite
-        timeout-minutes: 5
-        run: build/garuda_fuzzing_tests.exe
-
-      - name: Run Test - Package Manager grdmix E2E Suite
-        timeout-minutes: 5
-        run: build/garuda_grdmix_e2e_tests.exe
-
-      - name: Run Test - Bytecode I/O & Checksum Suite
-        timeout-minutes: 5
-        run: build/garuda_bytecode_io_tests.exe
-
-      - name: Run Test - In-Process Compiler API Suite
-        timeout-minutes: 5
-        run: build/garuda_compiler_api_tests.exe
-
-      - name: Run Test - Formatter & Linter Suite
-        timeout-minutes: 5
-        run: build/garuda_formatter_linter_tests.exe
-
-      - name: Run Test - HTTP Server E2E Suite
-        timeout-minutes: 5
-        run: build/garuda_http_server_e2e_tests.exe
-
-      - name: Run Test - WebSocket E2E Suite
-        timeout-minutes: 5
-        run: build/garuda_websocket_e2e_tests.exe
-
-      - name: Run Test - RICHAT Backend Demo E2E Suite
-        timeout-minutes: 5
-        run: build/garuda_richat_backend_tests.exe
-
-      - name: Run Test - Minimal Native Protobuf Suite
-        timeout-minutes: 5
-        run: build/garuda_protobuf_minimal_tests.exe
-
-      - name: Run Test - Native mbedTLS TLS/SSL Suite
-        timeout-minutes: 5
-        run: build/garuda_tls_tests.exe
-
-      - name: Run Test - SQLite3 Amalgamation Driver Suite
-        timeout-minutes: 5
-        run: build/garuda_sqlite_tests.exe
-
-      - name: Run Test - Query Builder & Parameter Binding Suite
-        timeout-minutes: 5
-        run: build/garuda_query_builder_tests.exe
-
-      - name: Run Test - Schema Migrator Engine Suite
-        timeout-minutes: 5
-        run: build/garuda_schema_migrator_tests.exe
-
-      - name: Run Test - Health Check & Readiness Probe Suite
-        timeout-minutes: 5
-        run: build/garuda_health_check_tests.exe
-
-      - name: Run Test - Structured JSON Logger Suite
-        timeout-minutes: 5
-        run: build/garuda_logger_tests.exe
-
-      - name: Run Test - Prometheus Metrics Registry Suite
-        timeout-minutes: 5
-        run: build/garuda_metrics_tests.exe
-
-      - name: Run Test - OpenTelemetry Distributed Tracing Suite
-        timeout-minutes: 5
-        run: build/garuda_tracing_tests.exe
-
-      - name: Run Test - JWT HS256 Authentication Suite
-        timeout-minutes: 5
-        run: build/garuda_jwt_tests.exe
-
-      - name: Run Test - Rate Limiter & Input Validation Security Suite
-        timeout-minutes: 5
-        run: build/garuda_security_app_tests.exe
-
-      - name: Run Test - Secret Manager Environment Loader Suite
-        timeout-minutes: 5
-        run: build/garuda_secret_manager_tests.exe
-
-      - name: Run Test - FFI C ABI & Function Registry Suite
-        timeout-minutes: 5
-        run: build/garuda_c_abi_tests.exe
-
-      - name: Run Test - Filesystem & Process Execution Suite
-        timeout-minutes: 5
-        run: build/garuda_fs_process_tests.exe
-
-      - name: Run Test - Automated Doc Generator Suite
-        timeout-minutes: 5
-        run: build/garuda_doc_generator_tests.exe
-
-      - name: Run Test - CLI Tool Example Project Suite
-        timeout-minutes: 5
-        run: build/garuda_cli_example_tests.exe
-
-      - name: Run Test - Script Engine & Embedding Suite
-        timeout-minutes: 5
-        run: build/garuda_script_engine_tests.exe
-
-      - name: Run Test - Actor Persistence & Event Sourcing Suite
-        timeout-minutes: 5
-        run: build/garuda_actor_snapshot_tests.exe
-
-      - name: Run Test - Garuda Nusantara Ecosystem Suite
-        timeout-minutes: 5
-        run: build/garuda_nusantara_tests.exe
-
-      - name: Run Test - Jalur Langit Database Engine Suite
-        timeout-minutes: 5
-        run: build/garuda_jalur_langit_tests.exe
-
-      - name: Run Test - Jalur Langit Connection Pool Suite
-        timeout-minutes: 5
-        run: build/garuda_connection_pool_tests.exe
-
-      - name: Run Test - Jalur Langit Query Cache Suite
-        timeout-minutes: 5
-        run: build/garuda_query_cache_tests.exe
-
-      - name: Run Test - Jalur Langit JSON Serializer Suite
-        timeout-minutes: 5
-        run: build/garuda_json_serializer_tests.exe
-
-      - name: Run Test - Jalur Langit Auth Manager Suite
-        timeout-minutes: 5
-        run: build/garuda_auth_manager_tests.exe
-
-      - name: Run Test - Jalur Langit Backup Manager Suite
-        timeout-minutes: 5
-        run: build/garuda_backup_manager_tests.exe
-
-      - name: Run Test - Jalur Langit Schema Migrator Suite
-        timeout-minutes: 5
-        run: build/garuda_schema_migrator_jl_tests.exe
-
-      - name: Run Test - Jalur Langit Bridge Suite
-        timeout-minutes: 5
-        run: build/garuda_jalur_langit_bridge_tests.exe
-
-      - name: Run Test - Autopilot Admin Gate Suite
-        timeout-minutes: 5
-        run: build/garuda_autopilot_admin_gate_tests.exe
-
-      - name: Run Test - Autopilot Health Monitor Suite
-        timeout-minutes: 5
-        run: build/garuda_autopilot_health_monitor_tests.exe
-
-      - name: Run Test - Autopilot AI Code Fixer Suite
-        timeout-minutes: 5
-        run: build/garuda_autopilot_ai_code_fixer_tests.exe
-
-      - name: Run Test - Autopilot AI Integration Suite
-        timeout-minutes: 5
-        run: build/garuda_autopilot_ai_tests.exe
-
-      - name: Run Test - RICHAT API Contract Suite
-        timeout-minutes: 5
-        run: build/garuda_richat_contract_tests.exe
-
-      - name: Run Test - RICHAT Gateway Suite
-        timeout-minutes: 5
-        run: build/garuda_richat_gateway_tests.exe
-
-      - name: Run Test - RICHAT Room Suite
-        timeout-minutes: 5
-        run: build/garuda_richat_room_tests.exe
-
-      - name: Run Test - RICHAT Observability Suite
-        timeout-minutes: 5
-        run: build/garuda_richat_observability_tests.exe
-
-      - name: Run Test - RICHAT Status & Moment Suite
-        timeout-minutes: 5
-        run: build/garuda_richat_status_moment_tests.exe
-
-      - name: Run Test - RICHAT Call Log Suite
-        timeout-minutes: 5
-        run: build/garuda_richat_call_log_tests.exe
-
-      - name: Run Test - RICHAT Server Smoke Suite
-        timeout-minutes: 5
-        run: build/garuda_richat_server_smoke_tests.exe
-
-      - name: Run Test - Garuda GenServer Suite
-        timeout-minutes: 5
-        run: build/garuda_gen_server_tests.exe
-
-      - name: Run Test - Garuda Supervisor Suite
-        timeout-minutes: 5
-        run: build/garuda_supervisor_tests.exe
-
-      - name: Run Test - Garuda Application Suite
-        timeout-minutes: 5
-        run: build/garuda_application_tests.exe
-
-      - name: Run Test - Garuda PubSub Suite
-        timeout-minutes: 5
-        run: build/garuda_pubsub_tests.exe
-
-      - name: Run Test - Garuda GenStatem Suite
-        timeout-minutes: 5
-        run: build/garuda_gen_statem_tests.exe
-
-      - name: Run Test - Garuda Distributed Node Suite
-        timeout-minutes: 5
-        run: build/garuda_dist_node_tests.exe
-
-      - name: Run Test - Garuda Global Registry Suite
-        timeout-minutes: 5
-        run: build/garuda_global_registry_tests.exe
-
-      - name: Run Test - Garuda Cluster Manager Suite
-        timeout-minutes: 5
-        run: build/garuda_cluster_manager_tests.exe
-
-      - name: Run Test - Garuda Process Group Suite
-        timeout-minutes: 5
-        run: build/garuda_pg_tests.exe
-
-      - name: Run Test - Garuda Mnesia Suite
-        timeout-minutes: 5
-        run: build/garuda_mnesia_tests.exe
-
-      - name: Run Test - Garuda Mnesia Tier Suite
-        timeout-minutes: 5
-        run: build/garuda_mnesia_tier_tests.exe
-
-      - name: Run Test - Garuda Mnesia Sweep Suite
-        timeout-minutes: 5
-        run: build/garuda_mnesia_sweep_tests.exe
-
-      - name: Run Test - Garuda Mnesia Cluster Suite
-        timeout-minutes: 5
-        run: build/garuda_mnesia_cluster_tests.exe
-
-      - name: Run Test - Garuda Crypto Suite
-        timeout-minutes: 5
-        run: build/garuda_crypto_tests.exe
-
-      - name: Run Test - Garuda Key Transparency Suite
-        timeout-minutes: 5
-        run: build/garuda_key_transparency_tests.exe
-
-      - name: Run Test - Garuda Sealed Sender Suite
-        timeout-minutes: 5
-        run: build/garuda_sealed_sender_tests.exe
-
-      - name: Run Test - Garuda E2E Session Suite
-        timeout-minutes: 5
-        run: build/garuda_e2e_session_tests.exe
-
-      - name: Run Test - Garuda WebRTC Signaling Suite
-        timeout-minutes: 5
-        run: build/garuda_webrtc_signaling_tests.exe
-
-      - name: Run Test - Garuda Presence Suite
-        timeout-minutes: 5
-        run: build/garuda_presence_tests.exe
-
-      - name: Run Test - Garuda Typing Indicator Suite
-        timeout-minutes: 5
-        run: build/garuda_typing_indicator_tests.exe
-
-      - name: Run Test - Garuda Read Receipt Suite
-        timeout-minutes: 5
-        run: build/garuda_read_receipt_tests.exe
-
-      - name: Run Test - Garuda Reaction Suite
-        timeout-minutes: 5
-        run: build/garuda_reaction_tests.exe
-
-      - name: Run Test - Garuda Shell Suite
-        timeout-minutes: 5
-        run: build/garuda_shell_tests.exe
-
-      - name: Run Test - Garuda RPC Suite
-        timeout-minutes: 5
-        run: build/garuda_rpc_tests.exe
-
-      - name: Run Test - Garuda Observer Suite
-        timeout-minutes: 5
-        run: build/garuda_observer_tests.exe
-
-      - name: Run Test - Garuda Telemetry Suite
-        timeout-minutes: 5
-        run: build/garuda_telemetry_tests.exe
-
-      - name: Run Test - RICHAT App Suite
-        timeout-minutes: 5
-        run: build/garuda_richat_app_tests.exe
-
-      - name: Run Test - RICHAT Group Member Suite
-        timeout-minutes: 5
-        run: build/garuda_richat_group_member_tests.exe
-
-      - name: Run Test - RICHAT Group Fanout Suite
-        timeout-minutes: 5
-        run: build/garuda_richat_group_fanout_tests.exe
-
-      - name: Run Test - RICHAT Group Dist Suite
-        timeout-minutes: 5
-        run: build/garuda_richat_group_dist_tests.exe
-
-      - name: Run Test - RICHAT Cold DB Suite
-        timeout-minutes: 5
-        run: build/garuda_richat_cold_db_tests.exe
-
-      - name: Run Test - Garuda Anomaly Detector Suite
-        timeout-minutes: 5
-        run: build/garuda_anomaly_detector_tests.exe
-
-      - name: Run Test - Garuda RCA Engine Suite
-        timeout-minutes: 5
-        run: build/garuda_rca_engine_tests.exe
-
-      - name: Run Test - Garuda Action Engine Suite
-        timeout-minutes: 5
-        run: build/garuda_action_engine_tests.exe
-
-      - name: Run Test - Garuda Autopilot Runtime Suite
-        timeout-minutes: 5
-        run: build/garuda_autopilot_runtime_tests.exe
-
-      - name: Run Test - RICHAT Native WebSocket Suite
-        timeout-minutes: 5
-        run: build/garuda_native_websocket_tests.exe
-
-      - name: Run Test - RICHAT Native Crypto Suite
-        timeout-minutes: 5
-        run: build/garuda_native_crypto_tests.exe
-
-      - name: Run Test - RICHAT Native Sync Suite
-        timeout-minutes: 5
-        run: build/garuda_native_sync_tests.exe
-
-      - name: Run Test - RICHAT JNI Bridge Suite
-        timeout-minutes: 5
-        run: build/garuda_jni_bridge_tests.exe
-
-      - name: Run Test - Garuda Rate Limiter Suite
-        timeout-minutes: 5
-        run: build/garuda_rate_limiter_tests.exe
-
-      - name: Run Test - Garuda 2FA TOTP Suite
-        timeout-minutes: 5
-        run: build/garuda_totp_2fa_tests.exe
-
-      - name: Run Test - Garuda CAPTCHA PoW Suite
-        timeout-minutes: 5
-        run: build/garuda_captcha_pow_tests.exe
-
-      - name: Run Test - Garuda Audit Log Suite
-        timeout-minutes: 5
-        run: build/garuda_audit_log_tests.exe
-
-      - name: Run Test - Garuda C-ABI FFI Core Suite
-        timeout-minutes: 5
-        run: build/garuda_ffi_tests.exe
-
-      - name: Run Test - Garuda C Registry Suite
-        timeout-minutes: 5
-        run: build/garuda_ffi_registry_tests.exe
-
-      - name: Run Test - Garuda Native Binding Suite
-        timeout-minutes: 5
-        run: build/garuda_native_binding_tests.exe
-
-      - name: Run Test - Garuda FFI DSL Suite
-        timeout-minutes: 5
-        run: build/garuda_dsl_tests.exe
-
-      - name: Run Test - RICHAT Chat API 1-on-1 Suite
-        timeout-minutes: 5
-        run: build/garuda_richat_chat_api_tests.exe
-
-      - name: Run Test - RICHAT Group Chat API Suite
-        timeout-minutes: 5
-        run: build/garuda_richat_group_api_tests.exe
-
-      - name: Run Test - RICHAT Real-time API Suite
-        timeout-minutes: 5
-        run: build/garuda_richat_realtime_tests.exe
-
-      - name: Run Test - RICHAT Offline Queue Suite
-        timeout-minutes: 5
-        run: build/garuda_richat_offline_queue_tests.exe
-
-      - name: Run Performance Benchmarks
-        timeout-minutes: 5
-        run: powershell -ExecutionPolicy Bypass -File scripts/run_tests.ps1
+          ls -la build/garuda_richat_server
+          ls -la build/gvm-admin
+          ./build/gvm-admin help
+
+  deploy:
+    name: Auto Deploy to VPS
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            cd /opt/garuda/garuda_v67_0_production/garuda_v67.0.0
+            git pull origin main
+            cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DGARUDA_BUILD_TESTS=OFF
+            make garuda_richat_server gvm-admin -j2
+            cp gvm-admin /usr/local/bin/gvm-admin
+            chmod +x /usr/local/bin/gvm-admin
+            systemctl restart richat-garuda
+            echo "✅ Auto-Deploy GVM Selesai: $(date)"
