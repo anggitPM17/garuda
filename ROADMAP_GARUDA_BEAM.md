@@ -110,3 +110,10 @@
 - [x] `Unified Nginx Server Block` — Pemasangan server block terpadu `/etc/nginx/sites-available/richat`
 - [x] `Routes Verification` — Verifikasi HTTPS rute `/`, `/playground_wasm`, `/docs/`, `/openapi.yaml`, `/health`, `/metrics`, `/api/auth/login`, & `/ws` (100% 200 OK)
 - [x] `Production Safety` — Verification of `richat.my.id` production REST & WebSocket server active & untouched
+
+## 📍 OPSI A: Complete the Product (Fitur Chat Lengkap RICHAT) — ✅ SELESAI
+- [x] `richat_chat_api.hpp` — Chat API 1-on-1 messaging (`richat_chat_api.hpp` & `test_richat_chat_api.cpp`)
+- [x] `richat_group_api.hpp` — Group Chat API (`richat_group_api.hpp` & `test_richat_group_api.cpp`)
+- [x] `richat_realtime.hpp` — Real-time Presence, Typing, Read Receipts & Reactions (`richat_realtime.hpp` & `test_richat_realtime.cpp`)
+- [x] `richat_offline_queue.hpp` — Offline queue & retry engine (`richat_offline_queue.hpp` & `test_richat_offline_queue.cpp`)
+- [x] `migrate_postgres_to_mnesia.sh` — Migration script & documentation (`migrate_postgres_to_mnesia.sh`, `MIGRATION.md`, `CHAT_API.md`)
