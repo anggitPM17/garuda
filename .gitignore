@@ -105,7 +105,8 @@ rebar.lock
 mix.exs
 mix.lock
 
-# Android Legacy (Guard)
+# Android & Mobile Client
+android/
 app/
 RichatAndroid/
 *.apk
@@ -113,6 +114,14 @@ RichatAndroid/
 gradle/
 gradlew
 gradlew.bat
+
+# RICHAT Application Layer (Excluded for Pure Garuda BEAM Engine)
+include/garuda/richat/
+src/richat_*
+tests/test_richat_*
+docs/*CHAT*
+docs/*MIGRATION*
+docs/RICHAT_*
 
 # Python Legacy (Guard)
 __pycache__/

@@ -110,11 +110,6 @@ $TestNames = @(
   "garuda_rpc_tests",
   "garuda_observer_tests",
   "garuda_telemetry_tests",
-  "garuda_richat_app_tests",
-  "garuda_richat_group_member_tests",
-  "garuda_richat_group_fanout_tests",
-  "garuda_richat_group_dist_tests",
-  "garuda_richat_cold_db_tests",
   "garuda_anomaly_detector_tests",
   "garuda_rca_engine_tests",
   "garuda_action_engine_tests",
@@ -130,11 +125,7 @@ $TestNames = @(
   "garuda_ffi_tests",
   "garuda_ffi_registry_tests",
   "garuda_native_binding_tests",
-  "garuda_dsl_tests",
-  "garuda_richat_chat_api_tests",
-  "garuda_richat_group_api_tests",
-  "garuda_richat_realtime_tests",
-  "garuda_richat_offline_queue_tests"
+  "garuda_dsl_tests"
 )
 
 $AllPassed = $true
