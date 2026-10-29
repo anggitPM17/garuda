@@ -221,6 +221,11 @@ private:
             if (!text.has_value()) break;
             if (text->empty()) continue;
 
+            if (text->find("\"type\":\"ping\"") != std::string::npos || *text == "ping") {
+                client.send_text("{\"type\":\"pong\"}");
+                continue;
+            }
+
             auto msg = NusantaraMessage::from_json(*text);
             if (msg.has_value()) {
                 send_message(*msg);
