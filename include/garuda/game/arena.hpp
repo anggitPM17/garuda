@@ -8,6 +8,7 @@
 
 #include "sqlite3.h"
 #include "../sys/json_logger.hpp"
+#include "../auth/auth_manager.hpp"
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -548,14 +549,30 @@ public:
         else if (json_text.find("\"action\":\"join\"") != std::string::npos ||
                  json_text.find("\"action\": \"join\"") != std::string::npos) {
             std::string name = "";
-            auto name_pos = json_text.find("\"name\":\"");
-            if (name_pos != std::string::npos) {
-                auto name_end = json_text.find("\"", name_pos + 8);
-                if (name_end != std::string::npos) {
-                    name = json_text.substr(name_pos + 8, name_end - (name_pos + 8));
+
+            // Check JWT Token first
+            std::string token = "";
+            auto token_pos = json_text.find("\"token\":\"");
+            if (token_pos != std::string::npos) {
+                auto token_end = json_text.find("\"", token_pos + 9);
+                if (token_end != std::string::npos) {
+                    token = json_text.substr(token_pos + 9, token_end - (token_pos + 9));
                 }
             }
-            name = sanitize_player_name(name);
+
+            auto [valid, jwt_username] = garuda::auth::AuthManager::get_instance().validate_jwt(token);
+            if (valid && !jwt_username.empty()) {
+                name = jwt_username;
+            } else {
+                auto name_pos = json_text.find("\"name\":\"");
+                if (name_pos != std::string::npos) {
+                    auto name_end = json_text.find("\"", name_pos + 8);
+                    if (name_end != std::string::npos) {
+                        name = json_text.substr(name_pos + 8, name_end - (name_pos + 8));
+                    }
+                }
+                name = sanitize_player_name(name);
+            }
 
             std::string color = "";
             auto color_pos = json_text.find("\"color\":\"");

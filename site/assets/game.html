@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🎮 GARUDA ARENA — Premium Edition (GVM Engine)</title>
+  <title>🎮 GARUDA ARENA — True Identity & JWT (GVM Engine)</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -49,6 +49,35 @@
       border-radius: 12px;
       letter-spacing: 0.5px;
     }
+    .user-status-area {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .user-badge {
+      font-size: 12px;
+      font-weight: bold;
+      color: #38bdf8;
+      background: #0f172a;
+      padding: 6px 12px;
+      border-radius: 20px;
+      border: 1px solid #334155;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .logout-btn {
+      background: #dc2626;
+      color: white;
+      border: none;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 10px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .logout-btn:hover { background: #ef4444; }
+
     .status-box {
       display: flex;
       align-items: center;
@@ -102,12 +131,8 @@
       flex-direction: column;
       backdrop-filter: blur(8px);
     }
-    .sidebar-card.chat-card {
-      flex: 1;
-    }
-    .sidebar-card.fame-card {
-      flex: 1;
-    }
+    .sidebar-card.chat-card { flex: 1; }
+    .sidebar-card.fame-card { flex: 1; }
 
     .sidebar-header {
       font-size: 13px;
@@ -120,9 +145,7 @@
       justify-content: space-between;
       align-items: center;
     }
-    .sidebar-header.fame-header {
-      color: #f59e0b;
-    }
+    .sidebar-header.fame-header { color: #f59e0b; }
 
     /* Global Chat Panel */
     .chat-messages {
@@ -142,10 +165,7 @@
     }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
     .chat-sender { font-weight: bold; color: #38bdf8; }
-    .chat-input-row {
-      display: flex;
-      gap: 6px;
-    }
+    .chat-input-row { display: flex; gap: 6px; }
     .chat-input {
       flex: 1;
       padding: 8px 10px;
@@ -195,10 +215,7 @@
       text-overflow: ellipsis;
       max-width: 140px;
     }
-    .score-item .p-score {
-      font-weight: bold;
-      color: #f59e0b;
-    }
+    .score-item .p-score { font-weight: bold; color: #f59e0b; }
     .cheer-btn {
       background: #38bdf8;
       color: #0f172a;
@@ -282,11 +299,11 @@
       z-index: 6;
     }
 
-    /* Join Modal Overlay */
+    /* Auth & Join Overlay Modal */
     .join-overlay {
       position: absolute;
       top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(2, 6, 23, 0.94);
+      background: rgba(2, 6, 23, 0.95);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -300,19 +317,53 @@
       border: 1px solid #dc2626;
       text-align: center;
       box-shadow: 0 0 30px rgba(220, 38, 38, 0.4);
-      max-width: 400px;
+      max-width: 420px;
       width: 90%;
     }
     .join-box h2 {
-      font-size: 24px;
+      font-size: 22px;
       color: #f8fafc;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
     }
     .join-box p {
-      font-size: 13px;
+      font-size: 12px;
       color: #94a3b8;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
     }
+
+    /* Auth Tabs */
+    .auth-tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+    .auth-tab {
+      flex: 1;
+      padding: 8px;
+      background: #0f172a;
+      border: 1px solid #334155;
+      color: #94a3b8;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 12px;
+      cursor: pointer;
+    }
+    .auth-tab.active {
+      background: #dc2626;
+      color: white;
+      border-color: #dc2626;
+    }
+
+    .auth-alert {
+      font-size: 11px;
+      padding: 6px;
+      border-radius: 4px;
+      margin-bottom: 10px;
+      display: none;
+    }
+    .auth-alert.error { background: #7f1d1d; color: #fca5a5; display: block; }
+    .auth-alert.success { background: #064e3b; color: #6ee7b7; display: block; }
+
     .join-input {
       width: 100%;
       padding: 10px 14px;
@@ -320,17 +371,17 @@
       border: 1px solid #334155;
       border-radius: 6px;
       color: #fff;
-      font-size: 15px;
-      margin-bottom: 14px;
+      font-size: 14px;
+      margin-bottom: 10px;
       outline: none;
       text-align: center;
     }
-    .join-input:focus { border-color: #dc2626; }
+    .join-input:focus { border-color: #38bdf8; }
 
     .selector-title {
-      font-size: 12px;
+      font-size: 11px;
       color: #94a3b8;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
       font-weight: bold;
     }
 
@@ -339,11 +390,11 @@
       display: flex;
       justify-content: center;
       gap: 12px;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
     }
     .color-swatch {
-      width: 32px;
-      height: 32px;
+      width: 28px;
+      height: 28px;
       border-radius: 50%;
       cursor: pointer;
       border: 2px solid transparent;
@@ -360,17 +411,17 @@
     .skin-options {
       display: flex;
       justify-content: center;
-      gap: 10px;
-      margin-bottom: 20px;
+      gap: 8px;
+      margin-bottom: 16px;
     }
     .skin-btn {
       flex: 1;
-      padding: 8px 10px;
+      padding: 6px 8px;
       background: #0f172a;
       border: 1px solid #334155;
       border-radius: 6px;
       color: #94a3b8;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: bold;
       cursor: pointer;
       transition: all 0.2s;
@@ -384,10 +435,10 @@
 
     .join-btn {
       width: 100%;
-      padding: 12px;
+      padding: 10px;
       background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
       color: white;
-      font-size: 16px;
+      font-size: 15px;
       font-weight: bold;
       border: none;
       border-radius: 6px;
@@ -403,10 +454,16 @@
 <body>
 
   <header>
-    <h1>🦅 GARUDA <span>ARENA</span> <span class="badge">PREMIUM EDITION</span></h1>
-    <div class="status-box">
-      <div id="statusDot" class="status-dot"></div>
-      <span id="statusText">Menghubungkan ke WebSocket...</span>
+    <h1>🦅 GARUDA <span>ARENA</span> <span class="badge">TRUE IDENTITY</span></h1>
+    <div class="user-status-area">
+      <div id="userInfo" class="user-badge" style="display:none;">
+        👤 <span id="usernameDisplay">Pilot</span>
+        <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+      </div>
+      <div class="status-box">
+        <div id="statusDot" class="status-dot"></div>
+        <span id="statusText">Menghubungkan ke WebSocket...</span>
+      </div>
     </div>
   </header>
 
@@ -416,10 +473,10 @@
       <div class="sidebar-card chat-card">
         <div class="sidebar-header">
           <span>💬 Global Chat</span>
-          <span style="font-size: 10px; color: #94a3b8;">Real-Time</span>
+          <span style="font-size: 10px; color: #94a3b8;">JWT Authenticated</span>
         </div>
         <div id="chatMessages" class="chat-messages">
-          <div class="chat-msg"><span class="chat-sender">[GARUDA]</span> Selamat datang di Garuda Arena Premium Edition!</div>
+          <div class="chat-msg"><span class="chat-sender">[GARUDA]</span> Selamat datang di Garuda Arena True Identity Edition!</div>
         </div>
         <div class="chat-input-row">
           <input type="text" id="chatInput" class="chat-input" placeholder="Obrolan global..." maxlength="100" aria-label="Chat Message">
@@ -438,13 +495,21 @@
       <div class="canvas-box">
         <canvas id="gameCanvas" width="820" height="620"></canvas>
 
-        <!-- Join Overlay inside Canvas Box -->
+        <!-- Auth & Join Overlay inside Canvas Box -->
         <div id="joinOverlay" class="join-overlay">
           <div class="join-box">
-            <h2>🔥 GARUDA ARENA</h2>
-            <p>Real-Time Multiplayer Actor Game on GVM Engine (30 FPS)</p>
+            <h2>🔐 GARUDA AUTH</h2>
+            <p>Akun Abadi & Autentikasi JWT HMAC-SHA256</p>
 
-            <input type="text" id="playerNameInput" class="join-input" placeholder="Masukkan Nama Pilot" aria-label="Nama Pilot" maxlength="15" value="PilotGaruda">
+            <div class="auth-tabs">
+              <button id="tabLoginBtn" class="auth-tab active" onclick="switchAuthMode('login')">🔑 Login</button>
+              <button id="tabRegisterBtn" class="auth-tab" onclick="switchAuthMode('register')">📝 Register</button>
+            </div>
+
+            <div id="authAlert" class="auth-alert"></div>
+
+            <input type="text" id="authUserInput" class="join-input" placeholder="Username" aria-label="Username" maxlength="20">
+            <input type="password" id="authPassInput" class="join-input" placeholder="Password" aria-label="Password">
 
             <div class="selector-title">PILIH WARNA PESAWAT:</div>
             <div class="color-swatches">
@@ -461,7 +526,7 @@
               <button class="skin-btn" data-skin="heavy">🛡️ Heavy</button>
             </div>
 
-            <button id="joinBtn" class="join-btn">🚀 MASUK ARENA</button>
+            <button id="authSubmitBtn" class="join-btn" onclick="submitAuth()">🔑 MASUK GAME</button>
           </div>
         </div>
       </div>
@@ -502,8 +567,15 @@
     const statusDot = document.getElementById('statusDot');
     const statusText = document.getElementById('statusText');
     const joinOverlay = document.getElementById('joinOverlay');
-    const playerNameInput = document.getElementById('playerNameInput');
-    const joinBtn = document.getElementById('joinBtn');
+
+    const userInfo = document.getElementById('userInfo');
+    const usernameDisplay = document.getElementById('usernameDisplay');
+
+    const authUserInput = document.getElementById('authUserInput');
+    const authPassInput = document.getElementById('authPassInput');
+    const authAlert = document.getElementById('authAlert');
+    const authSubmitBtn = document.getElementById('authSubmitBtn');
+
     const scoreList = document.getElementById('scoreList');
     const hallOfFameList = document.getElementById('hallOfFameList');
     const playerCount = document.getElementById('playerCount');
@@ -513,49 +585,31 @@
     const chatInput = document.getElementById('chatInput');
     const sendChatBtn = document.getElementById('sendChatBtn');
 
-    // Selection State
-    let selectedColor = "#ef4444";
-    let selectedSkin = "default";
+    let currentAuthMode = 'login'; // 'login' or 'register'
+    let jwtToken = localStorage.getItem('garuda_jwt_token') || '';
+    let currentUsername = localStorage.getItem('garuda_player_name') || '';
 
-    // --- LOCAL STORAGE USERNAME & SETTINGS PERSISTENCE ---
-    const savedName = localStorage.getItem('garuda_player_name');
-    const savedColor = localStorage.getItem('garuda_player_color');
-    const savedSkin = localStorage.getItem('garuda_player_skin');
-    const savedId = localStorage.getItem('garuda_player_id');
+    let selectedColor = localStorage.getItem('garuda_player_color') || "#ef4444";
+    let selectedSkin = localStorage.getItem('garuda_player_skin') || "default";
 
-    let playerId = savedId || ("p_" + Math.floor(Math.random() * 89999 + 10000));
-    if (!savedId) localStorage.setItem('garuda_player_id', playerId);
-
-    let playerName = savedName || "PilotGaruda";
-    if (savedName) playerNameInput.value = savedName;
-
-    if (savedColor) {
-      selectedColor = savedColor;
-      document.querySelectorAll('.color-swatch').forEach(s => {
-        s.classList.toggle('active', s.getAttribute('data-color') === savedColor);
-      });
-    }
-
-    if (savedSkin) {
-      selectedSkin = savedSkin;
-      document.querySelectorAll('.skin-btn').forEach(b => {
-        b.classList.toggle('active', b.getAttribute('data-skin') === savedSkin);
-      });
-    }
-
-    document.querySelectorAll('.color-swatch').forEach(swatch => {
-      swatch.addEventListener('click', () => {
-        document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
-        swatch.classList.add('active');
-        selectedColor = swatch.getAttribute('data-color');
+    // Set swatch & skin active states
+    document.querySelectorAll('.color-swatch').forEach(s => {
+      s.classList.toggle('active', s.getAttribute('data-color') === selectedColor);
+      s.addEventListener('click', () => {
+        document.querySelectorAll('.color-swatch').forEach(sw => sw.classList.remove('active'));
+        s.classList.add('active');
+        selectedColor = s.getAttribute('data-color');
+        localStorage.setItem('garuda_player_color', selectedColor);
       });
     });
 
-    document.querySelectorAll('.skin-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.skin-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        selectedSkin = btn.getAttribute('data-skin');
+    document.querySelectorAll('.skin-btn').forEach(b => {
+      b.classList.toggle('active', b.getAttribute('data-skin') === selectedSkin);
+      b.addEventListener('click', () => {
+        document.querySelectorAll('.skin-btn').forEach(btn => btn.classList.remove('active'));
+        b.classList.add('active');
+        selectedSkin = b.getAttribute('data-skin');
+        localStorage.setItem('garuda_player_skin', selectedSkin);
       });
     });
 
@@ -568,17 +622,111 @@
     let inGame = false;
 
     // Server State Cache
-    let gameState = {
-      players: [],
-      bullets: [],
-      powerups: []
-    };
+    let gameState = { players: [], bullets: [], powerups: [] };
 
     // Client Input Tracking
     const keys = { w: false, a: false, s: false, d: false, space: false };
     let mouseX = 410;
     let mouseY = 310;
     let lastShootTime = 0;
+
+    // --- AUTH MODE SWITCHER ---
+    function switchAuthMode(mode) {
+      currentAuthMode = mode;
+      document.getElementById('tabLoginBtn').classList.toggle('active', mode === 'login');
+      document.getElementById('tabRegisterBtn').classList.toggle('active', mode === 'register');
+      authSubmitBtn.textContent = mode === 'login' ? '🔑 MASUK GAME' : '📝 DAFTAR AKUN';
+      authAlert.style.display = 'none';
+    }
+
+    async function submitAuth() {
+      const user = authUserInput.value.trim();
+      const pass = authPassInput.value.trim();
+
+      if (!user || !pass) {
+        showAuthAlert('Username dan password harus diisi', 'error');
+        return;
+      }
+
+      const endpoint = currentAuthMode === 'login' ? '/api/login' : '/api/register';
+      try {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: user, password: pass })
+        });
+        const data = await res.json();
+
+        if (res.ok && data.status === 'ok') {
+          if (currentAuthMode === 'register') {
+            showAuthAlert('Registrasi berhasil! Mengalihkan ke Login...', 'success');
+            setTimeout(() => switchAuthMode('login'), 1200);
+          } else {
+            jwtToken = data.token;
+            currentUsername = data.username || user;
+
+            localStorage.setItem('garuda_jwt_token', jwtToken);
+            localStorage.setItem('garuda_player_name', currentUsername);
+
+            showAuthAlert('Login berhasil!', 'success');
+            setTimeout(enterGameAfterAuth, 800);
+          }
+        } else {
+          showAuthAlert(data.message || 'Gagal memproses otentikasi', 'error');
+        }
+      } catch (e) {
+        showAuthAlert('Gagal terhubung ke server auth', 'error');
+      }
+    }
+
+    function showAuthAlert(msg, type) {
+      authAlert.textContent = msg;
+      authAlert.className = 'auth-alert ' + type;
+      authAlert.style.display = 'block';
+    }
+
+    async function checkAutoLogin() {
+      if (!jwtToken) return;
+
+      try {
+        const res = await fetch('/api/me', {
+          headers: { 'Authorization': 'Bearer ' + jwtToken }
+        });
+        const data = await res.json();
+
+        if (res.ok && data.status === 'ok') {
+          currentUsername = data.username;
+          localStorage.setItem('garuda_player_name', currentUsername);
+          enterGameAfterAuth();
+        } else {
+          // Token expired or invalid
+          logout();
+        }
+      } catch (e) {
+        // Fallback: stay in login screen
+      }
+    }
+
+    function enterGameAfterAuth() {
+      inGame = true;
+      joinOverlay.style.display = 'none';
+
+      usernameDisplay.textContent = currentUsername;
+      userInfo.style.display = 'flex';
+
+      sendJoinMsg();
+    }
+
+    function logout() {
+      localStorage.removeItem('garuda_jwt_token');
+      localStorage.removeItem('garuda_player_name');
+      jwtToken = '';
+      currentUsername = '';
+      inGame = false;
+      userInfo.style.display = 'none';
+      joinOverlay.style.display = 'flex';
+      switchAuthMode('login');
+    }
 
     // --- WEB AUDIO API LASER SFX ---
     let audioCtx = null;
@@ -627,14 +775,7 @@
           statusDot.classList.add('online');
           statusText.textContent = "ONLINE (GVM WebSocket Active)";
 
-          if (inGame) {
-            sendJoinMsg();
-          } else if (savedName) {
-            // Auto join if saved before
-            inGame = true;
-            joinOverlay.style.display = 'none';
-            sendJoinMsg();
-          }
+          checkAutoLogin();
         };
 
         socket.onmessage = (event) => {
@@ -699,7 +840,7 @@
 
     // --- SPECTATOR & CHEER ---
     function checkSpectatorState() {
-      const myPlayer = gameState.players.find(p => p.id === playerId);
+      const myPlayer = gameState.players.find(p => p.name === currentUsername);
       if (myPlayer && myPlayer.is_spectator) {
         spectatorBanner.style.display = 'flex';
       } else {
@@ -712,7 +853,7 @@
         socket.send(JSON.stringify({
           action: "cheer",
           target_id: targetId,
-          player_id: playerId
+          token: jwtToken
         }));
       }
     }
@@ -748,7 +889,7 @@
 
     // --- INPUT LISTENERS ---
     window.addEventListener('keydown', (e) => {
-      if (!inGame || document.activeElement === chatInput) return;
+      if (!inGame || document.activeElement === chatInput || document.activeElement === authUserInput || document.activeElement === authPassInput) return;
       const k = e.key.toLowerCase();
       if (k === 'w' || k === 'arrowup') keys.w = true;
       if (k === 'a' || k === 'arrowleft') keys.a = true;
@@ -763,7 +904,7 @@
     });
 
     window.addEventListener('keyup', (e) => {
-      if (!inGame || document.activeElement === chatInput) return;
+      if (!inGame || document.activeElement === chatInput || document.activeElement === authUserInput || document.activeElement === authPassInput) return;
       const k = e.key.toLowerCase();
       if (k === 'w' || k === 'arrowup') keys.w = false;
       if (k === 'a' || k === 'arrowleft') keys.a = false;
@@ -786,37 +927,25 @@
     });
 
     function sendJoinMsg() {
-      if (socket && socket.readyState === WebSocket.OPEN) {
+      if (socket && socket.readyState === WebSocket.OPEN && jwtToken) {
         socket.send(JSON.stringify({
           action: "join",
-          name: playerName,
+          token: jwtToken,
           color: selectedColor,
-          skin: selectedSkin,
-          player_id: playerId
+          skin: selectedSkin
         }));
       }
     }
 
-    joinBtn.addEventListener('click', () => {
-      const val = playerNameInput.value.trim();
-      if (val) playerName = val;
-
-      // Save to LocalStorage
-      localStorage.setItem('garuda_player_name', playerName);
-      localStorage.setItem('garuda_player_color', selectedColor);
-      localStorage.setItem('garuda_player_skin', selectedSkin);
-
-      inGame = true;
-      joinOverlay.style.display = 'none';
-      sendJoinMsg();
+    authUserInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') authPassInput.focus();
     });
-
-    playerNameInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') joinBtn.click();
+    authPassInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') submitAuth();
     });
 
     function shoot() {
-      const myPlayer = gameState.players.find(p => p.id === playerId);
+      const myPlayer = gameState.players.find(p => p.name === currentUsername);
       if (myPlayer && myPlayer.is_spectator) return;
 
       const now = Date.now();
@@ -828,7 +957,7 @@
       if (socket && socket.readyState === WebSocket.OPEN) {
         socket.send(JSON.stringify({
           action: "shoot",
-          player_id: playerId
+          token: jwtToken
         }));
       }
     }
@@ -836,7 +965,7 @@
     // --- GAME LOOP & MOVEMENT SYNC ---
     function processInputAndSync() {
       if (!inGame || !socket || socket.readyState !== WebSocket.OPEN) return;
-      const myPlayer = gameState.players.find(p => p.id === playerId);
+      const myPlayer = gameState.players.find(p => p.name === currentUsername);
       if (myPlayer && myPlayer.is_spectator) return;
 
       let dx = 0;
@@ -862,7 +991,7 @@
       if (dx !== 0 || dy !== 0 || Math.abs(angle) > 0.001) {
         socket.send(JSON.stringify({
           action: "move",
-          player_id: playerId,
+          token: jwtToken,
           dx: dx,
           dy: dy,
           angle: angle
@@ -882,13 +1011,13 @@
         return;
       }
 
-      const myPlayer = gameState.players.find(p => p.id === playerId);
+      const myPlayer = gameState.players.find(p => p.name === currentUsername);
       const isSpectator = myPlayer && myPlayer.is_spectator;
 
       const sorted = [...players].sort((a, b) => b.score - a.score);
       scoreList.innerHTML = sorted.map((p, idx) => `
         <li class="score-item" style="border-left: 3px solid ${p.color}">
-          <span class="p-name">${idx + 1}. ${escapeHtml(p.name)} ${p.is_spectator ? '💀' : ''} ${p.id === playerId ? '⭐' : ''}</span>
+          <span class="p-name">${idx + 1}. ${escapeHtml(p.name)} ${p.is_spectator ? '💀' : ''} ${p.name === currentUsername ? '⭐' : ''}</span>
           <span class="p-score">${p.score} ${isSpectator && !p.is_spectator ? `<button class="cheer-btn" onclick="sendCheer('${p.id}')">📣 Cheer</button>` : ''}</span>
         </li>
       `).join('');
@@ -910,21 +1039,18 @@
 
       ctx.beginPath();
       if (p.skin === 'stealth') {
-        // 🥷 Stealth Fighter Skin: Sharp needle nose, swept-back delta wings
         ctx.moveTo(size * 1.8, 0);
         ctx.bezierCurveTo(size * 0.8, -size * 0.3, size * 0.2, -size * 0.8, -size * 1.2, -size * 0.7);
         ctx.bezierCurveTo(-size * 0.8, -size * 0.4, -size * 0.5, -size * 0.2, -size * 0.6, 0);
         ctx.bezierCurveTo(-size * 0.5, size * 0.2, -size * 0.8, size * 0.4, -size * 1.2, size * 0.7);
         ctx.bezierCurveTo(size * 0.2, size * 0.8, size * 0.8, size * 0.3, size * 1.8, 0);
       } else if (p.skin === 'heavy') {
-        // 🛡️ Heavy Bomber Skin: Wide armored wings, thick fuselage
         ctx.moveTo(size * 1.4, 0);
         ctx.bezierCurveTo(size * 0.8, -size * 0.6, size * 0.2, -size * 1.4, -size * 0.9, -size * 1.3);
         ctx.bezierCurveTo(-size * 0.7, -size * 0.8, -size * 0.6, -size * 0.3, -size * 0.8, 0);
         ctx.bezierCurveTo(-size * 0.6, size * 0.3, -size * 0.7, size * 0.8, -size * 0.9, size * 1.3);
         ctx.bezierCurveTo(size * 0.2, size * 1.4, size * 0.8, size * 0.6, size * 1.4, 0);
       } else {
-        // 🚀 Default Fighter Skin: Natural sleek jet shape with curved wings
         ctx.moveTo(size * 1.5, 0);
         ctx.bezierCurveTo(size * 0.6, -size * 0.3, size * 0.2, -size * 1.0, -size * 1.0, -size * 0.8);
         ctx.bezierCurveTo(-size * 0.7, -size * 0.4, -size * 0.4, -size * 0.1, -size * 0.5, 0);
@@ -1059,7 +1185,7 @@
         ctx.font = 'bold 12px Segoe UI, sans-serif';
         ctx.textAlign = 'center';
         ctx.fillStyle = '#f8fafc';
-        ctx.fillText(p.name + (p.id === playerId ? ' (Anda)' : ''), px, py - size - 16);
+        ctx.fillText(p.name + (p.name === currentUsername ? ' (Anda)' : ''), px, py - size - 16);
 
         // Draw HP Bar
         const barW = 36 * scaleX;

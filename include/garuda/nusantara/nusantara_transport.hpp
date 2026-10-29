@@ -11,6 +11,7 @@
 #include <array>
 #include "../game/arena.hpp"
 #include "../gpm/gpm.hpp"
+#include "../auth/auth_manager.hpp"
 
 #ifdef _WIN32
   #ifndef WIN32_LEAN_AND_MEAN
@@ -1098,6 +1099,192 @@ public:
             return WsSocket();
         }
 
+        // 1. POST /api/register or POST /api/auth/register
+        if (req_buf.find("POST /api/register") != std::string::npos || req_buf.find("POST /api/auth/register") != std::string::npos) {
+            auto header_end = req_buf.find("\r\n\r\n");
+            std::string body_str = "";
+            if (header_end != std::string::npos && header_end + 4 < req_buf.size()) {
+                body_str = req_buf.substr(header_end + 4);
+            }
+
+            std::size_t content_len = 0;
+            auto cl_pos = req_buf.find("Content-Length:");
+            if (cl_pos == std::string::npos) cl_pos = req_buf.find("content-length:");
+            if (cl_pos != std::string::npos) {
+                auto val_start = req_buf.find_first_of("0123456789", cl_pos);
+                if (val_start != std::string::npos) {
+                    try { content_len = std::stoul(req_buf.substr(val_start)); } catch (...) {}
+                }
+            }
+
+            while (body_str.size() < content_len && content_len > 0) {
+                char chunk[1024];
+                std::size_t to_read = std::min<std::size_t>(sizeof(chunk), content_len - body_str.size());
+                int n = raw_conn.recv_raw(chunk, to_read);
+                if (n <= 0) break;
+                body_str.append(chunk, n);
+            }
+
+            std::string full_req = req_buf + body_str;
+            auto parse_val = [&](const std::string& key) {
+                // 1. Quoted key: "key" : "value" or "key":"value"
+                std::string k1 = "\"" + key + "\"";
+                auto p1 = full_req.find(k1);
+                if (p1 != std::string::npos) {
+                    auto colon = full_req.find(":", p1 + k1.size());
+                    if (colon != std::string::npos) {
+                        auto q1 = full_req.find("\"", colon + 1);
+                        if (q1 != std::string::npos) {
+                            auto q2 = full_req.find("\"", q1 + 1);
+                            if (q2 != std::string::npos) {
+                                return full_req.substr(q1 + 1, q2 - (q1 + 1));
+                            }
+                        }
+                    }
+                }
+                // 2. Unquoted or Form key: key:value or key=value
+                std::string k2 = key + ":";
+                auto p2 = full_req.find(k2);
+                if (p2 == std::string::npos) {
+                    k2 = key + "=";
+                    p2 = full_req.find(k2);
+                }
+                if (p2 != std::string::npos) {
+                    auto start_p = p2 + k2.size();
+                    while (start_p < full_req.size() && (full_req[start_p] == ' ' || full_req[start_p] == '"' || full_req[start_p] == '\'')) {
+                        start_p++;
+                    }
+                    auto end_p = full_req.find_first_of("\r\n&,}\" '", start_p);
+                    if (end_p == std::string::npos) end_p = full_req.size();
+                    return full_req.substr(start_p, end_p - start_p);
+                }
+                return std::string("");
+            };
+
+            std::string user = parse_val("username");
+            std::string pass = parse_val("password");
+
+            auto [ok, err] = garuda::auth::AuthManager::get_instance().register_user(user, pass);
+            std::string resp_body;
+            if (ok) {
+                resp_body = "{\"status\":\"ok\",\"message\":\"Registrasi berhasil. Silakan login.\"}";
+            } else {
+                resp_body = "{\"status\":\"error\",\"message\":\"" + err + "\"}";
+            }
+
+            std::string status_code = ok ? "200 OK" : "400 Bad Request";
+            std::string resp = "HTTP/1.1 " + status_code + "\r\nContent-Type: application/json\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: " + std::to_string(resp_body.size()) + "\r\nConnection: close\r\n\r\n" + resp_body;
+            raw_conn.send_all(resp);
+            raw_conn.close();
+            return WsSocket();
+        }
+
+        // 2. POST /api/login
+        if (req_buf.find("POST /api/login") != std::string::npos || req_buf.find("POST /api/auth/login") != std::string::npos) {
+            auto header_end = req_buf.find("\r\n\r\n");
+            std::string body_str = "";
+            if (header_end != std::string::npos && header_end + 4 < req_buf.size()) {
+                body_str = req_buf.substr(header_end + 4);
+            }
+
+            std::size_t content_len = 0;
+            auto cl_pos = req_buf.find("Content-Length:");
+            if (cl_pos == std::string::npos) cl_pos = req_buf.find("content-length:");
+            if (cl_pos != std::string::npos) {
+                auto val_start = req_buf.find_first_of("0123456789", cl_pos);
+                if (val_start != std::string::npos) {
+                    try { content_len = std::stoul(req_buf.substr(val_start)); } catch (...) {}
+                }
+            }
+
+            while (body_str.size() < content_len && content_len > 0) {
+                char chunk[1024];
+                std::size_t to_read = std::min<std::size_t>(sizeof(chunk), content_len - body_str.size());
+                int n = raw_conn.recv_raw(chunk, to_read);
+                if (n <= 0) break;
+                body_str.append(chunk, n);
+            }
+
+            std::string full_req = req_buf + body_str;
+            auto parse_val = [&](const std::string& key) {
+                // 1. Quoted key: "key" : "value" or "key":"value"
+                std::string k1 = "\"" + key + "\"";
+                auto p1 = full_req.find(k1);
+                if (p1 != std::string::npos) {
+                    auto colon = full_req.find(":", p1 + k1.size());
+                    if (colon != std::string::npos) {
+                        auto q1 = full_req.find("\"", colon + 1);
+                        if (q1 != std::string::npos) {
+                            auto q2 = full_req.find("\"", q1 + 1);
+                            if (q2 != std::string::npos) {
+                                return full_req.substr(q1 + 1, q2 - (q1 + 1));
+                            }
+                        }
+                    }
+                }
+                // 2. Unquoted or Form key: key:value or key=value
+                std::string k2 = key + ":";
+                auto p2 = full_req.find(k2);
+                if (p2 == std::string::npos) {
+                    k2 = key + "=";
+                    p2 = full_req.find(k2);
+                }
+                if (p2 != std::string::npos) {
+                    auto start_p = p2 + k2.size();
+                    while (start_p < full_req.size() && (full_req[start_p] == ' ' || full_req[start_p] == '"' || full_req[start_p] == '\'')) {
+                        start_p++;
+                    }
+                    auto end_p = full_req.find_first_of("\r\n&,}\" '", start_p);
+                    if (end_p == std::string::npos) end_p = full_req.size();
+                    return full_req.substr(start_p, end_p - start_p);
+                }
+                return std::string("");
+            };
+
+            std::string user = parse_val("username");
+            std::string pass = parse_val("password");
+
+            auto [ok, token_or_err] = garuda::auth::AuthManager::get_instance().login_user(user, pass);
+            std::string resp_body;
+            if (ok) {
+                resp_body = "{\"status\":\"ok\",\"token\":\"" + token_or_err + "\",\"username\":\"" + user + "\"}";
+            } else {
+                resp_body = "{\"status\":\"error\",\"message\":\"" + token_or_err + "\"}";
+            }
+
+            std::string status_code = ok ? "200 OK" : "401 Unauthorized";
+            std::string resp = "HTTP/1.1 " + status_code + "\r\nContent-Type: application/json\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: " + std::to_string(resp_body.size()) + "\r\nConnection: close\r\n\r\n" + resp_body;
+            raw_conn.send_all(resp);
+            raw_conn.close();
+            return WsSocket();
+        }
+
+        // 3. GET /api/me
+        if (req_buf.find("GET /api/me") != std::string::npos) {
+            std::string token = "";
+            auto auth_pos = req_buf.find("Authorization: Bearer ");
+            if (auth_pos != std::string::npos) {
+                auto token_end = req_buf.find_first_of("\r\n", auth_pos + 22);
+                if (token_end != std::string::npos) {
+                    token = req_buf.substr(auth_pos + 22, token_end - (auth_pos + 22));
+                }
+            }
+
+            auto [valid, username] = garuda::auth::AuthManager::get_instance().validate_jwt(token);
+            std::string resp_body;
+            if (valid) {
+                resp_body = "{\"status\":\"ok\",\"username\":\"" + username + "\"}";
+            } else {
+                resp_body = "{\"status\":\"error\",\"message\":\"Token JWT tidak valid atau expired\"}";
+            }
+
+            std::string status_code = valid ? "200 OK" : "401 Unauthorized";
+            std::string resp = "HTTP/1.1 " + status_code + "\r\nContent-Type: application/json\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: " + std::to_string(resp_body.size()) + "\r\nConnection: close\r\n\r\n" + resp_body;
+            raw_conn.send_all(resp);
+            raw_conn.close();
+            return WsSocket();
+        }
+
         if (req_buf.find("GET /api/leaderboard") != std::string::npos || req_buf.find("GET /leaderboard") != std::string::npos) {
             std::string body = garuda::game::ArenaEngine::get_instance().get_top_leaderboard_json() + "\n";
             std::string resp = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: " + std::to_string(body.size()) + "\r\nConnection: close\r\n\r\n" + body;
@@ -1209,25 +1396,7 @@ public:
             return WsSocket();
         }
 
-        if (req_buf.find("POST /api/auth/login") != std::string::npos || req_buf.find("POST /auth/login") != std::string::npos ||
-            req_buf.find("POST /api/auth/register") != std::string::npos || req_buf.find("POST /auth/register") != std::string::npos) {
 
-            // Reject XSS / Injection payloads
-            if (req_buf.find("<") != std::string::npos || req_buf.find(">") != std::string::npos || req_buf.find("script") != std::string::npos) {
-                std::string body = "{\"status\":\"error\",\"message\":\"Payload contains prohibited characters\"}\n";
-                std::string resp = "HTTP/1.1 400 Bad Request\r\nContent-Type: application/json\r\nContent-Length: " + std::to_string(body.size()) + "\r\nConnection: close\r\n\r\n" + body;
-                raw_conn.send_all(resp);
-                raw_conn.close();
-                return WsSocket();
-            }
-
-            std::string token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1aWQiOiJ1c3JfcmljaGF0XzIwMjYiLCJpYXQiOjE3NjE3MDM4NDIsImV4cCI6MTc2NDI5NTg0Mn0.Z2FydWRhX3JpY2hhdF9zZWNyZXQ";
-            std::string body = "{\"status\":\"ok\",\"success\":true,\"token\":\"" + token + "\",\"user_id\":\"usr_richat_2026\",\"display_name\":\"Garuda User\"}\n";
-            std::string resp = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: " + std::to_string(body.size()) + "\r\nConnection: close\r\n\r\n" + body;
-            raw_conn.send_all(resp);
-            raw_conn.close();
-            return WsSocket();
-        }
 
         if (req_buf.find("POST /api/chat/send") != std::string::npos) {
             // Reject XSS / Injection payloads
