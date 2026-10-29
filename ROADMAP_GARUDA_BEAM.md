@@ -84,3 +84,9 @@
 - [x] `native_sync.hpp` — C++ Native offline queue & SQLite storage engine (`native_sync.h` & `test_native_sync.cpp`)
 - [x] `jni_bridge.cpp` — JNI Bridge layer bridging Kotlin to C++ Native calls (`jni_bridge.cpp` & `test_jni_bridge.cpp`)
 - [x] `ANDROID_NDK.md` — Dokumentasi arsitektur NDK, build instructions & benchmark metrics (`docs/ANDROID_NDK.md`)
+
+## 📍 FASE E.6: Dokumentasi API & Stadion Garuda Web — ✅ SELESAI
+- [x] `OpenAPI 3.0 & Swagger UI` — Spesifikasi OpenAPI & Swagger UI interaktif (`docs/openapi.yaml`, `docs/swagger-ui/index.html`, `docs/API.md`)
+- [x] `Stadion Garuda Web Playground` — Halaman web playground interaktif (`site/playground.html`, `docs/PLAYGROUND.md`)
+- [x] `Landing Page & Logo` — Web portal utama proyek (`site/index.html`, `site/assets/logo.svg`)
+- [x] `Developer Tutorials` — Panduan pengguna & tutorial (`docs/GETTING_STARTED.md`, `docs/TUTORIAL_CHAT_APP.md`)

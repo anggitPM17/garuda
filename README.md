@@ -91,10 +91,19 @@ docs/               # Panduan deployment Linux VPS
 
 ---
 
-## 📚 Dokumentasi
+## 📚 Dokumentasi & Web Portal
 
-- [Panduan Deployment Linux VPS](docs/DEPLOYMENT_LINUX.md)
-- [Roadmap Garuda BEAM](ROADMAP_GARUDA_BEAM.md)
+- [🌐 Live Web Landing Page](site/index.html)
+- [🏟️ Stadion Garuda Web Playground](site/playground.html)
+- [📖 RICHAT API Reference Guide](docs/API.md)
+- [📝 OpenAPI 3.0 Specification](docs/openapi.yaml)
+- [🚀 Getting Started Guide](docs/GETTING_STARTED.md)
+- [💬 Tutorial Chat App Real-time](docs/TUTORIAL_CHAT_APP.md)
+- [🐧 Panduan Deployment Linux VPS](docs/DEPLOYMENT_LINUX.md)
+- [🛡️ Laporan Keamanan & Benchmark](docs/BENCHMARK.md)
+- [🤖 Arsitektur Autopilot AI Self-Healing](docs/AUTOPILOT_AI.md)
+- [📱 Panduan Android NDK C++ Engine](docs/ANDROID_NDK.md)
+- [🗺️ Roadmap Garuda BEAM](ROADMAP_GARUDA_BEAM.md)
 
 ---
 

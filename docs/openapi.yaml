@@ -1,0 +1,114 @@
+openapi: 3.0.3
+info:
+  title: RICHAT API Powered by Garuda BEAM 🇮🇩
+  description: |
+    Spesifikasi API produksi untuk RICHAT Chat Application di atas Garuda BEAM (G-BEAM) C++ Engine.
+    Mendukung REST Authentication, Real-time WebSocket Messaging, 2FA TOTP, CAPTCHA PoW, dan Prometheus Telemetry.
+  version: 1.0.0
+  contact:
+    name: Garuda BEAM Team
+    url: https://richat.my.id
+servers:
+  - url: https://richat.my.id
+    description: VPS Production Server
+  - url: http://localhost:9002
+    description: Local Development Server
+
+paths:
+  /health:
+    get:
+      summary: Health Check Endpoint
+      description: Memverifikasi status kesehatan runtime server Garuda BEAM C++.
+      responses:
+        '200':
+          description: Server Sehat
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: "ok" }
+                  engine: { type: string, example: "garuda_beam_v67" }
+                  app: { type: string, example: "richat" }
+
+  /metrics:
+    get:
+      summary: Prometheus Metrics
+      description: Mengekspor metrik telemetry dalam format Prometheus.
+      responses:
+        '200':
+          description: Metrics Exported
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: |
+                  # HELP garuda_beam_up Garuda BEAM status
+                  # TYPE garuda_beam_up gauge
+                  garuda_beam_up 1
+
+  /api/auth/login:
+    post:
+      summary: User Login
+      description: Otentikasi pengguna dengan nomor HP & password, mengembalikan token JWT.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phone, password]
+              properties:
+                phone: { type: string, example: "+62812345678" }
+                password: { type: string, format: password, example: "password123" }
+      responses:
+        '200':
+          description: Login Berhasil
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: "ok" }
+                  success: { type: boolean, example: true }
+                  token: { type: string, example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." }
+                  user_id: { type: string, example: "usr_richat_2026" }
+                  display_name: { type: string, example: "Garuda User" }
+        '401':
+          description: Kredensial Tidak Valid
+        '429':
+          description: Rate Limit Exceeded
+
+  /api/auth/register:
+    post:
+      summary: User Registration
+      description: Pendaftaran pengguna baru.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [phone, password]
+              properties:
+                phone: { type: string, example: "+62888888888" }
+                password: { type: string, format: password, example: "pass123" }
+      responses:
+        '200':
+          description: Pendaftaran Berhasil
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: "ok" }
+                  success: { type: boolean, example: true }
+                  token: { type: string }
+
+  /ws:
+    get:
+      summary: WebSocket Real-time Endpoint
+      description: Handshake WebSocket 101 Switching Protocols untuk percakapan real-time.
+      responses:
+        '101':
+          description: Switching Protocols to WebSocket
