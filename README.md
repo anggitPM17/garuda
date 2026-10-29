@@ -127,6 +127,14 @@ docker run --rm -p 9002:9002 garuda-beam
 
 ---
 
+## 📚 Dokumentasi & Catatan Rilis
+
+* 🏆 **[Peta Pencapaian Ekosistem (ACHIEVEMENTS.md)](ACHIEVEMENTS.md)** — Rangkuman 6 pilar ekosistem GVM.
+* 📝 **[Catatan Rilis & History (CHANGELOG.md)](CHANGELOG.md)** — History rilis v67.0.0 dan catatan perubahan.
+* 🔑 **[Panduan Deployment CI/CD (README_DEPLOY.md)](README_DEPLOY.md)** — Setup GitHub Secrets & SSH Deploy Key.
+
+---
+
 ## 📜 Lisensi & Kontribusi
 
 Proyek ini dilesensikan di bawah **[MIT License](LICENSE)** — bebas digunakan, dimodifikasi, dan didistribusikan untuk keperluan personal maupun komersial.
