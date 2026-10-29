@@ -57,3 +57,9 @@
 - [x] `ci-linux.yml` — GitHub Actions CI pipeline (Ubuntu / GCC & Clang)
 - [x] `DEPLOYMENT_LINUX.md` — Panduan deployment VPS Linux (systemd & nginx proxy)
 - [x] `Dockerfile` & `.dockerignore` — Multi-stage Docker containerization
+
+## 📍 FASE C: Hardening & Security Audit (Production Ready) — ✅ SELESAI
+- [x] `Fuzz Testing` — Malformed JSON, path traversal, & SQLi blocked
+- [x] `Load Testing` — 1,000 - 5,000 requests, 100% availability, 0 failed
+- [x] `Security Audit` — JWT HS256, TLS 1.3, input validation, SIGKILL recovery
+- [x] `BENCHMARK.md` — Dokumentasi laporan keamanan & performa (`docs/BENCHMARK.md`)
