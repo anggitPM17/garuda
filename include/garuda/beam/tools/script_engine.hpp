@@ -87,13 +87,13 @@ private:
                 if (auto* str = t.get_if<std::string>()) s = *str;
                 else if (auto* a = t.get_if<Atom>()) s = a->name;
                 else if (auto* i = t.get_if<std::int64_t>()) s = std::to_string(*i);
+                else s = garuda::beam::to_string(t);
                 if (s.length() >= 2 && s.front() == '"' && s.back() == '"') s = s.substr(1, s.length() - 2);
                 return s;
             };
 
             auto is_mod_fn = [](const std::string& name, const std::string& mod, const std::string& base) {
-                return name == base || name == (mod + "." + base) ||
-                       name.rfind(base + "/", 0) == 0 ||
+                return name == (mod + "." + base) ||
                        name.rfind(mod + "." + base + "/", 0) == 0;
             };
 
@@ -117,13 +117,19 @@ private:
                 return Term();
             };
 
+            if (fn_name.find("panjang") != std::string::npos) {
+                std::cout << "[DEBUG HANDLE_BUILTIN] fn_name=" << fn_name << " x0_idx=" << x_regs[0].value().index() << " x0_str='" << garuda::beam::to_string(x_regs[0]) << "'\n";
+            }
+
             // List Built-ins
             if (is_mod_fn(fn_name, "List", "panjang") || is_mod_fn(fn_name, "List", "length")) {
-                int64_t len = get_seq_size(x_regs[0]);
-                Term res(len);
-                x_regs[0] = res;
-                last_result = res;
-                return true;
+                if (fn_name.rfind("List.", 0) == 0 || x_regs[0].is<List>() || x_regs[0].is<Tuple>()) {
+                    int64_t len = get_seq_size(x_regs[0]);
+                    Term res(len);
+                    x_regs[0] = res;
+                    last_result = res;
+                    return true;
+                }
             }
             if (is_mod_fn(fn_name, "List", "kepala") || is_mod_fn(fn_name, "List", "head")) {
                 Term res = get_seq_elem(x_regs[0], 0);
@@ -158,6 +164,16 @@ private:
             // Map Built-ins
             if (is_mod_fn(fn_name, "Map", "baru") || is_mod_fn(fn_name, "Map", "new")) {
                 Term res(Tuple{std::make_shared<const std::vector<Term>>()});
+                x_regs[0] = res;
+                last_result = res;
+                return true;
+            }
+            if (is_mod_fn(fn_name, "Map", "panjang") || is_mod_fn(fn_name, "Map", "size") || is_mod_fn(fn_name, "Map", "length")) {
+                int64_t sz = 0;
+                if (auto* tup = x_regs[0].get_if<Tuple>()) {
+                    if (tup->items) sz = static_cast<int64_t>(tup->items->size());
+                }
+                Term res(sz);
                 x_regs[0] = res;
                 last_result = res;
                 return true;
@@ -535,6 +551,8 @@ private:
                         if (auto* a = inst.args[0].literal.get_if<Atom>()) fn_name = a->name;
                         else if (auto* s = inst.args[0].literal.get_if<std::string>()) fn_name = *s;
 
+                        std::cout << "[DEBUG VPS OpTailCall] fn_name='" << fn_name << "'\n";
+
                         if (handle_builtin(fn_name)) break;
 
                         std::size_t target_ip = 0;
@@ -568,6 +586,9 @@ private:
                 }
                 case Opcode::OpReturn: {
                     Term ret_val = !last_result.is<std::monostate>() ? last_result : x_regs[0];
+                    if (auto* i = ret_val.get_if<std::int64_t>()) {
+                        std::cout << "[DEBUG OpReturn int]: " << *i << "\n";
+                    }
                     if (!call_stack.empty()) {
                         ip = call_stack.back() - 1;
                         call_stack.pop_back();
