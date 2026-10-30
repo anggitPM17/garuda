@@ -185,15 +185,21 @@ private:
                             return s;
                         };
 
+                        auto is_fn = [](const std::string& name, const std::string& base) {
+                            return name == base || name == ("String." + base) ||
+                                   name.rfind(base + "/", 0) == 0 ||
+                                   name.rfind("String." + base + "/", 0) == 0;
+                        };
+
                         // Native String Built-ins
-                        if (fn_name == "panjang" || fn_name == "String.panjang" || fn_name == "string_length") {
+                        if (is_fn(fn_name, "panjang") || fn_name == "string_length") {
                             std::string s = clean_str(x_regs[0]);
                             Term res(static_cast<std::int64_t>(s.length()));
                             x_regs[0] = res;
                             last_result = res;
                             break;
                         }
-                        if (fn_name == "besar" || fn_name == "String.besar") {
+                        if (is_fn(fn_name, "besar")) {
                             std::string s = clean_str(x_regs[0]);
                             std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return std::toupper(c); });
                             Term res(s);
@@ -201,7 +207,7 @@ private:
                             last_result = res;
                             break;
                         }
-                        if (fn_name == "kecil" || fn_name == "String.kecil") {
+                        if (is_fn(fn_name, "kecil")) {
                             std::string s = clean_str(x_regs[0]);
                             std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return std::tolower(c); });
                             Term res(s);
@@ -209,7 +215,7 @@ private:
                             last_result = res;
                             break;
                         }
-                        if (fn_name == "potong" || fn_name == "String.potong") {
+                        if (is_fn(fn_name, "potong")) {
                             std::string s = clean_str(x_regs[0]);
                             int64_t start = x_regs[1].get_if<std::int64_t>() ? *x_regs[1].get_if<std::int64_t>() : 0;
                             int64_t len = x_regs[2].get_if<std::int64_t>() ? *x_regs[2].get_if<std::int64_t>() : static_cast<int64_t>(s.length());
@@ -223,7 +229,7 @@ private:
                             last_result = res;
                             break;
                         }
-                        if (fn_name == "gabung" || fn_name == "String.gabung") {
+                        if (is_fn(fn_name, "gabung")) {
                             std::string s1 = clean_str(x_regs[0]);
                             std::string s2 = clean_str(x_regs[1]);
                             Term res(s1 + s2);
@@ -296,7 +302,7 @@ private:
                     break;
                 }
                 case Opcode::OpReturn: {
-                    Term ret_val = !x_regs[0].is<std::monostate>() ? x_regs[0] : last_result;
+                    Term ret_val = !last_result.is<std::monostate>() ? last_result : x_regs[0];
                     if (!call_stack.empty()) {
                         ip = call_stack.back() - 1;
                         call_stack.pop_back();
