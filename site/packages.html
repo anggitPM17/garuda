@@ -307,27 +307,58 @@
         return;
       }
 
-      packageGrid.innerHTML = pkgs.map(p => `
-        <div class="pkg-card">
-          <div>
-            <div class="pkg-title">
-              <span class="pkg-name">${escapeHtml(p.name)}</span>
-              <span class="pkg-ver">v${escapeHtml(p.version)}</span>
-            </div>
-            <div class="pkg-desc">${escapeHtml(p.description || 'Tidak ada deskripsi.')}</div>
+      packageGrid.innerHTML = pkgs.map(p => {
+        let statusBadge = '<span class="pkg-status" style="color:#f59e0b;">⏳ Segera Hadir</span>';
+        let cmdBox = `
+          <div class="pkg-cmd" style="color:#94a3b8; justify-content:center;">
+            <span>⏳ Belum tersedia — dalam pengembangan</span>
           </div>
-          <div>
-            <div class="pkg-meta">
-              <span>Oleh <span class="pkg-author">${escapeHtml(p.author || 'Garuda Dev')}</span></span>
-              <span class="pkg-status">⏳ Segera Hadir</span>
+        `;
+
+        if (p.status === 'source_only') {
+          statusBadge = '<span class="pkg-status" style="color:#38bdf8;">💻 Source di Repo</span>';
+          cmdBox = `
+            <div class="pkg-cmd" style="color:#38bdf8;">
+              <span>🔗 Kode C++ di Repository</span>
+              <a href="https://github.com/anggitPM17/garuda" target="_blank" style="color:#38bdf8; text-decoration:none; font-weight:bold;">Lihat ➔</a>
             </div>
+          `;
+        } else if (p.status === 'available') {
+          statusBadge = '<span class="pkg-status" style="color:#4ade80;">✅ Tersedia</span>';
+          cmdBox = `
             <div class="pkg-cmd">
               <span>gpm install ${escapeHtml(p.name)}</span>
               <button class="copy-btn" title="Salin Perintah" onclick="copyCmd('gpm install ${escapeHtml(p.name)}')">📋</button>
             </div>
+          `;
+        } else if (p.status === 'deprecated') {
+          statusBadge = '<span class="pkg-status" style="color:#ef4444;">⚠️ Deprecated</span>';
+          cmdBox = `
+            <div class="pkg-cmd" style="color:#ef4444; justify-content:center;">
+              <span>⚠️ Package tidak lagi dirawat</span>
+            </div>
+          `;
+        }
+
+        return `
+          <div class="pkg-card">
+            <div>
+              <div class="pkg-title">
+                <span class="pkg-name">${escapeHtml(p.name)}</span>
+                <span class="pkg-ver">v${escapeHtml(p.version)}</span>
+              </div>
+              <div class="pkg-desc">${escapeHtml(p.description || 'Tidak ada deskripsi.')}</div>
+            </div>
+            <div>
+              <div class="pkg-meta">
+                <span>Oleh <span class="pkg-author">${escapeHtml(p.author || 'Garuda Dev')}</span></span>
+                ${statusBadge}
+              </div>
+              ${cmdBox}
+            </div>
           </div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
     }
 
     function copyCmd(text) {

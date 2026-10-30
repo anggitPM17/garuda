@@ -68,21 +68,21 @@ private:
     }
 
     void seed_initial_packages() {
-        publish_package("garuda_std", "1.0.0", "Pustaka standar fundamental: string, math, dan utilitas tipe data.", "Garuda Core Team");
-        publish_package("garuda_json", "1.2.0", "Parser & encoder JSON berkinerja tinggi untuk GVM Actor Model.", "Garuda Core Team");
-        publish_package("garuda_regex", "1.1.0", "Engine Regular Expression (Regex) berkinerja tinggi untuk GVM.", "Garuda Core Team");
-        publish_package("garuda_datetime", "1.0.2", "Manipulasi tanggal, waktu, dan zona waktu ISO-8601.", "Garuda Core Team");
-        publish_package("garuda_http", "2.1.0", "HTTP Client & Server ringan non-blocking untuk REST API.", "Garuda Core Team");
-        publish_package("garuda_ws", "1.0.5", "WebSocket Client & Server toolkit untuk aplikasi real-time.", "Garuda Core Team");
-        publish_package("garuda_network", "1.0.1", "TCP/UDP Socket, DNS Resolver, dan Ping network toolkit.", "Garuda Network Group");
-        publish_package("garuda_sqlite", "1.3.0", "Binding native SQLite untuk database relasional Jalur Langit.", "Garuda Storage Core");
-        publish_package("garuda_mnesia", "2.0.0", "Penyimpanan Key-Value & Mnesia terdistribusi bawaan GVM.", "Garuda Core Team");
-        publish_package("garuda_crypto", "3.0.1", "Algoritma kriptografi: SHA-256, AES-GCM 256, HMAC, X25519 DH.", "Garuda Security Core");
-        publish_package("garuda_jwt", "1.0.0", "Generator & validator JSON Web Token (JWT HS256) untuk SSO.", "Garuda Identity Team");
-        publish_package("garuda_logger", "1.1.0", "Structured JSON logging dengan output warna terminal & journalctl.", "Garuda Sys Group");
-        publish_package("garuda_cli", "1.0.0", "Framework untuk membuat aplikasi Command Line Interface (CLI).", "Garuda Tooling Team");
-        publish_package("garuda_test", "1.0.0", "Framework Unit Test untuk menulis test case bahasa Garuda.", "Garuda Quality Team");
-        garuda::sys::JsonLogger::info("GPM Seeded 14 Garuda standard packages.");
+        publish_package("garuda_std", "1.0.0", "Pustaka standar fundamental: string, math, dan utilitas tipe data.", "Garuda Core Team", "source_only");
+        publish_package("garuda_json", "1.2.0", "Parser & encoder JSON berkinerja tinggi untuk GVM Actor Model.", "Garuda Core Team", "source_only");
+        publish_package("garuda_regex", "1.1.0", "Engine Regular Expression (Regex) berkinerja tinggi untuk GVM.", "Garuda Core Team", "coming_soon");
+        publish_package("garuda_datetime", "1.0.2", "Manipulasi tanggal, waktu, dan zona waktu ISO-8601.", "Garuda Core Team", "coming_soon");
+        publish_package("garuda_http", "2.1.0", "HTTP Client & Server ringan non-blocking untuk REST API.", "Garuda Core Team", "source_only");
+        publish_package("garuda_ws", "1.0.5", "WebSocket Client & Server toolkit untuk aplikasi real-time.", "Garuda Core Team", "source_only");
+        publish_package("garuda_network", "1.0.1", "TCP/UDP Socket, DNS Resolver, dan Ping network toolkit.", "Garuda Network Group", "source_only");
+        publish_package("garuda_sqlite", "1.3.0", "Binding native SQLite untuk database relasional Jalur Langit.", "Garuda Storage Core", "source_only");
+        publish_package("garuda_mnesia", "2.0.0", "Penyimpanan Key-Value & Mnesia terdistribusi bawaan GVM.", "Garuda Core Team", "source_only");
+        publish_package("garuda_crypto", "3.0.1", "Algoritma kriptografi: SHA-256, AES-GCM 256, HMAC, X25519 DH.", "Garuda Security Core", "source_only");
+        publish_package("garuda_jwt", "1.0.0", "Generator & validator JSON Web Token (JWT HS256) untuk SSO.", "Garuda Identity Team", "source_only");
+        publish_package("garuda_logger", "1.1.0", "Structured JSON logging dengan output warna terminal & journalctl.", "Garuda Sys Group", "source_only");
+        publish_package("garuda_cli", "1.0.0", "Framework untuk membuat aplikasi Command Line Interface (CLI).", "Garuda Tooling Team", "source_only");
+        publish_package("garuda_test", "1.0.0", "Framework Unit Test untuk menulis test case bahasa Garuda.", "Garuda Quality Team", "source_only");
+        garuda::sys::JsonLogger::info("GPM Seeded 14 Garuda standard packages with verified statuses.");
     }
 
 public:
@@ -91,7 +91,7 @@ public:
         return instance;
     }
 
-    std::pair<bool, std::string> publish_package(const std::string& name, const std::string& version, const std::string& description, const std::string& author) {
+    std::pair<bool, std::string> publish_package(const std::string& name, const std::string& version, const std::string& description, const std::string& author, const std::string& status = "source_only") {
         if (name.empty() || version.empty()) {
             return {false, "Name or version is empty"};
         }
@@ -102,7 +102,7 @@ public:
 
         std::lock_guard<std::mutex> lock(mutex_);
 
-        const char* sql_ins = "INSERT INTO packages (name, version, description, author) VALUES (?, ?, ?, ?);";
+        const char* sql_ins = "INSERT INTO packages (name, version, description, author, status) VALUES (?, ?, ?, ?, ?);";
         sqlite3_stmt* stmt = nullptr;
         bool success = false;
         std::string err_reason = "";
@@ -112,6 +112,7 @@ public:
             sqlite3_bind_text(stmt, 2, version.c_str(), -1, SQLITE_TRANSIENT);
             sqlite3_bind_text(stmt, 3, description.c_str(), -1, SQLITE_TRANSIENT);
             sqlite3_bind_text(stmt, 4, author.c_str(), -1, SQLITE_TRANSIENT);
+            sqlite3_bind_text(stmt, 5, status.c_str(), -1, SQLITE_TRANSIENT);
 
             int res = sqlite3_step(stmt);
             if (res == SQLITE_DONE || res == SQLITE_OK) {
@@ -125,12 +126,13 @@ public:
         }
 
         if (!success) {
-            const char* sql_upd = "UPDATE packages SET version = ?, description = ?, author = ? WHERE name = ?;";
+            const char* sql_upd = "UPDATE packages SET version = ?, description = ?, author = ?, status = ? WHERE name = ?;";
             if (sqlite3_prepare_v2(db_, sql_upd, -1, &stmt, nullptr) == SQLITE_OK) {
                 sqlite3_bind_text(stmt, 1, version.c_str(), -1, SQLITE_TRANSIENT);
                 sqlite3_bind_text(stmt, 2, description.c_str(), -1, SQLITE_TRANSIENT);
                 sqlite3_bind_text(stmt, 3, author.c_str(), -1, SQLITE_TRANSIENT);
-                sqlite3_bind_text(stmt, 4, name.c_str(), -1, SQLITE_TRANSIENT);
+                sqlite3_bind_text(stmt, 4, status.c_str(), -1, SQLITE_TRANSIENT);
+                sqlite3_bind_text(stmt, 5, name.c_str(), -1, SQLITE_TRANSIENT);
 
                 int res = sqlite3_step(stmt);
                 if (res == SQLITE_DONE || res == SQLITE_OK) {
@@ -160,10 +162,10 @@ public:
         std::lock_guard<std::mutex> lock(mutex_);
         std::string sql;
         if (query.empty()) {
-            sql = "SELECT id, name, version, description, author, downloads, strftime('%Y-%m-%d', created_at) FROM packages ORDER BY downloads DESC, id DESC;";
+            sql = "SELECT id, name, version, description, author, status, strftime('%Y-%m-%d', created_at) FROM packages ORDER BY id ASC;";
         } else {
-            sql = "SELECT id, name, version, description, author, downloads, strftime('%Y-%m-%d', created_at) FROM packages "
-                  "WHERE name LIKE ? OR description LIKE ? OR author LIKE ? ORDER BY downloads DESC;";
+            sql = "SELECT id, name, version, description, author, status, strftime('%Y-%m-%d', created_at) FROM packages "
+                  "WHERE name LIKE ? OR description LIKE ? OR author LIKE ? ORDER BY id ASC;";
         }
 
         sqlite3_stmt* stmt = nullptr;
@@ -188,13 +190,14 @@ public:
                 const unsigned char* version = sqlite3_column_text(stmt, 2);
                 const unsigned char* desc = sqlite3_column_text(stmt, 3);
                 const unsigned char* author = sqlite3_column_text(stmt, 4);
-                int downloads = sqlite3_column_int(stmt, 5);
+                const unsigned char* status = sqlite3_column_text(stmt, 5);
                 const unsigned char* date = sqlite3_column_text(stmt, 6);
 
                 std::string s_name = name ? reinterpret_cast<const char*>(name) : "";
                 std::string s_version = version ? reinterpret_cast<const char*>(version) : "1.0.0";
                 std::string s_desc = desc ? reinterpret_cast<const char*>(desc) : "";
                 std::string s_author = author ? reinterpret_cast<const char*>(author) : "Anon";
+                std::string s_status = status ? reinterpret_cast<const char*>(status) : "coming_soon";
                 std::string s_date = date ? reinterpret_cast<const char*>(date) : "";
 
                 // Escape string
@@ -214,7 +217,7 @@ public:
                    << "\"version\":\"" << escape_json(s_version) << "\","
                    << "\"description\":\"" << escape_json(s_desc) << "\","
                    << "\"author\":\"" << escape_json(s_author) << "\","
-                   << "\"downloads\":" << downloads << ","
+                   << "\"status\":\"" << escape_json(s_status) << "\","
                    << "\"created_at\":\"" << escape_json(s_date) << "\"}";
             }
             sqlite3_finalize(stmt);
