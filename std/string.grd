@@ -1,23 +1,9 @@
 modul String
 
 # Modul Manipulasi String Bahasa Garuda (std/string.grd)
-
-fungsi panjang(Teks) ->
-    panjang(Teks)
-rampung
+# Catatan: Fungsi panjang(), besar(), kecil(), dan potong() dieksekusi
+# secara native oleh runtime GVM (ScriptEngine handle_builtin / Str C++ stdlib).
 
 fungsi gabung(Teks1, Teks2) ->
     Teks1 ++ Teks2
-rampung
-
-fungsi besar(Teks) ->
-    besar(Teks)
-rampung
-
-fungsi kecil(Teks) ->
-    kecil(Teks)
-rampung
-
-fungsi potong(Teks, Mulai, Panjang) ->
-    potong(Teks, Mulai, Panjang)
 rampung
