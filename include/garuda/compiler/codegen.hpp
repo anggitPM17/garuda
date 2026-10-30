@@ -242,6 +242,12 @@ private:
                 emit(Opcode::OpMove, {Operand{RegType::Literal, 0, lit->value()}, Operand{RegType::X, reg, Term()}});
                 return reg;
             }
+            case AstNodeType::PatternLiteral: {
+                auto* pat_lit = static_cast<PatternLiteralNode*>(node.get());
+                std::uint16_t reg = alloc_reg();
+                emit(Opcode::OpMove, {Operand{RegType::Literal, 0, pat_lit->value()}, Operand{RegType::X, reg, Term()}});
+                return reg;
+            }
             case AstNodeType::AtomExpr: {
                 auto* atom_node = static_cast<AtomExprNode*>(node.get());
                 std::uint16_t reg = alloc_reg();
@@ -417,6 +423,74 @@ private:
                 });
 
                 return unwrap_reg;
+            }
+            case AstNodeType::CaseExpr: {
+                auto* case_node = static_cast<CaseExprNode*>(node.get());
+                std::uint16_t subj_reg = gen_expr(case_node->subject_ptr(), false);
+                std::uint16_t result_reg = alloc_reg();
+
+                std::vector<std::size_t> end_jumps;
+
+                for (const auto& clause : case_node->clauses()) {
+                    std::uint16_t match_reg = alloc_reg();
+                    if (clause.pattern->type() == AstNodeType::PatternWildcard) {
+                        emit(Opcode::OpMove, {Operand{RegType::Literal, 0, Term(1LL)}, Operand{RegType::X, match_reg, Term()}});
+                    } else if (clause.pattern->type() == AstNodeType::PatternLiteral) {
+                        auto* pat_lit = static_cast<PatternLiteralNode*>(clause.pattern.get());
+                        std::uint16_t pat_reg = alloc_reg();
+                        emit(Opcode::OpMove, {Operand{RegType::Literal, 0, pat_lit->value()}, Operand{RegType::X, pat_reg, Term()}});
+                        emit(Opcode::OpEq, {Operand{RegType::X, subj_reg, Term()}, Operand{RegType::X, pat_reg, Term()}, Operand{RegType::X, match_reg, Term()}});
+                    } else if (clause.pattern->type() == AstNodeType::PatternTuple ||
+                               clause.pattern->type() == AstNodeType::TupleExpr) {
+                        auto* ptup = static_cast<PatternTupleNode*>(clause.pattern.get());
+                        if (!ptup->items().empty() && (ptup->items()[0]->type() == AstNodeType::AtomExpr || ptup->items()[0]->type() == AstNodeType::PatternLiteral)) {
+                            std::uint16_t elem0_reg = alloc_reg();
+                            emit(Opcode::OpGetTupleElem, {
+                                Operand{RegType::X, subj_reg, Term()},
+                                Operand{RegType::Literal, 0, Term(0LL)},
+                                Operand{RegType::X, elem0_reg, Term()}
+                            });
+                            std::uint16_t tag_reg = gen_expr(ptup->items()[0], false);
+                            emit(Opcode::OpEq, {Operand{RegType::X, elem0_reg, Term()}, Operand{RegType::X, tag_reg, Term()}, Operand{RegType::X, match_reg, Term()}});
+                        } else {
+                            emit(Opcode::OpMove, {Operand{RegType::Literal, 0, Term(1LL)}, Operand{RegType::X, match_reg, Term()}});
+                        }
+                    } else if (clause.pattern->type() == AstNodeType::LiteralExpr ||
+                               clause.pattern->type() == AstNodeType::AtomExpr ||
+                               clause.pattern->type() == AstNodeType::BoolExpr) {
+                        std::uint16_t pat_reg = gen_expr(clause.pattern, false);
+                        emit(Opcode::OpEq, {Operand{RegType::X, subj_reg, Term()}, Operand{RegType::X, pat_reg, Term()}, Operand{RegType::X, match_reg, Term()}});
+                    } else {
+                        emit(Opcode::OpMove, {Operand{RegType::Literal, 0, Term(1LL)}, Operand{RegType::X, match_reg, Term()}});
+                    }
+
+                    std::size_t jump_if_false_ip = current_func_->instructions.size();
+                    emit(Opcode::OpJumpIfFalse, {Operand{RegType::X, match_reg, Term()}, Operand{RegType::Literal, 0, Term(0LL)}});
+
+                    gen_pattern_bind(clause.pattern, subj_reg);
+
+                    std::uint16_t clause_res = 0;
+                    for (const auto& stmt : clause.body) {
+                        clause_res = gen_expr(stmt, false);
+                    }
+
+                    emit(Opcode::OpMove, {Operand{RegType::X, clause_res, Term()}, Operand{RegType::X, result_reg, Term()}});
+
+                    end_jumps.push_back(current_func_->instructions.size());
+                    emit(Opcode::OpJump, {Operand{RegType::Literal, 0, Term(0LL)}});
+
+                    std::size_t next_clause_ip = current_global_ip();
+                    current_func_->instructions[jump_if_false_ip].args[1] =
+                        Operand{RegType::Literal, 0, Term(static_cast<std::int64_t>(next_clause_ip))};
+                }
+
+                std::size_t end_ip = current_global_ip();
+                for (auto jump_ip : end_jumps) {
+                    current_func_->instructions[jump_ip].args[0] =
+                        Operand{RegType::Literal, 0, Term(static_cast<std::int64_t>(end_ip))};
+                }
+
+                return result_reg;
             }
             case AstNodeType::SendExpr: {
                 auto* send_node = static_cast<SendExprNode*>(node.get());

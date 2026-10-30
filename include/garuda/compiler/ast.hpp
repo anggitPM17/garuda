@@ -290,6 +290,7 @@ public:
         : subject_(std::move(subject)), clauses_(std::move(clauses)) {}
     AstNodeType type() const override { return AstNodeType::CaseExpr; }
     const AstNode& subject() const { return *subject_; }
+    std::shared_ptr<AstNode> subject_ptr() const { return subject_; }
     const std::vector<CaseClause>& clauses() const { return clauses_; }
     std::string to_string() const override { return "tinjau ... ing ... rampung"; }
 private:

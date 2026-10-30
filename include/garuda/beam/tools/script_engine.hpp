@@ -139,10 +139,127 @@ private:
             return false;
         };
 
+        auto read_operand = [&](const compiler::Operand& op) -> Term {
+            if (op.type == compiler::RegType::Literal) return op.literal;
+            return x_regs[op.index % 256];
+        };
+
+        auto get_int_val = [&](const Term& t) -> int64_t {
+            if (auto* i = t.get_if<std::int64_t>()) return *i;
+            if (auto* d = t.get_if<double>()) return static_cast<int64_t>(*d);
+            if (auto* a = t.get_if<Atom>()) {
+                if (a->name == "true" || a->name == "benar") return 1LL;
+                if (a->name == "false" || a->name == "salah") return 0LL;
+            }
+            return 0LL;
+        };
+
         while (ip < cg_out.all_instructions.size()) {
             const auto& inst = cg_out.all_instructions[ip];
 
             switch (inst.op) {
+                case Opcode::OpMakeTuple: {
+                    if (!inst.args.empty()) {
+                        std::vector<Term> items;
+                        for (std::size_t i = 1; i < inst.args.size(); ++i) {
+                            items.push_back(read_operand(inst.args[i]));
+                        }
+                        Term res(Tuple{std::make_shared<const std::vector<Term>>(std::move(items))});
+                        x_regs[inst.args[0].index % 256] = res;
+                        last_result = res;
+                    }
+                    break;
+                }
+                case Opcode::OpGetTupleElem: {
+                    if (inst.args.size() >= 3) {
+                        Term tuple_term = read_operand(inst.args[0]);
+                        std::size_t idx = static_cast<std::size_t>(get_int_val(read_operand(inst.args[1])));
+                        if (auto* tup = tuple_term.get_if<Tuple>()) {
+                            if (tup->items && idx < tup->items->size()) {
+                                Term elem = (*tup->items)[idx];
+                                x_regs[inst.args[2].index % 256] = elem;
+                                last_result = elem;
+                            }
+                        }
+                    }
+                    break;
+                }
+                case Opcode::OpEq: {
+                    if (inst.args.size() >= 3) {
+                        Term v1 = read_operand(inst.args[0]);
+                        Term v2 = read_operand(inst.args[1]);
+                        bool eq = (v1 == v2);
+                        x_regs[inst.args[2].index % 256] = Term(eq ? 1LL : 0LL);
+                        last_result = Term(eq ? 1LL : 0LL);
+                    }
+                    break;
+                }
+                case Opcode::OpNeq: {
+                    if (inst.args.size() >= 3) {
+                        Term v1 = read_operand(inst.args[0]);
+                        Term v2 = read_operand(inst.args[1]);
+                        bool neq = (v1 != v2);
+                        x_regs[inst.args[2].index % 256] = Term(neq ? 1LL : 0LL);
+                        last_result = Term(neq ? 1LL : 0LL);
+                    }
+                    break;
+                }
+                case Opcode::OpLt: {
+                    if (inst.args.size() >= 3) {
+                        int64_t v1 = get_int_val(read_operand(inst.args[0]));
+                        int64_t v2 = get_int_val(read_operand(inst.args[1]));
+                        x_regs[inst.args[2].index % 256] = Term(v1 < v2 ? 1LL : 0LL);
+                        last_result = Term(v1 < v2 ? 1LL : 0LL);
+                    }
+                    break;
+                }
+                case Opcode::OpLte: {
+                    if (inst.args.size() >= 3) {
+                        int64_t v1 = get_int_val(read_operand(inst.args[0]));
+                        int64_t v2 = get_int_val(read_operand(inst.args[1]));
+                        x_regs[inst.args[2].index % 256] = Term(v1 <= v2 ? 1LL : 0LL);
+                        last_result = Term(v1 <= v2 ? 1LL : 0LL);
+                    }
+                    break;
+                }
+                case Opcode::OpGt: {
+                    if (inst.args.size() >= 3) {
+                        int64_t v1 = get_int_val(read_operand(inst.args[0]));
+                        int64_t v2 = get_int_val(read_operand(inst.args[1]));
+                        x_regs[inst.args[2].index % 256] = Term(v1 > v2 ? 1LL : 0LL);
+                        last_result = Term(v1 > v2 ? 1LL : 0LL);
+                    }
+                    break;
+                }
+                case Opcode::OpGte: {
+                    if (inst.args.size() >= 3) {
+                        int64_t v1 = get_int_val(read_operand(inst.args[0]));
+                        int64_t v2 = get_int_val(read_operand(inst.args[1]));
+                        x_regs[inst.args[2].index % 256] = Term(v1 >= v2 ? 1LL : 0LL);
+                        last_result = Term(v1 >= v2 ? 1LL : 0LL);
+                    }
+                    break;
+                }
+                case Opcode::OpJump: {
+                    if (!inst.args.empty()) {
+                        std::size_t target_ip = static_cast<std::size_t>(get_int_val(read_operand(inst.args[0])));
+                        ip = target_ip;
+                        continue;
+                    }
+                    break;
+                }
+                case Opcode::OpJumpIfFalse: {
+                    if (inst.args.size() >= 2) {
+                        Term cond_val = read_operand(inst.args[0]);
+                        int64_t cond_int = get_int_val(cond_val);
+                        if (cond_int == 0) {
+                            std::size_t target_ip = static_cast<std::size_t>(get_int_val(read_operand(inst.args[1])));
+                            ip = target_ip;
+                            continue;
+                        }
+                    }
+                    break;
+                }
                 case Opcode::OpMove: {
                     if (inst.args.size() >= 2) {
                         const auto& src = inst.args[0];
