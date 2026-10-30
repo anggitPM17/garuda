@@ -1,0 +1,6 @@
+modul CircularA
+impor "tests/import_test/circular_b.grd"
+
+fungsi fn_a(X) ->
+    X + 1
+rampung

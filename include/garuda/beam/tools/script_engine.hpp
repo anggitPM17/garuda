@@ -16,11 +16,61 @@
 #include <string>
 #include <vector>
 
+#include <set>
+
 namespace garuda::beam {
 
 class ScriptEngine {
 public:
     ScriptEngine() = default;
+
+    std::optional<compiler::CodeGeneratorOutput> compile_module(const std::string& path, std::set<std::string>& imported_paths) {
+        if (imported_paths.count(path) > 0) {
+            return compiler::CodeGeneratorOutput{};
+        }
+        imported_paths.insert(path);
+
+        std::string src = "";
+        if (Fs::exists(path)) {
+            src = Fs::read_file(path);
+        } else if (Fs::exists("../" + path)) {
+            src = Fs::read_file("../" + path);
+        } else {
+            std::string std_path = "std/" + path;
+            if (Fs::exists(std_path)) {
+                src = Fs::read_file(std_path);
+            } else if (Fs::exists("../" + std_path)) {
+                src = Fs::read_file("../" + std_path);
+            } else {
+                return std::nullopt;
+            }
+        }
+
+        if (src.empty()) return compiler::CodeGeneratorOutput{};
+
+        compiler::Lexer lexer(src);
+        auto tokens = lexer.tokenize();
+        if (tokens.empty()) return compiler::CodeGeneratorOutput{};
+
+        compiler::Parser parser(tokens);
+        auto ast = parser.parse_program();
+        if (!ast) return std::nullopt;
+
+        compiler::CodeGenerator cg;
+        compiler::CodeGeneratorOutput main_out = cg.generate(ast);
+
+        compiler::CodeGeneratorOutput combined_out;
+
+        for (const auto& imp : ast->imports()) {
+            auto imp_out_opt = compile_module(imp->path(), imported_paths);
+            if (imp_out_opt) {
+                merge_output(combined_out, *imp_out_opt);
+            }
+        }
+
+        merge_output(combined_out, main_out);
+        return combined_out;
+    }
 
     std::optional<Term> eval(const std::string& source) {
         if (source.empty()) return std::nullopt;
@@ -44,15 +94,37 @@ public:
             if (!ast) return std::nullopt;
 
             compiler::CodeGenerator cg;
-            compiler::CodeGeneratorOutput cg_out = cg.generate(ast);
+            compiler::CodeGeneratorOutput main_out = cg.generate(ast);
+
+            compiler::CodeGeneratorOutput combined_out;
+            std::set<std::string> imported_paths;
+
+            for (const auto& imp : ast->imports()) {
+                auto imp_out_opt = compile_module(imp->path(), imported_paths);
+                if (!imp_out_opt.has_value()) {
+                    return std::nullopt; // File not found / invalid import
+                }
+                merge_output(combined_out, *imp_out_opt);
+            }
+
+            merge_output(combined_out, main_out);
 
             std::size_t start_ip = 0;
-            auto it = cg_out.function_table.find("utama");
-            if (it != cg_out.function_table.end()) {
+            auto it = combined_out.function_table.find("utama");
+            if (it == combined_out.function_table.end()) {
+                for (const auto& [k, v] : combined_out.function_table) {
+                    if (k == "utama" || k.rfind("utama/", 0) == 0) {
+                        it = combined_out.function_table.find(k);
+                        break;
+                    }
+                }
+            }
+
+            if (it != combined_out.function_table.end()) {
                 start_ip = it->second;
             }
 
-            return execute_instructions(cg_out, start_ip);
+            return execute_instructions(combined_out, start_ip);
         } catch (...) {
             return std::nullopt;
         }
@@ -63,6 +135,26 @@ public:
         std::string src = Fs::read_file(path);
         if (src.empty()) return std::nullopt;
         return eval(src);
+    }
+
+private:
+    void merge_output(compiler::CodeGeneratorOutput& target, const compiler::CodeGeneratorOutput& src) {
+        std::size_t offset = target.all_instructions.size();
+
+        for (const auto& [fn_name, fn_ip] : src.function_table) {
+            target.function_table[fn_name] = offset + fn_ip;
+        }
+
+        for (auto inst : src.all_instructions) {
+            if (inst.op == compiler::Opcode::OpJump || inst.op == compiler::Opcode::OpJumpIfFalse) {
+                if (!inst.args.empty() && inst.args.back().type == compiler::RegType::Literal) {
+                    if (auto* ip_val = inst.args.back().literal.get_if<std::int64_t>()) {
+                        inst.args.back().literal = Term(static_cast<std::int64_t>(offset + *ip_val));
+                    }
+                }
+            }
+            target.all_instructions.push_back(inst);
+        }
     }
 
 private:

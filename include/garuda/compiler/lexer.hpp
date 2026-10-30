@@ -15,7 +15,7 @@ enum class TokenType {
     DefModule, DefFunc, DefMacro, End, Spawn, Receive, After,
     Mili, Detik, Case, In, If, Else, When,
     Self, Print, Send, Destroy, Supervisor, Child, Strategy,
-    Try, Catch,
+    Try, Catch, Import,
 
     // Operators
     Arrow, SendOp, Eq, Neq, Lt, Gt, Lte, Gte, Concat,
@@ -47,6 +47,9 @@ struct Token {
             case TokenType::Else: return "Else";
             case TokenType::Case: return "Case";
             case TokenType::When: return "When";
+            case TokenType::Try: return "Try";
+            case TokenType::Catch: return "Catch";
+            case TokenType::Import: return "Import";
             case TokenType::Print: return "Print";
             case TokenType::SendOp: return "SendOp";
             case TokenType::Arrow: return "Arrow";
@@ -131,6 +134,7 @@ public:
                 else if (word == "strategi" || word == "strategy") type = TokenType::Strategy;
                 else if (word == "coba" || word == "try") type = TokenType::Try;
                 else if (word == "tangkap" || word == "catch") type = TokenType::Catch;
+                else if (word == "impor" || word == "import") type = TokenType::Import;
                 else if (word == "benar" || word == "salah" || word == "true" || word == "false") type = TokenType::Boolean;
                 else if (word == "nil") type = TokenType::Nil;
 

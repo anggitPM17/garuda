@@ -39,7 +39,11 @@ public:
         auto module_node = std::make_shared<ModuleNode>(mod_name);
 
         while (!is_at_end() && !check(TokenType::EOF_Token)) {
-            if (check(TokenType::DefFunc)) {
+            if (check(TokenType::Import)) {
+                advance();
+                const Token& path_tok = expect(TokenType::String, "Expected string file path after 'impor'");
+                module_node->add_import(std::make_shared<ImportNode>(path_tok.text));
+            } else if (check(TokenType::DefFunc)) {
                 module_node->add_function(parse_function());
             } else if (check(TokenType::DefMacro)) {
                 module_node->add_function(parse_macro());

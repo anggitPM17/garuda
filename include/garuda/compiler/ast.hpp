@@ -19,7 +19,7 @@ enum class AstNodeType {
     IfExpr, CaseExpr, AssignmentExpr,
     PatternWildcard, PatternVar, PatternLiteral, PatternTuple, PatternListHeadTail, PatternGuard,
     MacroDef, MacroCall,
-    TryCatchExpr, TryOperatorExpr
+    TryCatchExpr, TryOperatorExpr, ImportDecl
 };
 
 class AstNode {
@@ -489,6 +489,16 @@ private:
     std::shared_ptr<AstNode> expr_;
 };
 
+class ImportNode : public AstNode {
+public:
+    explicit ImportNode(std::string path) : path_(std::move(path)) {}
+    AstNodeType type() const override { return AstNodeType::ImportDecl; }
+    const std::string& path() const { return path_; }
+    std::string to_string() const override { return "impor \"" + path_ + "\""; }
+private:
+    std::string path_;
+};
+
 class ModuleNode : public AstNode {
 public:
     explicit ModuleNode(std::string name) : name_(std::move(name)) {}
@@ -496,10 +506,13 @@ public:
     const std::string& name() const { return name_; }
     void add_function(std::shared_ptr<FunctionDeclNode> fn) { functions_.push_back(std::move(fn)); }
     const std::vector<std::shared_ptr<FunctionDeclNode>>& functions() const { return functions_; }
+    void add_import(std::shared_ptr<ImportNode> imp) { imports_.push_back(std::move(imp)); }
+    const std::vector<std::shared_ptr<ImportNode>>& imports() const { return imports_; }
     std::string to_string() const override { return "defmodule " + name_; }
 private:
     std::string name_;
     std::vector<std::shared_ptr<FunctionDeclNode>> functions_;
+    std::vector<std::shared_ptr<ImportNode>> imports_;
 };
 
 } // namespace garuda::compiler

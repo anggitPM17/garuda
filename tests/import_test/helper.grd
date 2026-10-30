@@ -1,0 +1,5 @@
+modul Helper
+
+fungsi tambah_sepuluh(X) ->
+    X + 10
+rampung
