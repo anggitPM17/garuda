@@ -22,8 +22,8 @@ Dokumen ini mencatat hasil audit kode sumber dan status ketersediaan aktual dari
 | 3 | **`garuda_regex`** | 1.1.0 | ⏳ `coming_soon` | Modul `regex` khusus dalam tahap pengembangan |
 | 4 | **`garuda_datetime`** | 1.0.2 | ⏳ `coming_soon` | Modul `datetime` khusus dalam tahap pengembangan |
 | 5 | **`garuda_http`** | 2.1.0 | 💻 `source_only` | `include/garuda/beam/stdlib/http_server.hpp`, `tests/test_http.cpp` |
-| 6 | **`garuda_ws`** | 1.0.5 | 💻 `source_only` | `include/garuda/nusantara/nusantara_transport.hpp`, `tests/test_websocket_e2e.cpp` |
-| 7 | **`garuda_network`** | 1.0.1 | 💻 `source_only` | `include/garuda/nusantara/nusantara_transport.hpp` (Socket/Listener) |
+| 6 | **`garuda_ws`** | 1.0.5 | 💻 `source_only` | `include/garuda/beam/net/websocket_handler.hpp`, `tests/test_websocket_e2e.cpp` |
+| 7 | **`garuda_network`** | 1.0.1 | 💻 `source_only` | `include/garuda/beam/net/socket_layer.hpp` |
 | 8 | **`garuda_sqlite`** | 1.3.0 | 💻 `source_only` | `src/vendor/sqlite3/sqlite3.h`, `tests/test_sqlite.cpp` |
 | 9 | **`garuda_mnesia`** | 2.0.0 | 💻 `source_only` | `include/garuda/beam/otp/mnesia.hpp`, `tests/test_mnesia.cpp` |
 | 10 | **`garuda_crypto`** | 3.0.1 | 💻 `source_only` | `include/garuda/beam/stdlib/crypto.hpp`, `tests/test_crypto.cpp` |
