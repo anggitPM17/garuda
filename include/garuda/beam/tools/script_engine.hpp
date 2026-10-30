@@ -91,6 +91,70 @@ private:
                 return s;
             };
 
+            auto is_mod_fn = [](const std::string& name, const std::string& mod, const std::string& base) {
+                return name == base || name == (mod + "." + base) ||
+                       name.rfind(base + "/", 0) == 0 ||
+                       name.rfind(mod + "." + base + "/", 0) == 0;
+            };
+
+            auto get_seq_size = [](const Term& t) -> int64_t {
+                if (auto* lst = t.get_if<List>()) {
+                    return lst->items ? static_cast<int64_t>(lst->items->size()) : 0;
+                }
+                if (auto* tup = t.get_if<Tuple>()) {
+                    return tup->items ? static_cast<int64_t>(tup->items->size()) : 0;
+                }
+                return 0;
+            };
+
+            auto get_seq_elem = [](const Term& t, size_t idx) -> Term {
+                if (auto* lst = t.get_if<List>()) {
+                    if (lst->items && idx < lst->items->size()) return (*lst->items)[idx];
+                }
+                if (auto* tup = t.get_if<Tuple>()) {
+                    if (tup->items && idx < tup->items->size()) return (*tup->items)[idx];
+                }
+                return Term();
+            };
+
+            // List Built-ins
+            if (is_mod_fn(fn_name, "List", "panjang") || is_mod_fn(fn_name, "List", "length")) {
+                int64_t len = get_seq_size(x_regs[0]);
+                Term res(len);
+                x_regs[0] = res;
+                last_result = res;
+                return true;
+            }
+            if (is_mod_fn(fn_name, "List", "kepala") || is_mod_fn(fn_name, "List", "head")) {
+                Term res = get_seq_elem(x_regs[0], 0);
+                x_regs[0] = res;
+                last_result = res;
+                return true;
+            }
+            if (is_mod_fn(fn_name, "List", "ekor") || is_mod_fn(fn_name, "List", "tail")) {
+                std::vector<Term> tail_items;
+                int64_t sz = get_seq_size(x_regs[0]);
+                for (int64_t i = 1; i < sz; ++i) {
+                    tail_items.push_back(get_seq_elem(x_regs[0], static_cast<size_t>(i)));
+                }
+                Term res(List{std::make_shared<const std::vector<Term>>(std::move(tail_items))});
+                x_regs[0] = res;
+                last_result = res;
+                return true;
+            }
+            if (is_mod_fn(fn_name, "List", "tambah") || is_mod_fn(fn_name, "List", "append")) {
+                std::vector<Term> new_items;
+                int64_t sz = get_seq_size(x_regs[0]);
+                for (int64_t i = 0; i < sz; ++i) {
+                    new_items.push_back(get_seq_elem(x_regs[0], static_cast<size_t>(i)));
+                }
+                new_items.push_back(x_regs[1]);
+                Term res(List{std::make_shared<const std::vector<Term>>(std::move(new_items))});
+                x_regs[0] = res;
+                last_result = res;
+                return true;
+            }
+
             if (is_fn(fn_name, "panjang") || fn_name == "string_length") {
                 std::string s = clean_str(x_regs[0]);
                 Term res(static_cast<std::int64_t>(s.length()));

@@ -101,7 +101,7 @@ public:
             if (std::isalpha(c) || c == '_') {
                 std::size_t start_col = col_;
                 std::size_t start_pos = pos_;
-                while (pos_ < source_.length() && (std::isalnum(source_[pos_]) || source_[pos_] == '_')) {
+                while (pos_ < source_.length() && (std::isalnum(source_[pos_]) || source_[pos_] == '_' || source_[pos_] == '.')) {
                     pos_++;
                     col_++;
                 }

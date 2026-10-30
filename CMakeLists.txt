@@ -79,6 +79,12 @@ target_link_libraries(garuda_string_grd_tests PRIVATE garuda)
 add_executable(garuda_result_grd_tests tests/test_result_grd.cpp)
 target_link_libraries(garuda_result_grd_tests PRIVATE garuda)
 
+add_executable(garuda_list_grd_tests tests/test_list_grd.cpp)
+target_link_libraries(garuda_list_grd_tests PRIVATE garuda)
+
+add_executable(garuda_map_grd_tests tests/test_map_grd.cpp)
+target_link_libraries(garuda_map_grd_tests PRIVATE garuda)
+
 add_executable(grdc src/grdc.cpp)
 target_link_libraries(grdc PRIVATE garuda)
 
