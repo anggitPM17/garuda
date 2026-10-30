@@ -155,6 +155,84 @@ private:
                 return true;
             }
 
+            // Map Built-ins
+            if (is_mod_fn(fn_name, "Map", "baru") || is_mod_fn(fn_name, "Map", "new")) {
+                Term res(Tuple{std::make_shared<const std::vector<Term>>()});
+                x_regs[0] = res;
+                last_result = res;
+                return true;
+            }
+            if (is_mod_fn(fn_name, "Map", "taruh") || is_mod_fn(fn_name, "Map", "put")) {
+                std::string k = clean_str(x_regs[1]);
+                Term v = x_regs[2];
+                std::vector<Term> entries;
+                if (auto* tup = x_regs[0].get_if<Tuple>()) {
+                    if (tup->items) entries = *tup->items;
+                }
+                bool updated = false;
+                for (std::size_t i = 0; i < entries.size(); ++i) {
+                    if (auto* entry = entries[i].get_if<Tuple>()) {
+                        if (entry->items && entry->items->size() >= 2) {
+                            if (clean_str((*entry->items)[0]) == k) {
+                                std::vector<Term> pair = {Term(k), v};
+                                entries[i] = Term(Tuple{std::make_shared<const std::vector<Term>>(std::move(pair))});
+                                updated = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+                if (!updated) {
+                    std::vector<Term> pair = {Term(k), v};
+                    entries.push_back(Term(Tuple{std::make_shared<const std::vector<Term>>(std::move(pair))}));
+                }
+                Term res(Tuple{std::make_shared<const std::vector<Term>>(std::move(entries))});
+                x_regs[0] = res;
+                last_result = res;
+                return true;
+            }
+            if (is_mod_fn(fn_name, "Map", "ambil") || is_mod_fn(fn_name, "Map", "get")) {
+                std::string k = clean_str(x_regs[1]);
+                Term res;
+                if (auto* tup = x_regs[0].get_if<Tuple>()) {
+                    if (tup->items) {
+                        for (const auto& item : *tup->items) {
+                            if (auto* entry = item.get_if<Tuple>()) {
+                                if (entry->items && entry->items->size() >= 2) {
+                                    if (clean_str((*entry->items)[0]) == k) {
+                                        res = (*entry->items)[1];
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                x_regs[0] = res;
+                last_result = res;
+                return true;
+            }
+            if (is_mod_fn(fn_name, "Map", "hapus") || is_mod_fn(fn_name, "Map", "delete")) {
+                std::string k = clean_str(x_regs[1]);
+                std::vector<Term> entries;
+                if (auto* tup = x_regs[0].get_if<Tuple>()) {
+                    if (tup->items) {
+                        for (const auto& item : *tup->items) {
+                            if (auto* entry = item.get_if<Tuple>()) {
+                                if (entry->items && entry->items->size() >= 2) {
+                                    if (clean_str((*entry->items)[0]) == k) continue;
+                                }
+                            }
+                            entries.push_back(item);
+                        }
+                    }
+                }
+                Term res(Tuple{std::make_shared<const std::vector<Term>>(std::move(entries))});
+                x_regs[0] = res;
+                last_result = res;
+                return true;
+            }
+
             if (is_fn(fn_name, "panjang") || fn_name == "string_length") {
                 std::string s = clean_str(x_regs[0]);
                 Term res(static_cast<std::int64_t>(s.length()));

@@ -3,21 +3,21 @@ modul Map
 # Modul Manipulasi Peta/Kamus Bahasa Garuda (std/map.grd)
 
 fungsi baru() ->
-    # Membuat dan mengembalikan Map/Peta baru yang kosong
-    {}
+    Map.baru()
 rampung
 
 fungsi taruh(Peta, Kunci, Nilai) ->
-    # Menyimpan atau memperbarui pasangan Kunci -> Nilai pada Peta
-    Peta
+    Map.taruh(Peta, Kunci, Nilai)
 rampung
 
 fungsi ambil(Peta, Kunci) ->
-    # Mengambil Nilai dari Peta berdasarkan Kunci
-    Peta
+    Map.ambil(Peta, Kunci)
 rampung
 
 fungsi hapus(Peta, Kunci) ->
-    # Menghapus entri dengan Kunci dari Peta
-    Peta
+    Map.hapus(Peta, Kunci)
+rampung
+
+fungsi panjang(Peta) ->
+    Map.panjang(Peta)
 rampung
