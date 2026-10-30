@@ -309,18 +309,34 @@
 
       packageGrid.innerHTML = pkgs.map(p => {
         let statusBadge = '<span class="pkg-status" style="color:#f59e0b;">⏳ Segera Hadir</span>';
+        let langBadge = p.language === 'grd'
+          ? '<span style="background:#16a34a; color:#fff; padding:2px 8px; border-radius:12px; font-size:0.75rem; font-weight:bold; margin-right:6px;">Grd</span>'
+          : '<span style="background:#0284c7; color:#fff; padding:2px 8px; border-radius:12px; font-size:0.75rem; font-weight:bold; margin-right:6px;">C++</span>';
+
+        let repoUrl = p.repo_path
+          ? `https://github.com/anggitPM17/garuda/blob/main/${escapeHtml(p.repo_path)}`
+          : 'https://github.com/anggitPM17/garuda';
+
         let cmdBox = `
           <div class="pkg-cmd" style="color:#94a3b8; justify-content:center;">
             <span>⏳ Belum tersedia — dalam pengembangan</span>
           </div>
         `;
 
-        if (p.status === 'source_only') {
+        if (p.status === 'source_only_grd' || p.language === 'grd') {
+          statusBadge = '<span class="pkg-status" style="color:#4ade80;">📜 Module .grd (Lulus Test)</span>';
+          cmdBox = `
+            <div class="pkg-cmd" style="color:#4ade80;">
+              <span>📜 Kode .grd Murni</span>
+              <a href="${repoUrl}" target="_blank" style="color:#4ade80; text-decoration:none; font-weight:bold;">Lihat .grd ➔</a>
+            </div>
+          `;
+        } else if (p.status === 'source_only') {
           statusBadge = '<span class="pkg-status" style="color:#38bdf8;">💻 Source di Repo</span>';
           cmdBox = `
             <div class="pkg-cmd" style="color:#38bdf8;">
               <span>🔗 Kode C++ di Repository</span>
-              <a href="https://github.com/anggitPM17/garuda" target="_blank" style="color:#38bdf8; text-decoration:none; font-weight:bold;">Lihat ➔</a>
+              <a href="${repoUrl}" target="_blank" style="color:#38bdf8; text-decoration:none; font-weight:bold;">Lihat ➔</a>
             </div>
           `;
         } else if (p.status === 'available') {
@@ -344,6 +360,7 @@
           <div class="pkg-card">
             <div>
               <div class="pkg-title">
+                ${langBadge}
                 <span class="pkg-name">${escapeHtml(p.name)}</span>
                 <span class="pkg-ver">v${escapeHtml(p.version)}</span>
               </div>
