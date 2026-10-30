@@ -166,15 +166,23 @@ private:
         }
     }
 
-    void gen_tail_call(std::shared_ptr<CallExprNode> call) {
-        std::size_t arity = call->args().size();
-        for (auto& [vname, vreg] : current_func_->var_map) {
+    void protect_param_regs(std::size_t arity) {
+        std::vector<std::pair<std::string, std::uint16_t>> to_move;
+        for (const auto& [vname, vreg] : current_func_->var_map) {
             if (vreg < arity) {
-                std::uint16_t new_reg = alloc_reg();
-                emit(Opcode::OpMove, {Operand{RegType::X, vreg, Term()}, Operand{RegType::X, new_reg, Term()}});
-                vreg = new_reg;
+                to_move.emplace_back(vname, vreg);
             }
         }
+        for (const auto& [vname, vreg] : to_move) {
+            std::uint16_t new_reg = alloc_reg();
+            emit(Opcode::OpMove, {Operand{RegType::X, vreg, Term()}, Operand{RegType::X, new_reg, Term()}});
+            current_func_->var_map[vname] = new_reg;
+        }
+    }
+
+    void gen_tail_call(std::shared_ptr<CallExprNode> call) {
+        std::size_t arity = call->args().size();
+        protect_param_regs(arity);
 
         std::vector<std::uint16_t> arg_regs;
         arg_regs.reserve(arity);
@@ -367,13 +375,7 @@ private:
                 }
 
                 std::size_t arity = call->args().size();
-                for (auto& [vname, vreg] : current_func_->var_map) {
-                    if (vreg < arity) {
-                        std::uint16_t new_reg = alloc_reg();
-                        emit(Opcode::OpMove, {Operand{RegType::X, vreg, Term()}, Operand{RegType::X, new_reg, Term()}});
-                        vreg = new_reg;
-                    }
-                }
+                protect_param_regs(arity);
 
                 std::vector<std::uint16_t> arg_regs;
                 arg_regs.reserve(arity);

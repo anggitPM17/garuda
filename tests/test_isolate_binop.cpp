@@ -1,5 +1,5 @@
 // =====================================================================
-// BINARY OP + FUNCTION CALL REGISTER ISOLATION TEST (TESTS A THROUGH I)
+// BINARY OP + FUNCTION CALL REGISTER ISOLATION TEST (TESTS A THROUGH J2)
 // =====================================================================
 
 #include "../include/garuda/beam/tools/script_engine.hpp"
@@ -70,6 +70,37 @@ int main() {
     auto resI = engine.eval(codeI);
     auto* iI = resI ? resI->get_if<std::int64_t>() : nullptr;
     CHECK(iI != nullptr && *iI == 45, "Test I: (1 + 2) + Json.decode_int(\"42\") == 45");
+
+    // Test J1: f(x, x + 1) non-tail call parameter overlap protection
+    std::string codeJ1 = R"(
+        modul TestJ1
+        fungsi tambah(a, b) ->
+            a + b
+        rampung
+        fungsi utama() ->
+            x = 10
+            y = tambah(x, x + 1)
+            y
+        rampung
+    )";
+    auto resJ1 = engine.eval(codeJ1);
+    auto* iJ1 = resJ1 ? resJ1->get_if<std::int64_t>() : nullptr;
+    CHECK(iJ1 != nullptr && *iJ1 == 21, "Test J1: non-tail f(x, x + 1) overlap protection == 21");
+
+    // Test J2: f(x, x + 1) tail call parameter overlap protection
+    std::string codeJ2 = R"(
+        modul TestJ2
+        fungsi tambah(a, b) ->
+            a + b
+        rampung
+        fungsi utama() ->
+            x = 10
+            tambah(x, x + 1)
+        rampung
+    )";
+    auto resJ2 = engine.eval(codeJ2);
+    auto* iJ2 = resJ2 ? resJ2->get_if<std::int64_t>() : nullptr;
+    CHECK(iJ2 != nullptr && *iJ2 == 21, "Test J2: tail f(x, x + 1) overlap protection == 21");
 
     return 0;
 }
