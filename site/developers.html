@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>⚡ GVM Identity Service — Developer Portal & SSO Documentation</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #090d16;
+      color: #f8fafc;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+      padding: 20px;
+    }
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 32px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+    }
+    header {
+      border-bottom: 2px solid #dc2626;
+      padding-bottom: 16px;
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    h1 {
+      font-size: 24px;
+      font-weight: 900;
+      color: #f8fafc;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    h1 span { color: #dc2626; }
+    .nav-btn {
+      background: #334155;
+      color: white;
+      text-decoration: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: bold;
+      transition: background 0.2s;
+    }
+    .nav-btn:hover { background: #475569; }
+
+    .card {
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    h2 {
+      font-size: 18px;
+      color: #38bdf8;
+      margin-bottom: 12px;
+    }
+    h3 {
+      font-size: 15px;
+      color: #f59e0b;
+      margin: 16px 0 8px 0;
+    }
+    p {
+      font-size: 14px;
+      color: #94a3b8;
+      margin-bottom: 12px;
+    }
+    pre {
+      background: #020617;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      padding: 14px;
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 13px;
+      color: #38bdf8;
+      overflow-x: auto;
+      margin-bottom: 14px;
+    }
+    code {
+      background: #334155;
+      color: #fef08a;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 12px;
+    }
+    .endpoint-badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: bold;
+      margin-right: 8px;
+    }
+    .badge-post { background: #22c55e; color: #020617; }
+    .badge-get { background: #38bdf8; color: #020617; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <h1>🦅 GVM <span>IDENTITY SERVICE</span></h1>
+      <a href="index.html" class="nav-btn">🏠 Kembali ke Portal</a>
+    </header>
+
+    <div class="card">
+      <h2>🔐 Single Sign-On (SSO) & Central Identity Provider</h2>
+      <p>
+        <strong>GVM Identity Service (One Key Pass)</strong> adalah layanan otentikasi terpusat berbasis
+        <code>HMAC SHA-256 JWT</code> untuk seluruh ekosistem Garuda BEAM. Cukup mendaftar satu akun untuk mengakses
+        <strong>RICHAT Android</strong>, <strong>Stadion Garuda</strong>, dan <strong>Garuda Arena</strong>.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>🌐 API Endpoints Specification</h2>
+
+      <h3>1. User Registration</h3>
+      <p><span class="endpoint-badge badge-post">POST</span> <code>https://richat.my.id/api/register</code></p>
+      <pre>curl -X POST https://richat.my.id/api/register \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "username=pilot_pro&password=secret_password"</pre>
+
+      <h3>2. User Login & Token Generation</h3>
+      <p><span class="endpoint-badge badge-post">POST</span> <code>https://richat.my.id/api/login</code></p>
+      <pre>curl -X POST https://richat.my.id/api/login \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "username=pilot_pro&password=secret_password"</pre>
+
+      <p><strong>Sample Response:</strong></p>
+      <pre>{
+  "status": "ok",
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "username": "pilot_pro"
+}</pre>
+
+      <h3>3. Verify Token / User Identity</h3>
+      <p><span class="endpoint-badge badge-get">GET</span> <code>https://richat.my.id/api/me</code></p>
+      <pre>curl -X GET https://richat.my.id/api/me \
+  -H "Authorization: Bearer &lt;YOUR_JWT_TOKEN&gt;"</pre>
+
+      <p><strong>Sample Response:</strong></p>
+      <pre>{
+  "status": "ok",
+  "username": "pilot_pro",
+  "role": "pilot"
+}</pre>
+    </div>
+
+    <div class="card">
+      <h2>💻 Integration Code Snippets</h2>
+
+      <h3>JavaScript / Fetch Client (Browser & Node.js)</h3>
+      <pre>async function loginToGVM(username, password) {
+  const formData = new URLSearchParams();
+  formData.append('username', username);
+  formData.append('password', password);
+
+  const res = await fetch('https://richat.my.id/api/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: formData.toString()
+  });
+
+  const data = await res.json();
+  if (data.status === 'ok') {
+    localStorage.setItem('garuda_jwt_token', data.token);
+    console.log("Logged in as:", data.username);
+  }
+}</pre>
+
+      <h3>Kotlin / OkHttp Client (Android Client)</h3>
+      <pre>val formBody = FormBody.Builder()
+    .add("username", "pilot_pro")
+    .add("password", "secret_password")
+    .build()
+
+val request = Request.Builder()
+    .url("https://richat.my.id/api/login")
+    .post(formBody)
+    .build()
+
+client.newCall(request).enqueue(object : Callback {
+    override fun onResponse(call: Call, response: Response) {
+        val json = JSONObject(response.body?.string() ?: "{}")
+        if (json.optString("status") == "ok") {
+            val token = json.getString("token")
+            saveJwtToken(context, token)
+        }
+    }
+})</pre>
+    </div>
+  </div>
+
+</body>
+</html>
