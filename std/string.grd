@@ -3,11 +3,7 @@ modul String
 # Modul Manipulasi String Bahasa Garuda (std/string.grd)
 
 fungsi panjang(Teks) ->
-    yen Teks != "" ->
-        Teks
-    lain ->
-        0
-    rampung
+    panjang(Teks)
 rampung
 
 fungsi gabung(Teks1, Teks2) ->
@@ -15,13 +11,13 @@ fungsi gabung(Teks1, Teks2) ->
 rampung
 
 fungsi besar(Teks) ->
-    Teks
+    besar(Teks)
 rampung
 
 fungsi kecil(Teks) ->
-    Teks
+    kecil(Teks)
 rampung
 
 fungsi potong(Teks, Mulai, Panjang) ->
-    Teks
+    potong(Teks, Mulai, Panjang)
 rampung

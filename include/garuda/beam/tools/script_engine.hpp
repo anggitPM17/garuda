@@ -147,19 +147,95 @@ private:
                     }
                     break;
                 }
+                case Opcode::OpConcat: {
+                    if (inst.args.size() >= 3) {
+                        Term val_a = (inst.args[0].type == RegType::Literal) ? inst.args[0].literal : x_regs[inst.args[0].index % 256];
+                        Term val_b = (inst.args[1].type == RegType::Literal) ? inst.args[1].literal : x_regs[inst.args[1].index % 256];
+                        auto clean_str = [](const Term& t) {
+                            std::string s;
+                            if (auto* str = t.get_if<std::string>()) s = *str;
+                            else if (auto* a = t.get_if<Atom>()) s = a->name;
+                            else if (auto* i = t.get_if<std::int64_t>()) s = std::to_string(*i);
+                            if (s.length() >= 2 && s.front() == '"' && s.back() == '"') s = s.substr(1, s.length() - 2);
+                            return s;
+                        };
+                        std::string sa = clean_str(val_a);
+                        std::string sb = clean_str(val_b);
+                        Term res(sa + sb);
+                        x_regs[inst.args[2].index % 256] = res;
+                        last_result = res;
+                    }
+                    break;
+                }
                 case Opcode::OpCall: {
                     if (!inst.args.empty()) {
                         std::size_t target_ip = 0;
                         bool found = false;
 
+                        std::string fn_name;
+                        if (auto* a = inst.args[0].literal.get_if<Atom>()) fn_name = a->name;
+                        else if (auto* s = inst.args[0].literal.get_if<std::string>()) fn_name = *s;
+
+                        auto clean_str = [](const Term& t) {
+                            std::string s;
+                            if (auto* str = t.get_if<std::string>()) s = *str;
+                            else if (auto* a = t.get_if<Atom>()) s = a->name;
+                            else if (auto* i = t.get_if<std::int64_t>()) s = std::to_string(*i);
+                            if (s.length() >= 2 && s.front() == '"' && s.back() == '"') s = s.substr(1, s.length() - 2);
+                            return s;
+                        };
+
+                        // Native String Built-ins
+                        if (fn_name == "panjang" || fn_name == "String.panjang" || fn_name == "string_length") {
+                            std::string s = clean_str(x_regs[0]);
+                            Term res(static_cast<std::int64_t>(s.length()));
+                            x_regs[0] = res;
+                            last_result = res;
+                            break;
+                        }
+                        if (fn_name == "besar" || fn_name == "String.besar") {
+                            std::string s = clean_str(x_regs[0]);
+                            std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return std::toupper(c); });
+                            Term res(s);
+                            x_regs[0] = res;
+                            last_result = res;
+                            break;
+                        }
+                        if (fn_name == "kecil" || fn_name == "String.kecil") {
+                            std::string s = clean_str(x_regs[0]);
+                            std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) { return std::tolower(c); });
+                            Term res(s);
+                            x_regs[0] = res;
+                            last_result = res;
+                            break;
+                        }
+                        if (fn_name == "potong" || fn_name == "String.potong") {
+                            std::string s = clean_str(x_regs[0]);
+                            int64_t start = x_regs[1].get_if<std::int64_t>() ? *x_regs[1].get_if<std::int64_t>() : 0;
+                            int64_t len = x_regs[2].get_if<std::int64_t>() ? *x_regs[2].get_if<std::int64_t>() : static_cast<int64_t>(s.length());
+                            if (start >= 0 && static_cast<std::size_t>(start) < s.length()) {
+                                s = s.substr(static_cast<std::size_t>(start), static_cast<std::size_t>(len));
+                            } else {
+                                s = "";
+                            }
+                            Term res(s);
+                            x_regs[0] = res;
+                            last_result = res;
+                            break;
+                        }
+                        if (fn_name == "gabung" || fn_name == "String.gabung") {
+                            std::string s1 = clean_str(x_regs[0]);
+                            std::string s2 = clean_str(x_regs[1]);
+                            Term res(s1 + s2);
+                            x_regs[0] = res;
+                            last_result = res;
+                            break;
+                        }
+
                         if (auto* i = inst.args[0].literal.get_if<std::int64_t>()) {
                             target_ip = static_cast<std::size_t>(*i);
                             found = true;
                         } else {
-                            std::string fn_name;
-                            if (auto* a = inst.args[0].literal.get_if<Atom>()) fn_name = a->name;
-                            else if (auto* s = inst.args[0].literal.get_if<std::string>()) fn_name = *s;
-
                             auto fit = cg_out.function_table.find(fn_name);
                             if (fit == cg_out.function_table.end()) {
                                 for (const auto& [k, v] : cg_out.function_table) {

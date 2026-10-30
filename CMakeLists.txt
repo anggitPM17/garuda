@@ -73,6 +73,9 @@ target_link_libraries(garuda_richat_server PRIVATE garuda)
 add_executable(gvm-admin src/gvm_admin.cpp)
 target_link_libraries(gvm-admin PRIVATE garuda)
 
+add_executable(garuda_string_grd_tests tests/test_string_grd.cpp)
+target_link_libraries(garuda_string_grd_tests PRIVATE garuda)
+
 add_executable(grdc src/grdc.cpp)
 target_link_libraries(grdc PRIVATE garuda)
 
