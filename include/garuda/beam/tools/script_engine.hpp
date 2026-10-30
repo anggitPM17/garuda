@@ -122,11 +122,7 @@ public:
             }
 
             return execute_instructions(combined_out, start_ip);
-        } catch (const std::exception& e) {
-            std::cout << "[DEBUG ScriptEngine::eval EXCEPTION]: " << e.what() << "\n";
-            return std::nullopt;
         } catch (...) {
-            std::cout << "[DEBUG ScriptEngine::eval UNKNOWN EXCEPTION]\n";
             return std::nullopt;
         }
     }
@@ -176,13 +172,10 @@ private:
             };
 
             auto clean_str = [](const Term& t) {
-                std::string s;
-                if (auto* str = t.get_if<std::string>()) s = *str;
-                else if (auto* a = t.get_if<Atom>()) s = a->name;
-                else if (auto* i = t.get_if<std::int64_t>()) s = std::to_string(*i);
-                else s = garuda::beam::to_string(t);
-                if (s.length() >= 2 && s.front() == '"' && s.back() == '"') s = s.substr(1, s.length() - 2);
-                return s;
+                if (auto* str = t.get_if<std::string>()) return *str;
+                if (auto* a = t.get_if<Atom>()) return a->name;
+                if (auto* i = t.get_if<std::int64_t>()) return std::to_string(*i);
+                return garuda::beam::to_string(t);
             };
 
             auto is_mod_fn = [](const std::string& name, const std::string& mod, const std::string& base) {
@@ -209,10 +202,6 @@ private:
                 }
                 return Term();
             };
-
-            if (fn_name.find("panjang") != std::string::npos) {
-                std::cout << "[DEBUG HANDLE_BUILTIN] fn_name=" << fn_name << " x0_idx=" << x_regs[0].value().index() << " x0_str='" << garuda::beam::to_string(x_regs[0]) << "'\n";
-            }
 
             // List Built-ins
             if (is_mod_fn(fn_name, "List", "panjang") || is_mod_fn(fn_name, "List", "length")) {

@@ -39,6 +39,25 @@ fungsi encode_list(Daftar) ->
     "[" ++ Json.encode_list_items(Daftar) ++ "]"
 rampung
 
+fungsi encode_map_pair(Pair) ->
+    K = List.kepala(Pair)
+    V = List.kepala(List.ekor(Pair))
+    "\"" ++ K ++ "\":" ++ Json.encode_int(V)
+rampung
+
+fungsi encode_map_items(Peta) ->
+    tinjau Peta ing
+        [] -> ""
+        [H | T] ->
+            yen List.panjang(T) == 0 ->
+                Json.encode_map_pair(H)
+            lain ->
+                Json.encode_map_pair(H) ++ "," ++ Json.encode_map_items(T)
+            rampung
+        _ -> ""
+    rampung
+rampung
+
 fungsi encode_map(Peta) ->
-    "{\"a\":1}"
+    "{" ++ Json.encode_map_items(Peta) ++ "}"
 rampung

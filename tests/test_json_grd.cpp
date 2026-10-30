@@ -1,5 +1,5 @@
 // =====================================================================
-// GVM G5 std/json.grd UNIT TEST WITH CHECK MACRO
+// GVM G5 & G6 std/json.grd UNIT TEST WITH CHECK MACRO
 // =====================================================================
 
 #include "../include/garuda/beam/tools/script_engine.hpp"
@@ -73,22 +73,55 @@ int main() {
     CHECK(s4 != nullptr && *s4 == "[1,2,3]", "Test 4 encode_list must be '[1,2,3]'");
     std::cout << "[Test 4] Json.encode_list([1, 2, 3]): '" << *s4 << "' [PASS]\n";
 
-    // Test 5: Json.encode_map
-    std::string code5 = R"(
-        modul Test5
+    // Test 5a: Json.encode_map(Map.baru()) == "{}"
+    std::string code5a = R"(
+        modul Test5a
         impor "std/json.grd"
         fungsi utama() ->
             Json.encode_map(Map.baru())
         rampung
     )";
-    auto res5 = engine.eval(code5);
-    CHECK(res5.has_value(), "Test 5 must return value");
-    auto* s5 = res5->get_if<std::string>();
-    CHECK(s5 != nullptr && *s5 == "{\"a\":1}", "Test 5 encode_map must be '{\"a\":1}'");
-    std::cout << "[Test 5] Json.encode_map: '" << *s5 << "' [PASS]\n";
+    auto res5a = engine.eval(code5a);
+    CHECK(res5a.has_value(), "Test 5a must return value");
+    auto* s5a = res5a->get_if<std::string>();
+    CHECK(s5a != nullptr && *s5a == "{}", "Test 5a encode_map empty must be '{}'");
+    std::cout << "[Test 5a] Json.encode_map(Map.baru()): '" << *s5a << "' [PASS]\n";
+
+    // Test 5b: Json.encode_map with single entry {"a": 1}
+    std::string code5b = R"(
+        modul Test5b
+        impor "std/json.grd"
+        fungsi utama() ->
+            m = Map.baru()
+            m1 = Map.taruh(m, "a", 1)
+            Json.encode_map(m1)
+        rampung
+    )";
+    auto res5b = engine.eval(code5b);
+    CHECK(res5b.has_value(), "Test 5b must return value");
+    auto* s5b = res5b->get_if<std::string>();
+    CHECK(s5b != nullptr && *s5b == "{\"a\":1}", "Test 5b encode_map single entry must be '{\"a\":1}'");
+    std::cout << "[Test 5b] Json.encode_map single entry: '" << *s5b << "' [PASS]\n";
+
+    // Test 5c: Json.encode_map with multiple entries {"a": 10, "b": 20}
+    std::string code5c = R"(
+        modul Test5c
+        impor "std/json.grd"
+        fungsi utama() ->
+            m = Map.baru()
+            m1 = Map.taruh(m, "a", 10)
+            m2 = Map.taruh(m1, "b", 20)
+            Json.encode_map(m2)
+        rampung
+    )";
+    auto res5c = engine.eval(code5c);
+    CHECK(res5c.has_value(), "Test 5c must return value");
+    auto* s5c = res5c->get_if<std::string>();
+    CHECK(s5c != nullptr && (s5c->find("\"a\":10") != std::string::npos) && (s5c->find("\"b\":20") != std::string::npos), "Test 5c encode_map multi entry must contain '\"a\":10' and '\"b\":20'");
+    std::cout << "[Test 5c] Json.encode_map multi entry: '" << *s5c << "' [PASS]\n";
 
     std::cout << "\n========================================\n";
-    std::cout << "ALL 5 G5 std/json.grd TESTS PASSED 100% WITH REAL CHECK MACRO!\n";
+    std::cout << "ALL G5 & G6 std/json.grd TESTS PASSED 100% WITH REAL CHECK MACRO!\n";
     std::cout << "========================================\n";
     return 0;
 }
