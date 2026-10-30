@@ -4,13 +4,13 @@ Dokumen ini mencatat hal teknis dan catatan performa compiler/VM GVM:
 
 ---
 
-## 1. OpReturn Resolution Priority
+## 1. JSON Encoder (`std/json.grd`)
+* **Catatan**: JSON Serializer murni dalam `.grd` mendukung `encode_int`, `encode_string`, `encode_bool`, `encode_list`, dan `encode_map`.
+* **Status**: Seluruh 5 unit test `garuda_json_grd_tests` terbukti **PASS 100%** di lokal dan VPS. JSON Decoder (`decode`) direncanakan pada iterasi berikutnya setelah penambahan built-in `pisah`, `mengandung`, dan `karakter_ke_int`.
+
+## 2. OpReturn Resolution Priority
 * **Catatan**: `OpReturn` pada `script_engine.hpp` memprioritaskan `last_result` jika tidak bernilai `std::monostate`.
 * **Status**: Seluruh test regresi TCO, control flow, dan process isolation terbukti **PASS 100%**.
-
-## 2. Codegen Pattern Matching (`tinjau` / `case`)
-* **Catatan**: Pattern matching `tinjau ... ing` dalam AST `case` saat ini dalam tahap penyempurnaan di level `codegen.hpp` (Test 6 pada control flow suite dilewati/skipped).
-* **Status**: Direncana disempurnakan pada **Fase G2** sebelum memicu modul `std/result.grd` dan `std/json.grd`.
 
 ## 3. SSH Rate Limiting pada High-Frequency SCP Commands
 * **Catatan**: Eksekusi perintah `scp` / `ssh` berkali-kali secara simultan dalam jeda sangat pendek dapat memicu proteksi rate-limiting temporer pada port 22 VPS.

@@ -497,6 +497,25 @@ private:
             expect(TokenType::RBrace, "Expected '}' in pattern tuple");
             return std::make_shared<PatternTupleNode>(items);
         }
+        if (check(TokenType::LBracket)) {
+            advance();
+            if (check(TokenType::RBracket)) {
+                advance();
+                return std::make_shared<ListExprNode>(std::vector<std::shared_ptr<AstNode>>{});
+            }
+            auto head = parse_pattern();
+            if (match(TokenType::Pipe)) {
+                auto tail = parse_pattern();
+                expect(TokenType::RBracket, "Expected ']' in list pattern [H | T]");
+                return std::make_shared<PatternListHeadTailNode>(head, tail);
+            }
+            std::vector<std::shared_ptr<AstNode>> items = {head};
+            while (match(TokenType::Comma)) {
+                items.push_back(parse_pattern());
+            }
+            expect(TokenType::RBracket, "Expected ']' in list pattern");
+            return std::make_shared<PatternTupleNode>(items);
+        }
         return parse_expr();
     }
 

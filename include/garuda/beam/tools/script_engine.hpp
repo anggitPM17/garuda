@@ -31,19 +31,16 @@ public:
         imported_paths.insert(path);
 
         std::string src = "";
-        if (Fs::exists(path)) {
-            src = Fs::read_file(path);
-        } else if (Fs::exists("../" + path)) {
+        if (Fs::exists("../" + path)) {
             src = Fs::read_file("../" + path);
+        } else if (Fs::exists("../std/" + path)) {
+            src = Fs::read_file("../std/" + path);
+        } else if (Fs::exists(path)) {
+            src = Fs::read_file(path);
+        } else if (Fs::exists("std/" + path)) {
+            src = Fs::read_file("std/" + path);
         } else {
-            std::string std_path = "std/" + path;
-            if (Fs::exists(std_path)) {
-                src = Fs::read_file(std_path);
-            } else if (Fs::exists("../" + std_path)) {
-                src = Fs::read_file("../" + std_path);
-            } else {
-                return std::nullopt;
-            }
+            return std::nullopt;
         }
 
         if (src.empty()) return compiler::CodeGeneratorOutput{};
@@ -113,7 +110,7 @@ public:
             auto it = combined_out.function_table.find("utama");
             if (it == combined_out.function_table.end()) {
                 for (const auto& [k, v] : combined_out.function_table) {
-                    if (k == "utama" || k.rfind("utama/", 0) == 0) {
+                    if (k == "utama" || k.find("utama") != std::string::npos) {
                         it = combined_out.function_table.find(k);
                         break;
                     }
@@ -125,7 +122,11 @@ public:
             }
 
             return execute_instructions(combined_out, start_ip);
+        } catch (const std::exception& e) {
+            std::cout << "[DEBUG ScriptEngine::eval EXCEPTION]: " << e.what() << "\n";
+            return std::nullopt;
         } catch (...) {
+            std::cout << "[DEBUG ScriptEngine::eval UNKNOWN EXCEPTION]\n";
             return std::nullopt;
         }
     }
@@ -404,6 +405,30 @@ private:
             return 0LL;
         };
 
+        auto match_fn = [&](const std::string& name) -> std::optional<std::size_t> {
+            std::string short_name = name;
+            auto dot_pos = name.rfind('.');
+            if (dot_pos != std::string::npos) {
+                short_name = name.substr(dot_pos + 1);
+            }
+
+            for (const auto& [k, v] : cg_out.function_table) {
+                std::string k_short = k;
+                auto k_dot = k.rfind('.');
+                if (k_dot != std::string::npos) {
+                    k_short = k.substr(k_dot + 1);
+                }
+
+                if (k == name || k == short_name ||
+                    k.rfind(name + "/", 0) == 0 ||
+                    k.rfind(short_name + "/", 0) == 0 ||
+                    k_short.rfind(short_name + "/", 0) == 0) {
+                    return v;
+                }
+            }
+            return std::nullopt;
+        };
+
         while (ip < cg_out.all_instructions.size()) {
             const auto& inst = cg_out.all_instructions[ip];
 
@@ -427,6 +452,12 @@ private:
                         if (auto* tup = tuple_term.get_if<Tuple>()) {
                             if (tup->items && idx < tup->items->size()) {
                                 Term elem = (*tup->items)[idx];
+                                x_regs[inst.args[2].index % 256] = elem;
+                                last_result = elem;
+                            }
+                        } else if (auto* lst = tuple_term.get_if<List>()) {
+                            if (lst->items && idx < lst->items->size()) {
+                                Term elem = (*lst->items)[idx];
                                 x_regs[inst.args[2].index % 256] = elem;
                                 last_result = elem;
                             }
@@ -606,33 +637,19 @@ private:
 
                         if (handle_builtin(fn_name)) break;
 
-                        std::size_t target_ip = 0;
-                        bool found = false;
-
                         if (auto* i = inst.args[0].literal.get_if<std::int64_t>()) {
-                            target_ip = static_cast<std::size_t>(*i);
-                            found = true;
-                        } else {
-                            auto fit = cg_out.function_table.find(fn_name);
-                            if (fit == cg_out.function_table.end()) {
-                                for (const auto& [k, v] : cg_out.function_table) {
-                                    if (k == fn_name || k.rfind(fn_name + "/", 0) == 0) {
-                                        fit = cg_out.function_table.find(k);
-                                        break;
-                                    }
-                                }
-                            }
-
-                            if (fit != cg_out.function_table.end()) {
-                                target_ip = fit->second;
-                                found = true;
-                            }
-                        }
-
-                        if (found) {
                             call_stack.push_back(ip + 1);
                             frame_stack.push_back(x_regs);
-                            ip = target_ip - 1;
+                            ip = static_cast<std::size_t>(*i);
+                            continue;
+                        }
+
+                        auto target_opt = match_fn(fn_name);
+                        if (target_opt.has_value()) {
+                            call_stack.push_back(ip + 1);
+                            frame_stack.push_back(x_regs);
+                            ip = *target_opt;
+                            continue;
                         }
                     }
                     break;
@@ -643,44 +660,23 @@ private:
                         if (auto* a = inst.args[0].literal.get_if<Atom>()) fn_name = a->name;
                         else if (auto* s = inst.args[0].literal.get_if<std::string>()) fn_name = *s;
 
-                        std::cout << "[DEBUG VPS OpTailCall] fn_name='" << fn_name << "'\n";
-
                         if (handle_builtin(fn_name)) break;
 
-                        std::size_t target_ip = 0;
-                        bool found = false;
-
                         if (auto* i = inst.args[0].literal.get_if<std::int64_t>()) {
-                            target_ip = static_cast<std::size_t>(*i);
-                            found = true;
-                        } else {
-                            auto fit = cg_out.function_table.find(fn_name);
-                            if (fit == cg_out.function_table.end()) {
-                                for (const auto& [k, v] : cg_out.function_table) {
-                                    if (k == fn_name || k.rfind(fn_name + "/", 0) == 0) {
-                                        fit = cg_out.function_table.find(k);
-                                        break;
-                                    }
-                                }
-                            }
-
-                            if (fit != cg_out.function_table.end()) {
-                                target_ip = fit->second;
-                                found = true;
-                            }
+                            ip = static_cast<std::size_t>(*i);
+                            continue;
                         }
 
-                        if (found) {
-                            ip = target_ip - 1;
+                        auto target_opt = match_fn(fn_name);
+                        if (target_opt.has_value()) {
+                            ip = *target_opt;
+                            continue;
                         }
                     }
                     break;
                 }
                 case Opcode::OpReturn: {
                     Term ret_val = !last_result.is<std::monostate>() ? last_result : x_regs[0];
-                    if (auto* i = ret_val.get_if<std::int64_t>()) {
-                        std::cout << "[DEBUG OpReturn int]: " << *i << "\n";
-                    }
                     if (!call_stack.empty()) {
                         ip = call_stack.back() - 1;
                         call_stack.pop_back();

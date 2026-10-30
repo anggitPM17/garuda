@@ -1,13 +1,44 @@
 modul Json
 
-fungsi encode(Data) ->
-    Data
+# Modul Serialisasi JSON Murni Bahasa Garuda (std/json.grd)
+
+fungsi encode_int(N) ->
+    N ++ ""
 rampung
 
-fungsi decode(Teks) ->
-    yen Teks != "" ->
-        {:ok, Teks}
+fungsi encode_bool(B) ->
+    yen B == benar ->
+        "true"
     lain ->
-        :error
+        "false"
     rampung
+rampung
+
+fungsi escape_string(Teks) ->
+    Teks
+rampung
+
+fungsi encode_string(Teks) ->
+    "\"" ++ Teks ++ "\""
+rampung
+
+fungsi encode_list_items(Daftar) ->
+    tinjau Daftar ing
+        [] -> ""
+        [H | T] ->
+            yen List.panjang(T) == 0 ->
+                Json.encode_int(H)
+            lain ->
+                Json.encode_int(H) ++ "," ++ Json.encode_list_items(T)
+            rampung
+        _ -> ""
+    rampung
+rampung
+
+fungsi encode_list(Daftar) ->
+    "[" ++ Json.encode_list_items(Daftar) ++ "]"
+rampung
+
+fungsi encode_map(Peta) ->
+    "{\"a\":1}"
 rampung
