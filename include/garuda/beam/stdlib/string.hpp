@@ -69,6 +69,16 @@ public:
         std::size_t last = s.find_last_not_of(" \t\n\r");
         return s.substr(first, (last - first + 1));
     }
+
+    static std::int64_t karakter_ke_int(const std::string& s) {
+        if (s.empty()) return 0;
+        return static_cast<std::int64_t>(static_cast<unsigned char>(s[0]));
+    }
+
+    static std::string int_ke_karakter(std::int64_t code) {
+        if (code < 0 || code > 255) return "";
+        return std::string(1, static_cast<char>(code));
+    }
 };
 
 } // namespace garuda::beam::stdlib

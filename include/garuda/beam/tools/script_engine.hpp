@@ -6,6 +6,7 @@
 #include "../core/runtime.hpp"
 #include "../gvm/interpreter.hpp"
 #include "../io/filesystem.hpp"
+#include "../stdlib/string.hpp"
 
 #include <algorithm>
 #include <array>
@@ -372,6 +373,66 @@ private:
                 std::string s1 = clean_str(x_regs[0]);
                 std::string s2 = clean_str(x_regs[1]);
                 Term res(s1 + s2);
+                x_regs[0] = res;
+                last_result = res;
+                return true;
+            }
+            if (is_fn(fn_name, "pisah") || is_mod_fn(fn_name, "String", "pisah")) {
+                std::string s = clean_str(x_regs[0]);
+                std::string delim = clean_str(x_regs[1]);
+                std::vector<Term> list_items;
+                if (!delim.empty()) {
+                    std::size_t start = 0, end = 0;
+                    while ((end = s.find(delim, start)) != std::string::npos) {
+                        list_items.push_back(Term(s.substr(start, end - start)));
+                        start = end + delim.length();
+                    }
+                    list_items.push_back(Term(s.substr(start)));
+                } else {
+                    for (char c : s) list_items.push_back(Term(std::string(1, c)));
+                }
+                Term res(List{std::make_shared<const std::vector<Term>>(std::move(list_items))});
+                x_regs[0] = res;
+                last_result = res;
+                return true;
+            }
+            if (is_fn(fn_name, "mengandung") || is_mod_fn(fn_name, "String", "mengandung")) {
+                std::string s = clean_str(x_regs[0]);
+                std::string sub = clean_str(x_regs[1]);
+                bool res_b = (s.find(sub) != std::string::npos);
+                Term res(Atom{res_b ? "true" : "false"});
+                x_regs[0] = res;
+                last_result = res;
+                return true;
+            }
+            if (is_fn(fn_name, "rapikan") || is_mod_fn(fn_name, "String", "rapikan")) {
+                std::string s = clean_str(x_regs[0]);
+                std::size_t first = s.find_first_not_of(" \t\n\r");
+                std::string res_s = "";
+                if (first != std::string::npos) {
+                    std::size_t last = s.find_last_not_of(" \t\n\r");
+                    res_s = s.substr(first, (last - first + 1));
+                }
+                Term res(res_s);
+                x_regs[0] = res;
+                last_result = res;
+                return true;
+            }
+            if (is_fn(fn_name, "karakter_ke_int") || is_mod_fn(fn_name, "String", "karakter_ke_int")) {
+                std::string s = clean_str(x_regs[0]);
+                int64_t code = 0;
+                if (!s.empty()) code = static_cast<int64_t>(static_cast<unsigned char>(s[0]));
+                Term res(code);
+                x_regs[0] = res;
+                last_result = res;
+                return true;
+            }
+            if (is_fn(fn_name, "int_ke_karakter") || is_mod_fn(fn_name, "String", "int_ke_karakter")) {
+                int64_t code = 0;
+                if (auto* i = x_regs[0].get_if<std::int64_t>()) code = *i;
+                std::string s = "";
+                if (code >= 0 && code <= 255) s = std::string(1, static_cast<char>(code));
+                Term res(s);
                 x_regs[0] = res;
                 last_result = res;
                 return true;
