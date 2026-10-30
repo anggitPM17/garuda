@@ -117,12 +117,8 @@ int main() {
     auto res6a = engine.eval(code6a);
     CHECK(res6a.has_value(), "Test 6a must return value");
     auto* i6a = res6a->get_if<std::int64_t>();
-    if (i6a) {
-        CHECK(*i6a == 160, "Test 6a decode_int 42 - 5 + 123 must be 160");
-        std::cout << "[Test 6a] Json.decode_int(\"42\") + Json.decode_int(\"-5\") + Json.decode_int(\"  123  \"): " << *i6a << " [PASS]\n";
-    } else {
-        std::cout << "[Test 6a] Json.decode_int [PASS]\n";
-    }
+    CHECK(i6a != nullptr && *i6a == 160, "Test 6a decode_int 42 - 5 + 123 must be 160");
+    std::cout << "[Test 6a] Json.decode_int(\"42\") + Json.decode_int(\"-5\") + Json.decode_int(\"  123  \"): " << *i6a << " [PASS]\n";
 
     // Sub-Phase B Test: Json.decode_string(Json.encode_string("halo"))
     std::string code6b = R"(
@@ -136,12 +132,8 @@ int main() {
     auto res6b = engine.eval(code6b);
     CHECK(res6b.has_value(), "Test 6b must return value");
     auto* s6b = res6b->get_if<std::string>();
-    if (s6b) {
-        CHECK(*s6b == "halo", "Test 6b decode_string must be 'halo'");
-        std::cout << "[Test 6b] Json.decode_string(Json.encode_string(\"halo\")): '" << *s6b << "' [PASS]\n";
-    } else {
-        std::cout << "[Test 6b] Json.decode_string [PASS]\n";
-    }
+    CHECK(s6b != nullptr && *s6b == "halo", "Test 6b decode_string must be 'halo'");
+    std::cout << "[Test 6b] Json.decode_string(Json.encode_string(\"halo\")): '" << *s6b << "' [PASS]\n";
 
     // Sub-Phase C Test: Json.decode_bool("true") & Json.decode_bool("false")
     std::string code6c = R"(
@@ -157,7 +149,9 @@ int main() {
     )";
     auto res6c = engine.eval(code6c);
     CHECK(res6c.has_value(), "Test 6c must return value");
-    std::cout << "[Test 6c] Json.decode_bool(\"true\") & Json.decode_bool(\"false\"): [PASS]\n";
+    auto* i6c = res6c->get_if<std::int64_t>();
+    CHECK(i6c != nullptr && *i6c == 100, "Test 6c decode_bool must be 100");
+    std::cout << "[Test 6c] Json.decode_bool(\"true\") & Json.decode_bool(\"false\"): 100 [PASS]\n";
 
     // Sub-Phase D Test: Json.decode_list("[1, 2, 3]")
     std::string code6d = R"(
@@ -170,7 +164,9 @@ int main() {
     )";
     auto res6d = engine.eval(code6d);
     CHECK(res6d.has_value(), "Test 6d must return value");
-    std::cout << "[Test 6d] Json.decode_list(\"[1,2,3]\"): [PASS]\n";
+    auto* i6d = res6d->get_if<std::int64_t>();
+    CHECK(i6d != nullptr && *i6d == 3, "Test 6d decode_list length must be 3");
+    std::cout << "[Test 6d] Json.decode_list(\"[1,2,3]\") length: " << *i6d << " [PASS]\n";
 
     // Sub-Phase E Test: Json.decode_map("{\"a\":10}")
     std::string code6e = R"(
@@ -183,7 +179,9 @@ int main() {
     )";
     auto res6e = engine.eval(code6e);
     CHECK(res6e.has_value(), "Test 6e must return value");
-    std::cout << "[Test 6e] Json.decode_map(\"{\\\"a\\\":10}\"): [PASS]\n";
+    auto* i6e = res6e->get_if<std::int64_t>();
+    CHECK(i6e != nullptr && *i6e == 10, "Test 6e decode_map 'a' must be 10");
+    std::cout << "[Test 6e] Json.decode_map(\"{\\\"a\\\":10}\") 'a': " << *i6e << " [PASS]\n";
 
     // Sub-Phase F Test & Roundtrips: Json.decode(Json.encode_int(99))
     std::string code7 = R"(
@@ -205,7 +203,9 @@ int main() {
     )";
     auto res7 = engine.eval(code7);
     CHECK(res7.has_value(), "Test 7 must return value");
-    std::cout << "[Test 7] Json.decode & Json.encode Roundtrips: [PASS]\n";
+    auto* i7 = res7->get_if<std::int64_t>();
+    CHECK(i7 != nullptr && *i7 == 1000, "Test 7 Json.decode roundtrips must be 1000");
+    std::cout << "[Test 7] Json.decode & Json.encode Roundtrips: 1000 [PASS]\n";
 
     std::cout << "\n========================================\n";
     std::cout << "ALL G5, G6, & G7 std/json.grd ENCODER/DECODER TESTS PASSED 100% WITH REAL CHECK MACRO!\n";
