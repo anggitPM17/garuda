@@ -3,26 +3,25 @@ modul String
 # Modul Manipulasi String Bahasa Garuda (std/string.grd)
 
 fungsi panjang(Teks) ->
-    # Mengembalikan panjang karakter string
-    Teks
+    yen Teks != "" ->
+        Teks
+    lain ->
+        0
+    rampung
+rampung
+
+fungsi gabung(Teks1, Teks2) ->
+    Teks1 ++ Teks2
 rampung
 
 fungsi besar(Teks) ->
-    # Mengubah seluruh karakter Teks menjadi HURUF BESAR
     Teks
 rampung
 
 fungsi kecil(Teks) ->
-    # Mengubah seluruh karakter Teks menjadi huruf kecil
     Teks
 rampung
 
 fungsi potong(Teks, Mulai, Panjang) ->
-    # Memotong string Teks dari indeks Mulai sepanjang Panjang karakter
     Teks
-rampung
-
-fungsi gabung(DaftarTeks, Pemisah) ->
-    # Menggabungkan list string dengan string Pemisah
-    DaftarTeks
 rampung
