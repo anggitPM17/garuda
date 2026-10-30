@@ -68,24 +68,21 @@ private:
     }
 
     void seed_initial_packages() {
-        const char* check_sql = "SELECT COUNT(*) FROM packages;";
-        sqlite3_stmt* stmt = nullptr;
-        int count = 0;
-        if (sqlite3_prepare_v2(db_, check_sql, -1, &stmt, nullptr) == SQLITE_OK) {
-            if (sqlite3_step(stmt) == SQLITE_ROW) {
-                count = sqlite3_column_int(stmt, 0);
-            }
-            sqlite3_finalize(stmt);
-        }
-
-        if (count == 0) {
-            publish_package("garuda_json", "1.2.0", "Native high-performance JSON parser & encoder for GVM Actor model.", "Garuda Team");
-            publish_package("garuda_http", "2.1.0", "Non-blocking HTTP & WebSocket server toolkit for GVM.", "Garuda Team");
-            publish_package("garuda_mnesia", "1.0.4", "Distributed in-memory & disk key-value database engine.", "Garuda Team");
-            publish_package("garuda_crypto", "3.0.1", "End-to-end encryption toolkit (AES-GCM 256, X25519 DH).", "Garuda Security Core");
-            publish_package("garuda_webrtc", "1.1.0", "Real-time P2P Signaling & Presence indicator module.", "Garuda Team");
-            garuda::sys::JsonLogger::info("GPM Seeded initial Garuda standard packages.");
-        }
+        publish_package("garuda_std", "1.0.0", "Pustaka standar fundamental: string, math, dan utilitas tipe data.", "Garuda Core Team");
+        publish_package("garuda_json", "1.2.0", "Parser & encoder JSON berkinerja tinggi untuk GVM Actor Model.", "Garuda Core Team");
+        publish_package("garuda_regex", "1.1.0", "Engine Regular Expression (Regex) berkinerja tinggi untuk GVM.", "Garuda Core Team");
+        publish_package("garuda_datetime", "1.0.2", "Manipulasi tanggal, waktu, dan zona waktu ISO-8601.", "Garuda Core Team");
+        publish_package("garuda_http", "2.1.0", "HTTP Client & Server ringan non-blocking untuk REST API.", "Garuda Core Team");
+        publish_package("garuda_ws", "1.0.5", "WebSocket Client & Server toolkit untuk aplikasi real-time.", "Garuda Core Team");
+        publish_package("garuda_network", "1.0.1", "TCP/UDP Socket, DNS Resolver, dan Ping network toolkit.", "Garuda Network Group");
+        publish_package("garuda_sqlite", "1.3.0", "Binding native SQLite untuk database relasional Jalur Langit.", "Garuda Storage Core");
+        publish_package("garuda_mnesia", "2.0.0", "Penyimpanan Key-Value & Mnesia terdistribusi bawaan GVM.", "Garuda Core Team");
+        publish_package("garuda_crypto", "3.0.1", "Algoritma kriptografi: SHA-256, AES-GCM 256, HMAC, X25519 DH.", "Garuda Security Core");
+        publish_package("garuda_jwt", "1.0.0", "Generator & validator JSON Web Token (JWT HS256) untuk SSO.", "Garuda Identity Team");
+        publish_package("garuda_logger", "1.1.0", "Structured JSON logging dengan output warna terminal & journalctl.", "Garuda Sys Group");
+        publish_package("garuda_cli", "1.0.0", "Framework untuk membuat aplikasi Command Line Interface (CLI).", "Garuda Tooling Team");
+        publish_package("garuda_test", "1.0.0", "Framework Unit Test untuk menulis test case bahasa Garuda.", "Garuda Quality Team");
+        garuda::sys::JsonLogger::info("GPM Seeded 14 Garuda standard packages.");
     }
 
 public:
