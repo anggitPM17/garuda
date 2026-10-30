@@ -26,48 +26,52 @@ public:
     ScriptEngine() = default;
 
     std::optional<compiler::CodeGeneratorOutput> compile_module(const std::string& path, std::set<std::string>& imported_paths) {
-        if (imported_paths.count(path) > 0) {
-            return compiler::CodeGeneratorOutput{};
-        }
-        imported_paths.insert(path);
+        try {
+            if (imported_paths.count(path) > 0) {
+                return compiler::CodeGeneratorOutput{};
+            }
+            imported_paths.insert(path);
 
-        std::string src = "";
-        if (Fs::exists("../" + path)) {
-            src = Fs::read_file("../" + path);
-        } else if (Fs::exists("../std/" + path)) {
-            src = Fs::read_file("../std/" + path);
-        } else if (Fs::exists(path)) {
-            src = Fs::read_file(path);
-        } else if (Fs::exists("std/" + path)) {
-            src = Fs::read_file("std/" + path);
-        } else {
+            std::string src = "";
+            if (Fs::exists(path)) {
+                src = Fs::read_file(path);
+            } else if (Fs::exists("../" + path)) {
+                src = Fs::read_file("../" + path);
+            } else if (path.rfind("std/", 0) != 0 && Fs::exists("std/" + path)) {
+                src = Fs::read_file("std/" + path);
+            } else if (path.rfind("std/", 0) != 0 && Fs::exists("../std/" + path)) {
+                src = Fs::read_file("../std/" + path);
+            } else {
+                return std::nullopt;
+            }
+
+            if (src.empty()) return compiler::CodeGeneratorOutput{};
+
+            compiler::Lexer lexer(src);
+            auto tokens = lexer.tokenize();
+            if (tokens.empty()) return compiler::CodeGeneratorOutput{};
+
+            compiler::Parser parser(tokens);
+            auto ast = parser.parse_program();
+            if (!ast) return std::nullopt;
+
+            compiler::CodeGenerator cg;
+            compiler::CodeGeneratorOutput main_out = cg.generate(ast);
+
+            compiler::CodeGeneratorOutput combined_out;
+
+            for (const auto& imp : ast->imports()) {
+                auto imp_out_opt = compile_module(imp->path(), imported_paths);
+                if (imp_out_opt) {
+                    merge_output(combined_out, *imp_out_opt);
+                }
+            }
+
+            merge_output(combined_out, main_out);
+            return combined_out;
+        } catch (...) {
             return std::nullopt;
         }
-
-        if (src.empty()) return compiler::CodeGeneratorOutput{};
-
-        compiler::Lexer lexer(src);
-        auto tokens = lexer.tokenize();
-        if (tokens.empty()) return compiler::CodeGeneratorOutput{};
-
-        compiler::Parser parser(tokens);
-        auto ast = parser.parse_program();
-        if (!ast) return std::nullopt;
-
-        compiler::CodeGenerator cg;
-        compiler::CodeGeneratorOutput main_out = cg.generate(ast);
-
-        compiler::CodeGeneratorOutput combined_out;
-
-        for (const auto& imp : ast->imports()) {
-            auto imp_out_opt = compile_module(imp->path(), imported_paths);
-            if (imp_out_opt) {
-                merge_output(combined_out, *imp_out_opt);
-            }
-        }
-
-        merge_output(combined_out, main_out);
-        return combined_out;
     }
 
     std::optional<Term> eval(const std::string& source) {

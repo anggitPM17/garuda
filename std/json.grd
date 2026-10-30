@@ -1,6 +1,6 @@
 modul Json
 
-# Modul Serialisasi JSON Murni Bahasa Garuda (std/json.grd)
+# Modul Serialisasi & Deserialisasi JSON Murni Bahasa Garuda (std/json.grd)
 
 fungsi encode_int(N) ->
     N ++ ""
@@ -27,22 +27,22 @@ fungsi encode_list_items(Daftar) ->
         [] -> ""
         [H | T] ->
             yen List.panjang(T) == 0 ->
-                Json.encode_int(H)
+                encode_int(H)
             lain ->
-                Json.encode_int(H) ++ "," ++ Json.encode_list_items(T)
+                encode_int(H) ++ "," ++ encode_list_items(T)
             rampung
         _ -> ""
     rampung
 rampung
 
 fungsi encode_list(Daftar) ->
-    "[" ++ Json.encode_list_items(Daftar) ++ "]"
+    "[" ++ encode_list_items(Daftar) ++ "]"
 rampung
 
 fungsi encode_map_pair(Pair) ->
     K = List.kepala(Pair)
     V = List.kepala(List.ekor(Pair))
-    "\"" ++ K ++ "\":" ++ Json.encode_int(V)
+    "\"" ++ K ++ "\":" ++ encode_int(V)
 rampung
 
 fungsi encode_map_items(Peta) ->
@@ -50,14 +50,175 @@ fungsi encode_map_items(Peta) ->
         [] -> ""
         [H | T] ->
             yen List.panjang(T) == 0 ->
-                Json.encode_map_pair(H)
+                encode_map_pair(H)
             lain ->
-                Json.encode_map_pair(H) ++ "," ++ Json.encode_map_items(T)
+                encode_map_pair(H) ++ "," ++ encode_map_items(T)
             rampung
         _ -> ""
     rampung
 rampung
 
 fungsi encode_map(Peta) ->
-    "{" ++ Json.encode_map_items(Peta) ++ "}"
+    "{" ++ encode_map_items(Peta) ++ "}"
+rampung
+
+# =====================================================================
+# DECODER FUNCTIONS
+# =====================================================================
+
+fungsi decode_int_loop(T, Idx, Akum, Sign) ->
+    yen Idx >= String.panjang(T) ->
+        Akum * Sign
+    lain ->
+        Kode = String.karakter_ke_int(String.potong(T, Idx, 1))
+        yen Kode >= 48 ->
+            yen Kode <= 57 ->
+                decode_int_loop(T, Idx + 1, Akum * 10 + Kode - 48, Sign)
+            lain ->
+                Akum * Sign
+            rampung
+        lain ->
+            Akum * Sign
+        rampung
+    rampung
+rampung
+
+fungsi decode_int(Teks) ->
+    T = String.rapikan(Teks)
+    yen String.panjang(T) == 0 ->
+        0
+    lain ->
+        yen String.potong(T, 0, 1) == "-" ->
+            decode_int_loop(T, 1, 0, -1)
+        lain ->
+            decode_int_loop(T, 0, 0, 1)
+        rampung
+    rampung
+rampung
+
+fungsi decode_string(Teks) ->
+    T = String.rapikan(Teks)
+    yen String.panjang(T) < 2 ->
+        ""
+    lain ->
+        String.potong(T, 1, String.panjang(T) - 2)
+    rampung
+rampung
+
+fungsi decode_bool(Teks) ->
+    T = String.rapikan(Teks)
+    yen T == "true" ->
+        benar
+    lain ->
+        yen T == "benar" ->
+            benar
+        lain ->
+            salah
+        rampung
+    rampung
+rampung
+
+fungsi decode_list_items(Items) ->
+    tinjau Items ing
+        [] -> []
+        [H | T] ->
+            List.tambah(decode_list_items(T), decode(H))
+        _ -> []
+    rampung
+rampung
+
+fungsi decode_list(Teks) ->
+    T = String.rapikan(Teks)
+    P = String.panjang(T)
+    yen P < 2 ->
+        []
+    lain ->
+        yen String.potong(T, 0, 1) != "[" ->
+            []
+        lain ->
+            Isi = String.rapikan(String.potong(T, 1, P - 2))
+            yen String.panjang(Isi) == 0 ->
+                []
+            lain ->
+                Items = String.pisah(Isi, ",")
+                decode_list_items(Items)
+            rampung
+        rampung
+    rampung
+rampung
+
+fungsi decode_map_items(PairList, AccMap) ->
+    tinjau PairList ing
+        [] -> AccMap
+        [H | T] ->
+            yen List.panjang(String.pisah(H, ":")) >= 2 ->
+                decode_map_items(T, Map.taruh(AccMap, decode_string(List.kepala(String.pisah(H, ":"))), decode(List.kepala(List.ekor(String.pisah(H, ":"))))))
+            lain ->
+                decode_map_items(T, AccMap)
+            rampung
+        _ -> AccMap
+    rampung
+rampung
+
+fungsi decode_map(Teks) ->
+    T = String.rapikan(Teks)
+    P = String.panjang(T)
+    yen P < 2 ->
+        Map.baru()
+    lain ->
+        yen String.potong(T, 0, 1) != "{" ->
+            Map.baru()
+        lain ->
+            Isi = String.rapikan(String.potong(T, 1, P - 2))
+            yen String.panjang(Isi) == 0 ->
+                Map.baru()
+            lain ->
+                PairList = String.pisah(Isi, ",")
+                decode_map_items(PairList, Map.baru())
+            rampung
+        rampung
+    rampung
+rampung
+
+fungsi decode(Teks) ->
+    T = String.rapikan(Teks)
+    yen String.panjang(T) == 0 ->
+        nil
+    lain ->
+        Kar = String.potong(T, 0, 1)
+        Kode = String.karakter_ke_int(Kar)
+        yen Kode >= 48 ->
+            yen Kode <= 57 ->
+                decode_int(T)
+            lain ->
+                yen Kar == "\"" ->
+                    decode_string(T)
+                lain ->
+                    yen Kar == "[" ->
+                        decode_list(T)
+                    lain ->
+                        yen Kar == "{" ->
+                            decode_map(T)
+                        lain ->
+                            yen Kar == "t" ->
+                                decode_bool(T)
+                            lain ->
+                                yen Kar == "b" ->
+                                    decode_bool(T)
+                                lain ->
+                                    nil
+                                rampung
+                            rampung
+                        rampung
+                    rampung
+                rampung
+            rampung
+        lain ->
+            yen Kar == "-" ->
+                decode_int(T)
+            lain ->
+                nil
+            rampung
+        rampung
+    rampung
 rampung

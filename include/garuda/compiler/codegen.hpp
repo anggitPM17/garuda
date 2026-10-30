@@ -574,12 +574,9 @@ private:
 
                     std::uint16_t then_reg = 0;
                     for (std::size_t j = 0; j < clause.body.size(); ++j) {
-                        bool stmt_is_tail = is_tail && (j == clause.body.size() - 1);
-                        then_reg = gen_expr(clause.body[j], stmt_is_tail);
+                        then_reg = gen_expr(clause.body[j], false);
                     }
-                    if (!(is_tail && !clause.body.empty() && clause.body.back()->type() == AstNodeType::CallExpr)) {
-                        emit(Opcode::OpMove, {Operand{RegType::X, then_reg, Term()}, Operand{RegType::X, out_reg, Term()}});
-                    }
+                    emit(Opcode::OpMove, {Operand{RegType::X, then_reg, Term()}, Operand{RegType::X, out_reg, Term()}});
 
                     std::size_t local_jump_then_end = current_func_->instructions.size();
                     emit(Opcode::OpJump, {Operand{RegType::Literal, 0, Term(0LL)}});
@@ -590,12 +587,9 @@ private:
 
                     std::uint16_t else_reg = 0;
                     for (std::size_t j = 0; j < if_node->else_body().size(); ++j) {
-                        bool stmt_is_tail = is_tail && (j == if_node->else_body().size() - 1);
-                        else_reg = gen_expr(if_node->else_body()[j], stmt_is_tail);
+                        else_reg = gen_expr(if_node->else_body()[j], false);
                     }
-                    if (!(is_tail && !if_node->else_body().empty() && if_node->else_body().back()->type() == AstNodeType::CallExpr)) {
-                        emit(Opcode::OpMove, {Operand{RegType::X, else_reg, Term()}, Operand{RegType::X, out_reg, Term()}});
-                    }
+                    emit(Opcode::OpMove, {Operand{RegType::X, else_reg, Term()}, Operand{RegType::X, out_reg, Term()}});
 
                     std::size_t end_ip = current_global_ip();
                     current_func_->instructions[local_jump_then_end].args[0] =
