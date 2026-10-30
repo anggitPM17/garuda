@@ -1275,26 +1275,31 @@ public:
             return WsSocket();
         }
 
-        // 3. GET /api/me
-        if (req_buf.find("GET /api/me") != std::string::npos) {
+        auto extract_auth_token = [&](const std::string& buf) {
             std::string token = "";
-            auto auth_pos = req_buf.find("Authorization: Bearer ");
+            auto auth_pos = buf.find("Authorization: Bearer ");
+            if (auth_pos == std::string::npos) auth_pos = buf.find("authorization: bearer ");
             if (auth_pos != std::string::npos) {
-                auto token_end = req_buf.find_first_of("\r\n", auth_pos + 22);
+                auto token_end = buf.find_first_of("\r\n", auth_pos + 22);
                 if (token_end != std::string::npos) {
-                    token = req_buf.substr(auth_pos + 22, token_end - (auth_pos + 22));
+                    token = buf.substr(auth_pos + 22, token_end - (auth_pos + 22));
                 }
             }
+            return token;
+        };
 
-            auto [valid, username] = garuda::auth::AuthManager::get_instance().validate_jwt(token);
+        // 3. GET /api/me
+        if (req_buf.find("GET /api/me") != std::string::npos) {
+            std::string token = extract_auth_token(req_buf);
+            auto payload = garuda::auth::AuthManager::get_instance().validate_jwt(token);
             std::string resp_body;
-            if (valid) {
-                resp_body = "{\"status\":\"ok\",\"username\":\"" + username + "\"}";
+            if (payload.valid) {
+                resp_body = "{\"status\":\"ok\",\"username\":\"" + payload.username + "\",\"role\":\"" + payload.role + "\"}";
             } else {
                 resp_body = "{\"status\":\"error\",\"message\":\"Token JWT tidak valid atau expired\"}";
             }
 
-            std::string status_code = valid ? "200 OK" : "401 Unauthorized";
+            std::string status_code = payload.valid ? "200 OK" : "401 Unauthorized";
             std::string resp = "HTTP/1.1 " + status_code + "\r\nContent-Type: application/json\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: " + std::to_string(resp_body.size()) + "\r\nConnection: close\r\n\r\n" + resp_body;
             raw_conn.send_all(resp);
             raw_conn.close();
@@ -1415,6 +1420,16 @@ public:
 
 
         if (req_buf.find("POST /api/chat/send") != std::string::npos) {
+            std::string token = extract_auth_token(req_buf);
+            auto payload = garuda::auth::AuthManager::get_instance().validate_jwt(token);
+            if (!payload.valid) {
+                std::string body = "{\"status\":\"error\",\"message\":\"Otorisasi gagal. Token JWT valid dibutuhkan.\"}";
+                std::string resp = "HTTP/1.1 401 Unauthorized\r\nContent-Type: application/json\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: " + std::to_string(body.size()) + "\r\nConnection: close\r\n\r\n" + body;
+                raw_conn.send_all(resp);
+                raw_conn.close();
+                return WsSocket();
+            }
+
             // Reject XSS / Injection payloads
             if (req_buf.find("<script>") != std::string::npos || req_buf.find("javascript:") != std::string::npos) {
                 std::string body = "{\"status\":\"error\",\"message\":\"XSS payload detected\"}\n";
@@ -1424,16 +1439,26 @@ public:
                 return WsSocket();
             }
 
-            std::string body = "{\"status\":\"ok\",\"success\":true,\"message_id\":\"msg_101\",\"timestamp\":1761703842000,\"status_code\":\"sent\"}\n";
-            std::string resp = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: " + std::to_string(body.size()) + "\r\nConnection: close\r\n\r\n" + body;
+            std::string body = "{\"status\":\"ok\",\"success\":true,\"message_id\":\"msg_101\",\"sender\":\"" + payload.username + "\",\"timestamp\":1761703842000,\"status_code\":\"sent\"}\n";
+            std::string resp = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: " + std::to_string(body.size()) + "\r\nConnection: close\r\n\r\n" + body;
             raw_conn.send_all(resp);
             raw_conn.close();
             return WsSocket();
         }
 
         if (req_buf.find("GET /api/messages") != std::string::npos) {
-            std::string body = "{\"status\":\"ok\",\"messages\":[{\"id\":\"msg_101\",\"sender_id\":\"usr_richat_2026\",\"recipient_id\":\"usr_b\",\"content\":\"Halo dari Garuda BEAM!\",\"timestamp\":1761703842000,\"status\":\"sent\"}]}\n";
-            std::string resp = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: " + std::to_string(body.size()) + "\r\nConnection: close\r\n\r\n" + body;
+            std::string token = extract_auth_token(req_buf);
+            auto payload = garuda::auth::AuthManager::get_instance().validate_jwt(token);
+            if (!payload.valid) {
+                std::string body = "{\"status\":\"error\",\"message\":\"Otorisasi gagal. Token JWT valid dibutuhkan.\"}";
+                std::string resp = "HTTP/1.1 401 Unauthorized\r\nContent-Type: application/json\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: " + std::to_string(body.size()) + "\r\nConnection: close\r\n\r\n" + body;
+                raw_conn.send_all(resp);
+                raw_conn.close();
+                return WsSocket();
+            }
+
+            std::string body = "{\"status\":\"ok\",\"messages\":[{\"id\":\"msg_101\",\"sender_id\":\"" + payload.username + "\",\"recipient_id\":\"usr_b\",\"content\":\"Halo dari Garuda BEAM!\",\"timestamp\":1761703842000,\"status\":\"sent\"}]}\n";
+            std::string resp = "HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nAccess-Control-Allow-Origin: *\r\nContent-Length: " + std::to_string(body.size()) + "\r\nConnection: close\r\n\r\n" + body;
             raw_conn.send_all(resp);
             raw_conn.close();
             return WsSocket();

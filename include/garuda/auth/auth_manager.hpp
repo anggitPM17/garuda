@@ -1,7 +1,8 @@
 #pragma once
 // =====================================================================
-// GARUDA AUTH MANAGER — TRUE IDENTITY & JWT ENGINE
+// GARUDA AUTH MANAGER — TRUE IDENTITY & CENTRAL JWT IdP ENGINE
 // Persistent User Accounts in SQLite & HMAC SHA-256 JWT Authentication
+// Supports User Roles: "pilot", "admin", "spectator"
 // =====================================================================
 
 #include "sqlite3.h"
@@ -17,6 +18,13 @@
 namespace garuda::auth {
 
 constexpr const char* JWT_SECRET = "GARUDA_BEAM_GVM_SECRET_KEY_2026";
+
+struct JwtPayload {
+    bool valid = false;
+    std::string username = "";
+    std::string role = "pilot";
+    uint64_t exp = 0;
+};
 
 class AuthManager {
 private:
@@ -45,12 +53,17 @@ private:
                               "id INTEGER PRIMARY KEY AUTOINCREMENT, "
                               "username TEXT UNIQUE NOT NULL, "
                               "password_hash TEXT NOT NULL, "
+                              "role TEXT DEFAULT 'pilot', "
                               "created_at DATETIME DEFAULT CURRENT_TIMESTAMP);";
             char* err_msg = nullptr;
             sqlite3_exec(db_, sql, nullptr, nullptr, &err_msg);
             if (err_msg) {
                 sqlite3_free(err_msg);
             }
+
+            // Ensure role column exists if upgrading database
+            const char* alter_sql = "ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'pilot';";
+            sqlite3_exec(db_, alter_sql, nullptr, nullptr, nullptr);
         }
     }
 
@@ -65,7 +78,7 @@ public:
         return instance;
     }
 
-    std::pair<bool, std::string> register_user(const std::string& username, const std::string& password) {
+    std::pair<bool, std::string> register_user(const std::string& username, const std::string& password, const std::string& role = "pilot") {
         if (username.empty() || password.empty()) {
             return {false, "Username dan password tidak boleh kosong"};
         }
@@ -78,8 +91,9 @@ public:
 
         std::lock_guard<std::mutex> lock(mutex_);
         std::string pass_hash = hash_password(username, password);
+        std::string user_role = (role == "admin" || role == "spectator") ? role : "pilot";
 
-        const char* sql = "INSERT INTO users (username, password_hash) VALUES (?, ?);";
+        const char* sql = "INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?);";
         sqlite3_stmt* stmt = nullptr;
         bool success = false;
         std::string err_msg = "";
@@ -87,6 +101,7 @@ public:
         if (sqlite3_prepare_v2(db_, sql, -1, &stmt, nullptr) == SQLITE_OK) {
             sqlite3_bind_text(stmt, 1, username.c_str(), -1, SQLITE_TRANSIENT);
             sqlite3_bind_text(stmt, 2, pass_hash.c_str(), -1, SQLITE_TRANSIENT);
+            sqlite3_bind_text(stmt, 3, user_role.c_str(), -1, SQLITE_TRANSIENT);
 
             int res = sqlite3_step(stmt);
             if (res == SQLITE_DONE || res == SQLITE_OK) {
@@ -100,21 +115,21 @@ public:
         }
 
         if (success) {
-            garuda::sys::JsonLogger::info("User registered successfully: " + username);
+            garuda::sys::JsonLogger::info("User registered successfully: " + username + " (role: " + user_role + ")");
         } else {
             garuda::sys::JsonLogger::warn("User registration failed for " + username + ": " + err_msg);
         }
         return {success, err_msg};
     }
 
-    std::pair<bool, std::string> create_jwt_token(const std::string& username) {
+    std::pair<bool, std::string> create_jwt_token(const std::string& username, const std::string& role = "pilot") {
         auto now = std::chrono::duration_cast<std::chrono::seconds>(
             std::chrono::system_clock::now().time_since_epoch()
         ).count();
         uint64_t exp = now + (7 * 24 * 3600); // 7 Hari Expiration
 
         std::string header_json = "{\"alg\":\"HS256\",\"typ\":\"JWT\"}";
-        std::string payload_json = "{\"sub\":\"" + username + "\",\"exp\":" + std::to_string(exp) + "}";
+        std::string payload_json = "{\"sub\":\"" + username + "\",\"role\":\"" + role + "\",\"exp\":" + std::to_string(exp) + "}";
 
         std::string header_b64 = garuda::beam::stdlib::Base64Url::encode(header_json);
         std::string payload_b64 = garuda::beam::stdlib::Base64Url::encode(payload_json);
@@ -137,9 +152,10 @@ public:
         std::lock_guard<std::mutex> lock(mutex_);
         std::string pass_hash = hash_password(username, password);
 
-        const char* sql = "SELECT username FROM users WHERE username = ? AND password_hash = ?;";
+        const char* sql = "SELECT username, role FROM users WHERE username = ? AND password_hash = ?;";
         sqlite3_stmt* stmt = nullptr;
         bool valid = false;
+        std::string role = "pilot";
 
         if (sqlite3_prepare_v2(db_, sql, -1, &stmt, nullptr) == SQLITE_OK) {
             sqlite3_bind_text(stmt, 1, username.c_str(), -1, SQLITE_TRANSIENT);
@@ -147,6 +163,8 @@ public:
 
             if (sqlite3_step(stmt) == SQLITE_ROW) {
                 valid = true;
+                const unsigned char* r = sqlite3_column_text(stmt, 1);
+                if (r) role = reinterpret_cast<const char*>(r);
             }
             sqlite3_finalize(stmt);
         }
@@ -156,17 +174,18 @@ public:
             return {false, "Username atau password salah"};
         }
 
-        garuda::sys::JsonLogger::info("User logged in successfully: " + username);
-        return create_jwt_token(username);
+        garuda::sys::JsonLogger::info("User logged in successfully: " + username + " (role: " + role + ")");
+        return create_jwt_token(username, role);
     }
 
-    std::pair<bool, std::string> validate_jwt(const std::string& token) {
-        if (token.empty()) return {false, ""};
+    JwtPayload validate_jwt(const std::string& token) {
+        JwtPayload result;
+        if (token.empty()) return result;
 
         auto p1 = token.find('.');
-        if (p1 == std::string::npos) return {false, ""};
+        if (p1 == std::string::npos) return result;
         auto p2 = token.find('.', p1 + 1);
-        if (p2 == std::string::npos) return {false, ""};
+        if (p2 == std::string::npos) return result;
 
         std::string header_b64 = token.substr(0, p1);
         std::string payload_b64 = token.substr(p1 + 1, p2 - (p1 + 1));
@@ -178,24 +197,42 @@ public:
         std::string expected_sig_b64 = garuda::beam::stdlib::Base64Url::encode(expected_sig_raw);
 
         if (sig_b64 != expected_sig_b64) {
-            return {false, ""}; // Signature mismatch!
+            return result; // Signature mismatch!
         }
 
         // Decode payload
         std::string payload_json = garuda::beam::stdlib::Base64Url::decode(payload_b64);
 
         // Extract sub (username)
-        std::string username = "";
         auto sub_pos = payload_json.find("\"sub\":\"");
         if (sub_pos != std::string::npos) {
             auto sub_end = payload_json.find("\"", sub_pos + 7);
             if (sub_end != std::string::npos) {
-                username = payload_json.substr(sub_pos + 7, sub_end - (sub_pos + 7));
+                result.username = payload_json.substr(sub_pos + 7, sub_end - (sub_pos + 7));
             }
         }
 
-        if (username.empty()) return {false, ""};
-        return {true, username};
+        // Extract role
+        auto role_pos = payload_json.find("\"role\":\"");
+        if (role_pos != std::string::npos) {
+            auto role_end = payload_json.find("\"", role_pos + 8);
+            if (role_end != std::string::npos) {
+                result.role = payload_json.substr(role_pos + 8, role_end - (role_pos + 8));
+            }
+        }
+
+        // Extract exp
+        auto exp_pos = payload_json.find("\"exp\":");
+        if (exp_pos != std::string::npos) {
+            try {
+                result.exp = std::stoull(payload_json.substr(exp_pos + 6));
+            } catch (...) {}
+        }
+
+        if (!result.username.empty()) {
+            result.valid = true;
+        }
+        return result;
     }
 };
 

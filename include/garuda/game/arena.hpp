@@ -560,9 +560,9 @@ public:
                 }
             }
 
-            auto [valid, jwt_username] = garuda::auth::AuthManager::get_instance().validate_jwt(token);
-            if (valid && !jwt_username.empty()) {
-                name = jwt_username;
+            auto payload = garuda::auth::AuthManager::get_instance().validate_jwt(token);
+            if (payload.valid && !payload.username.empty()) {
+                name = payload.username;
             } else {
                 auto name_pos = json_text.find("\"name\":\"");
                 if (name_pos != std::string::npos) {
@@ -593,6 +593,14 @@ public:
             }
 
             handle_join(player_id, name, color, skin);
+
+            if (payload.valid && payload.role == "spectator") {
+                std::lock_guard<std::mutex> lock(mutex_);
+                auto it = players_.find(player_id);
+                if (it != players_.end()) {
+                    it->second.is_spectator = true;
+                }
+            }
         }
     }
 };
