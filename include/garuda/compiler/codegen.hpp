@@ -167,13 +167,29 @@ private:
     }
 
     void gen_tail_call(std::shared_ptr<CallExprNode> call) {
+        std::size_t arity = call->args().size();
+        for (auto& [vname, vreg] : current_func_->var_map) {
+            if (vreg < arity) {
+                std::uint16_t new_reg = alloc_reg();
+                emit(Opcode::OpMove, {Operand{RegType::X, vreg, Term()}, Operand{RegType::X, new_reg, Term()}});
+                vreg = new_reg;
+            }
+        }
+
         std::vector<std::uint16_t> arg_regs;
-        arg_regs.reserve(call->args().size());
-        for (std::size_t i = 0; i < call->args().size(); ++i) {
+        arg_regs.reserve(arity);
+        for (std::size_t i = 0; i < arity; ++i) {
             arg_regs.push_back(gen_expr(call->args()[i], false));
         }
+        std::vector<std::uint16_t> temp_regs;
+        temp_regs.reserve(arg_regs.size());
         for (std::size_t i = 0; i < arg_regs.size(); ++i) {
-            emit(Opcode::OpMove, {Operand{RegType::X, arg_regs[i], Term()}, Operand{RegType::X, static_cast<std::uint16_t>(i), Term()}});
+            std::uint16_t t_reg = alloc_reg();
+            emit(Opcode::OpMove, {Operand{RegType::X, arg_regs[i], Term()}, Operand{RegType::X, t_reg, Term()}});
+            temp_regs.push_back(t_reg);
+        }
+        for (std::size_t i = 0; i < temp_regs.size(); ++i) {
+            emit(Opcode::OpMove, {Operand{RegType::X, temp_regs[i], Term()}, Operand{RegType::X, static_cast<std::uint16_t>(i), Term()}});
         }
         std::size_t global_idx = current_global_ip();
         emit(Opcode::OpTailCall, {Operand{RegType::Literal, 0, Term(Atom{call->name()})}});
@@ -349,13 +365,7 @@ private:
                     gen_tail_call(std::shared_ptr<CallExprNode>(node, call));
                     return 0;
                 }
-                std::vector<std::uint16_t> arg_regs;
-                arg_regs.reserve(call->args().size());
-                for (std::size_t i = 0; i < call->args().size(); ++i) {
-                    arg_regs.push_back(gen_expr(call->args()[i], false));
-                }
 
-                // Protect active variables in var_map mapped to X[0]...X[arity-1]
                 std::size_t arity = call->args().size();
                 for (auto& [vname, vreg] : current_func_->var_map) {
                     if (vreg < arity) {
@@ -365,8 +375,22 @@ private:
                     }
                 }
 
+                std::vector<std::uint16_t> arg_regs;
+                arg_regs.reserve(arity);
+                for (std::size_t i = 0; i < arity; ++i) {
+                    arg_regs.push_back(gen_expr(call->args()[i], false));
+                }
+
+                std::vector<std::uint16_t> temp_regs;
+                temp_regs.reserve(arg_regs.size());
                 for (std::size_t i = 0; i < arg_regs.size(); ++i) {
-                    emit(Opcode::OpMove, {Operand{RegType::X, arg_regs[i], Term()}, Operand{RegType::X, static_cast<std::uint16_t>(i), Term()}});
+                    std::uint16_t t_reg = alloc_reg();
+                    emit(Opcode::OpMove, {Operand{RegType::X, arg_regs[i], Term()}, Operand{RegType::X, t_reg, Term()}});
+                    temp_regs.push_back(t_reg);
+                }
+
+                for (std::size_t i = 0; i < temp_regs.size(); ++i) {
+                    emit(Opcode::OpMove, {Operand{RegType::X, temp_regs[i], Term()}, Operand{RegType::X, static_cast<std::uint16_t>(i), Term()}});
                 }
                 std::size_t global_idx = current_global_ip();
                 emit(Opcode::OpCall, {Operand{RegType::Literal, 0, Term(Atom{call->name()})}});

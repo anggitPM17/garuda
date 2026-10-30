@@ -91,6 +91,9 @@ target_link_libraries(garuda_import_grd_tests PRIVATE garuda)
 add_executable(garuda_json_grd_tests tests/test_json_grd.cpp)
 target_link_libraries(garuda_json_grd_tests PRIVATE garuda)
 
+add_executable(garuda_isolate_binop_tests tests/test_isolate_binop.cpp)
+target_link_libraries(garuda_isolate_binop_tests PRIVATE garuda)
+
 add_executable(grdc src/grdc.cpp)
 target_link_libraries(grdc PRIVATE garuda)
 
