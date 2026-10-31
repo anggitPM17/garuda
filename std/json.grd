@@ -1,4 +1,5 @@
 modul Json
+impor "std/list.grd"
 
 # Modul Serialisasi & Deserialisasi JSON Murni Bahasa Garuda (std/json.grd)
 

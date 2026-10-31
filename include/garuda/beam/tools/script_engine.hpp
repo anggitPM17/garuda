@@ -160,6 +160,15 @@ private:
                     }
                 }
             }
+            if (inst.op == compiler::Opcode::OpCall ||
+                inst.op == compiler::Opcode::OpTailCall ||
+                inst.op == compiler::Opcode::OpSpawn) {
+                if (!inst.args.empty() && inst.args[0].type == compiler::RegType::Literal) {
+                    if (auto* ip_val = inst.args[0].literal.get_if<std::int64_t>()) {
+                        inst.args[0].literal = Term(static_cast<std::int64_t>(offset + *ip_val));
+                    }
+                }
+            }
             target.all_instructions.push_back(inst);
         }
     }
