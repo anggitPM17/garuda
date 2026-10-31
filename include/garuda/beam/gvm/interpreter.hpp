@@ -56,7 +56,11 @@ enum class Opcode : uint8_t {
     OpConcat = 36,       // string / list concatenation (++)
     OpTryBegin = 37,     // try_begin catch_label
     OpTryEnd = 38,       // try_end
-    OpThrow = 39         // throw x[reason_reg]
+    OpThrow = 39,        // throw x[reason_reg]
+    OpGetListTail = 42,  // get_list_tail src_reg, dst_reg
+    OpGetListLen = 43,   // get_list_len src_reg, dst_reg
+    OpGetListElem = 44,  // get_list_elem src_reg, index_lit, dst_reg
+    OpMakeList = 45      // make_list dst, item0, item1, ...
 };
 
 enum class RegType { X, Y, Literal };

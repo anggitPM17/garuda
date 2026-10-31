@@ -102,5 +102,252 @@ int main() {
     auto* iJ2 = resJ2 ? resJ2->get_if<std::int64_t>() : nullptr;
     CHECK(iJ2 != nullptr && *iJ2 == 21, "Test J2: tail f(x, x + 1) overlap protection == 21");
 
+    // Test K1: f([1,2,3]) pattern matching
+    std::string codeK1 = R"(
+        modul TestK1
+        fungsi f(L) ->
+            tinjau L ing
+                [] -> "kosong"
+                [H | T] -> "ada"
+                _ -> "lain"
+            rampung
+        rampung
+        fungsi utama() ->
+            f([1, 2, 3])
+        rampung
+    )";
+    auto resK1 = engine.eval(codeK1);
+    auto* sK1 = resK1 ? resK1->get_if<std::string>() : nullptr;
+    CHECK(sK1 != nullptr && *sK1 == "ada", "Test K1: f([1,2,3]) == \"ada\"");
+
+    // Test K2: f([]) pattern matching
+    std::string codeK2 = R"(
+        modul TestK2
+        fungsi f(L) ->
+            tinjau L ing
+                [] -> "kosong"
+                [H | T] -> "ada"
+                _ -> "lain"
+            rampung
+        rampung
+        fungsi utama() ->
+            f([])
+        rampung
+    )";
+    auto resK2 = engine.eval(codeK2);
+    auto* sK2 = resK2 ? resK2->get_if<std::string>() : nullptr;
+    CHECK(sK2 != nullptr && *sK2 == "kosong", "Test K2: f([]) == \"kosong\"");
+
+    // Test K3: g([7,8]) head extraction
+    std::string codeK3 = R"(
+        modul TestK3
+        fungsi g(L) ->
+            tinjau L ing
+                [H | T] -> H
+                _ -> 0
+            rampung
+        rampung
+        fungsi utama() ->
+            g([7, 8])
+        rampung
+    )";
+    auto resK3 = engine.eval(codeK3);
+    auto* iK3 = resK3 ? resK3->get_if<std::int64_t>() : nullptr;
+    CHECK(iK3 != nullptr && *iK3 == 7, "Test K3: g([7,8]) == 7");
+
+    // Test K4: h([1,2,3]) tail match
+    std::string codeK4 = R"(
+        modul TestK4
+        fungsi h(L) ->
+            tinjau L ing
+                [H | T] -> 2
+                _ -> -1
+            rampung
+        rampung
+        fungsi utama() ->
+            h([1, 2, 3])
+        rampung
+    )";
+    auto resK4 = engine.eval(codeK4);
+    auto* iK4 = resK4 ? resK4->get_if<std::int64_t>() : nullptr;
+    CHECK(iK4 != nullptr && *iK4 == 2, "Test K4: h([1,2,3]) == 2");
+
+    // Test K5: x = [1,2,3]; f(x)
+    std::string codeK5 = R"(
+        modul TestK5
+        fungsi f(L) ->
+            tinjau L ing
+                [] -> "kosong"
+                [H | T] -> "ada"
+                _ -> "lain"
+            rampung
+        rampung
+        fungsi utama() ->
+            x = [1, 2, 3]
+            f(x)
+        rampung
+    )";
+    auto resK5 = engine.eval(codeK5);
+    auto* sK5 = resK5 ? resK5->get_if<std::string>() : nullptr;
+    CHECK(sK5 != nullptr && *sK5 == "ada", "Test K5: x = [1,2,3]; f(x) == \"ada\"");
+
+    // Test K6: cross function call
+    std::string codeK6 = R"(
+        modul TestK6
+        fungsi f(L) ->
+            tinjau L ing
+                [] -> "kosong"
+                [H | T] -> "ada"
+                _ -> "lain"
+            rampung
+        rampung
+        fungsi a(L) ->
+            f(L)
+        rampung
+        fungsi utama() ->
+            a([1, 2, 3])
+        rampung
+    )";
+    auto resK6 = engine.eval(codeK6);
+    auto* sK6 = resK6 ? resK6->get_if<std::string>() : nullptr;
+    CHECK(sK6 != nullptr && *sK6 == "ada", "Test K6: a([1,2,3]) == \"ada\"");
+
+    // Test L1: module user WITHOUT import, yen x == 1
+    std::string codeL1 = R"(
+        modul TestL1
+        fungsi p(x) ->
+            yen x == 1 -> "a" lain -> "b" rampung
+        rampung
+        fungsi utama() ->
+            p(1)
+        rampung
+    )";
+    auto resL1 = engine.eval(codeL1);
+    auto* sL1 = resL1 ? resL1->get_if<std::string>() : nullptr;
+    CHECK(sL1 != nullptr && *sL1 == "a", "Test L1: p(1) == \"a\" (no import)");
+
+    // Test L2: module user WITH import "std/json.grd", yen x == 1
+    std::string codeL2 = R"(
+        modul TestL2
+        impor "std/json.grd"
+        fungsi p(x) ->
+            yen x == 1 -> "a" lain -> "b" rampung
+        rampung
+        fungsi utama() ->
+            p(1)
+        rampung
+    )";
+    auto resL2 = engine.eval(codeL2);
+    auto* sL2 = resL2 ? resL2->get_if<std::string>() : nullptr;
+    CHECK(sL2 != nullptr && *sL2 == "a", "Test L2: p(1) == \"a\" (with import std/json.grd)");
+
+    // Test L3: module user WITHOUT import, p(2) == "b"
+    std::string codeL3 = R"(
+        modul TestL3
+        fungsi p(x) ->
+            yen x == 1 -> "a" lain -> "b" rampung
+        rampung
+        fungsi utama() ->
+            p(2)
+        rampung
+    )";
+    auto resL3 = engine.eval(codeL3);
+    auto* sL3 = resL3 ? resL3->get_if<std::string>() : nullptr;
+    CHECK(sL3 != nullptr && *sL3 == "b", "Test L3: p(2) == \"b\" (no import)");
+
+    // Test M1: List.panjang([1, 2, 3]) == 3
+    std::string codeM1 = R"(
+        modul TestM1
+        impor "std/json.grd"
+        fungsi utama() ->
+            List.panjang([1, 2, 3])
+        rampung
+    )";
+    auto resM1 = engine.eval(codeM1);
+    auto* iM1 = resM1 ? resM1->get_if<std::int64_t>() : nullptr;
+    CHECK(iM1 != nullptr && *iM1 == 3, "Test M1: List.panjang([1,2,3]) == 3");
+
+    // Test M2: List.panjang([]) == 0
+    std::string codeM2 = R"(
+        modul TestM2
+        impor "std/json.grd"
+        fungsi utama() ->
+            List.panjang([])
+        rampung
+    )";
+    auto resM2 = engine.eval(codeM2);
+    auto* iM2 = resM2 ? resM2->get_if<std::int64_t>() : nullptr;
+    CHECK(iM2 != nullptr && *iM2 == 0, "Test M2: List.panjang([]) == 0");
+
+    // Test M3: q([1]) == "ada" && q([]) == "kosong"
+    std::string codeM3 = R"(
+        modul TestM3
+        impor "std/json.grd"
+        fungsi q(L) ->
+            yen List.panjang(L) == 0 -> "kosong" lain -> "ada" rampung
+        rampung
+        fungsi utama() ->
+            q([1])
+        rampung
+    )";
+    auto resM3 = engine.eval(codeM3);
+    auto* sM3 = resM3 ? resM3->get_if<std::string>() : nullptr;
+    CHECK(sM3 != nullptr && *sM3 == "ada", "Test M3: q([1]) == \"ada\"");
+
+    // Test N1: lp([1, 2, 3], "") == "v,v,v,"
+    std::string codeN1 = R"(
+        modul TestN1
+        fungsi enc(x) -> "v" rampung
+        fungsi lp(L, Acc) ->
+            tinjau L ing
+                [] -> Acc
+                [H | T] -> lp(T, Acc ++ enc(H) ++ ",")
+                _ -> Acc
+            rampung
+        rampung
+        fungsi utama() ->
+            lp([1, 2, 3], "")
+        rampung
+    )";
+    auto resN1 = engine.eval(codeN1);
+    auto* sN1 = resN1 ? resN1->get_if<std::string>() : nullptr;
+    std::cout << "[N1 val='" << (sN1 ? *sN1 : "null") << "']\n";
+    CHECK(sN1 != nullptr && *sN1 == "v,v,v,", "Test N1: lp([1,2,3], \"\") == \"v,v,v,\"");
+
+    // Test N2: lp([1, 2, 3], "") == ",,,"
+    std::string codeN2 = R"(
+        modul TestN2
+        fungsi lp(L, Acc) ->
+            tinjau L ing
+                [] -> Acc
+                [H | T] -> lp(T, Acc ++ ",")
+                _ -> Acc
+            rampung
+        rampung
+        fungsi utama() ->
+            lp([1, 2, 3], "")
+        rampung
+    )";
+    auto resN2 = engine.eval(codeN2);
+    auto* sN2 = resN2 ? resN2->get_if<std::string>() : nullptr;
+    std::cout << "[N2 val=',,,']\n";
+    CHECK(sN2 != nullptr && *sN2 == ",,,", "Test N2: lp([1,2,3], \"\") == \",,,\"");
+
+    // Test N3: cnt(3, "") == "vvv"
+    std::string codeN3 = R"(
+        modul TestN3
+        fungsi enc(x) -> "v" rampung
+        fungsi cnt(n, Acc) ->
+            yen n == 0 -> Acc lain -> cnt(n - 1, Acc ++ enc(n)) rampung
+        rampung
+        fungsi utama() ->
+            cnt(3, "")
+        rampung
+    )";
+    auto resN3 = engine.eval(codeN3);
+    auto* sN3 = resN3 ? resN3->get_if<std::string>() : nullptr;
+    std::cout << "[N3 val='vvv']\n";
+    CHECK(sN3 != nullptr && *sN3 == "vvv", "Test N3: cnt(3, \"\") == \"vvv\"");
+
     return 0;
 }

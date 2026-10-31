@@ -169,6 +169,11 @@ private:
         std::size_t ip = start_ip;
         Term last_result;
 
+#pragma warning(push)
+#pragma warning(disable: 4996)
+        bool is_tracing = (std::getenv("GARUDA_TRACE") != nullptr);
+#pragma warning(pop)
+
         auto handle_builtin = [&](const std::string& fn_name) -> bool {
             auto is_fn = [](const std::string& name, const std::string& base) {
                 return name == base || name == ("String." + base) ||
@@ -483,8 +488,18 @@ private:
             return std::nullopt;
         };
 
+        std::size_t trace_count = 0;
         while (ip < cg_out.all_instructions.size()) {
             const auto& inst = cg_out.all_instructions[ip];
+
+            if (is_tracing && trace_count < 300) {
+                trace_count++;
+                std::cout << "EXEC IP " << ip << " op=" << static_cast<int>(inst.op) << " x[0..14]=";
+                for (int r = 0; r <= 14; ++r) {
+                    std::cout << " " << to_string(x_regs[r]);
+                }
+                std::cout << "\n";
+            }
 
             switch (inst.op) {
                 case Opcode::OpMakeTuple: {
@@ -516,6 +531,60 @@ private:
                                 last_result = elem;
                             }
                         }
+                    }
+                    break;
+                }
+                case Opcode::OpMakeList: {
+                    if (!inst.args.empty()) {
+                        std::vector<Term> items;
+                        for (std::size_t i = 1; i < inst.args.size(); ++i) {
+                            items.push_back(read_operand(inst.args[i]));
+                        }
+                        Term res(List{std::make_shared<const std::vector<Term>>(std::move(items))});
+                        x_regs[inst.args[0].index % 256] = res;
+                        last_result = res;
+                    }
+                    break;
+                }
+                case Opcode::OpGetListLen: {
+                    if (inst.args.size() >= 2) {
+                        Term t = read_operand(inst.args[0]);
+                        std::int64_t n = 0;
+                        if (auto* l = t.get_if<List>()) {
+                            n = l->items ? static_cast<std::int64_t>(l->items->size()) : 0;
+                        }
+                        Term res(n);
+                        x_regs[inst.args[1].index % 256] = res;
+                        last_result = res;
+                    }
+                    break;
+                }
+                case Opcode::OpGetListElem: {
+                    if (inst.args.size() >= 3) {
+                        Term t = read_operand(inst.args[0]);
+                        std::size_t idx = static_cast<std::size_t>(get_int_val(read_operand(inst.args[1])));
+                        if (auto* l = t.get_if<List>()) {
+                            if (l->items && idx < l->items->size()) {
+                                Term elem = (*l->items)[idx];
+                                x_regs[inst.args[2].index % 256] = elem;
+                                last_result = elem;
+                            }
+                        }
+                    }
+                    break;
+                }
+                case Opcode::OpGetListTail: {
+                    if (inst.args.size() >= 2) {
+                        Term t = read_operand(inst.args[0]);
+                        std::vector<Term> rest;
+                        if (auto* l = t.get_if<List>()) {
+                            if (l->items && l->items->size() > 1) {
+                                rest.assign(l->items->begin() + 1, l->items->end());
+                            }
+                        }
+                        Term res(List{std::make_shared<const std::vector<Term>>(std::move(rest))});
+                        x_regs[inst.args[1].index % 256] = res;
+                        last_result = res;
                     }
                     break;
                 }

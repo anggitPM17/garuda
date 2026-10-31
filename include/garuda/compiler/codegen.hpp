@@ -236,16 +236,15 @@ private:
             std::uint16_t head_reg = alloc_reg();
             std::uint16_t tail_reg = alloc_reg();
 
-            emit(Opcode::OpGetTupleElem, {
+            emit(Opcode::OpGetListElem, {
                 Operand{RegType::X, src_reg, Term()},
                 Operand{RegType::Literal, 0, Term(0LL)},
                 Operand{RegType::X, head_reg, Term()}
             });
-            emit(Opcode::OpMove, {Operand{RegType::X, src_reg, Term()}, Operand{RegType::X, 0, Term()}});
-            std::size_t global_idx = current_global_ip();
-            emit(Opcode::OpCall, {Operand{RegType::Literal, 0, Term(Atom{"List.ekor"})}});
-            global_call_patches_.push_back(global_idx);
-            emit(Opcode::OpMove, {Operand{RegType::X, 0, Term()}, Operand{RegType::X, tail_reg, Term()}});
+            emit(Opcode::OpGetListTail, {
+                Operand{RegType::X, src_reg, Term()},
+                Operand{RegType::X, tail_reg, Term()}
+            });
 
             gen_pattern_bind(pht->head_ptr(), head_reg);
             gen_pattern_bind(pht->tail_ptr(), tail_reg);
@@ -364,7 +363,7 @@ private:
                     std::uint16_t item_reg = gen_expr(item, false);
                     args.push_back(Operand{RegType::X, item_reg, Term()});
                 }
-                emit(Opcode::OpMakeTuple, std::move(args));
+                emit(Opcode::OpMakeList, std::move(args));
                 return out_reg;
             }
             case AstNodeType::CallExpr: {
@@ -470,14 +469,22 @@ private:
                         emit(Opcode::OpEq, {Operand{RegType::X, subj_reg, Term()}, Operand{RegType::X, pat_reg, Term()}, Operand{RegType::X, match_reg, Term()}});
                     } else if (clause.pattern->type() == AstNodeType::ListExpr) {
                         std::uint16_t len_reg = alloc_reg();
-                        emit(Opcode::OpMove, {Operand{RegType::X, subj_reg, Term()}, Operand{RegType::X, 0, Term()}});
-                        std::size_t global_idx = current_global_ip();
-                        emit(Opcode::OpCall, {Operand{RegType::Literal, 0, Term(Atom{"List.panjang"})}});
-                        global_call_patches_.push_back(global_idx);
-                        emit(Opcode::OpMove, {Operand{RegType::X, 0, Term()}, Operand{RegType::X, len_reg, Term()}});
+                        emit(Opcode::OpGetListLen, {
+                            Operand{RegType::X, subj_reg, Term()},
+                            Operand{RegType::X, len_reg, Term()}
+                        });
                         std::uint16_t zero_reg = alloc_reg();
                         emit(Opcode::OpMove, {Operand{RegType::Literal, 0, Term(0LL)}, Operand{RegType::X, zero_reg, Term()}});
                         emit(Opcode::OpEq, {Operand{RegType::X, len_reg, Term()}, Operand{RegType::X, zero_reg, Term()}, Operand{RegType::X, match_reg, Term()}});
+                    } else if (clause.pattern->type() == AstNodeType::PatternListHeadTail) {
+                        std::uint16_t len_reg = alloc_reg();
+                        emit(Opcode::OpGetListLen, {
+                            Operand{RegType::X, subj_reg, Term()},
+                            Operand{RegType::X, len_reg, Term()}
+                        });
+                        std::uint16_t zero_reg = alloc_reg();
+                        emit(Opcode::OpMove, {Operand{RegType::Literal, 0, Term(0LL)}, Operand{RegType::X, zero_reg, Term()}});
+                        emit(Opcode::OpGt, {Operand{RegType::X, len_reg, Term()}, Operand{RegType::X, zero_reg, Term()}, Operand{RegType::X, match_reg, Term()}});
                     } else if (clause.pattern->type() == AstNodeType::PatternTuple ||
                                clause.pattern->type() == AstNodeType::TupleExpr) {
                         auto* ptup = static_cast<PatternTupleNode*>(clause.pattern.get());
