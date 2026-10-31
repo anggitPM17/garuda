@@ -354,6 +354,24 @@ private:
                 last_result = res;
                 return true;
             }
+            if (is_mod_fn(fn_name, "Map", "kunci") || is_mod_fn(fn_name, "Map", "keys")) {
+                std::vector<Term> keys;
+                if (auto* tup = x_regs[0].get_if<Tuple>()) {
+                    if (tup->items) {
+                        for (const auto& item : *tup->items) {
+                            if (auto* entry = item.get_if<Tuple>()) {
+                                if (entry->items && entry->items->size() >= 2) {
+                                    keys.push_back((*entry->items)[0]);
+                                }
+                            }
+                        }
+                    }
+                }
+                Term res(List{std::make_shared<const std::vector<Term>>(std::move(keys))});
+                x_regs[0] = res;
+                last_result = res;
+                return true;
+            }
 
             if (is_fn(fn_name, "panjang") || fn_name == "string_length") {
                 std::string s = clean_str(x_regs[0]);

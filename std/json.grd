@@ -40,23 +40,27 @@ fungsi encode_list(Daftar) ->
     "[" ++ encode_list_items(Daftar) ++ "]"
 rampung
 
-fungsi encode_map_pair(Pair) ->
-    K = List.kepala(Pair)
-    V = List.kepala(List.ekor(Pair))
+fungsi encode_map_item(K, Peta) ->
+    V = Map.ambil(Peta, K)
     "\"" ++ K ++ "\":" ++ encode_int(V)
 rampung
 
-fungsi encode_map_items(Peta) ->
-    tinjau Peta ing
+fungsi encode_map_keys(Keys, Peta) ->
+    tinjau Keys ing
         [] -> ""
         [H | T] ->
             yen List.panjang(T) == 0 ->
-                encode_map_pair(H)
+                encode_map_item(H, Peta)
             lain ->
-                encode_map_pair(H) ++ "," ++ encode_map_items(T)
+                encode_map_item(H, Peta) ++ "," ++ encode_map_keys(T, Peta)
             rampung
         _ -> ""
     rampung
+rampung
+
+fungsi encode_map_items(Peta) ->
+    Keys = Map.kunci(Peta)
+    encode_map_keys(Keys, Peta)
 rampung
 
 fungsi encode_map(Peta) ->
