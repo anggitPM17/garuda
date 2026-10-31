@@ -27,23 +27,28 @@ public:
 
     std::optional<compiler::CodeGeneratorOutput> compile_module(const std::string& path, std::set<std::string>& imported_paths) {
         try {
-            if (imported_paths.count(path) > 0) {
-                return compiler::CodeGeneratorOutput{};
-            }
-            imported_paths.insert(path);
-
+            std::string resolved_path;
             std::string src = "";
             if (Fs::exists(path)) {
+                resolved_path = path;
                 src = Fs::read_file(path);
             } else if (Fs::exists("../" + path)) {
+                resolved_path = "../" + path;
                 src = Fs::read_file("../" + path);
             } else if (path.rfind("std/", 0) != 0 && Fs::exists("std/" + path)) {
+                resolved_path = "std/" + path;
                 src = Fs::read_file("std/" + path);
             } else if (path.rfind("std/", 0) != 0 && Fs::exists("../std/" + path)) {
+                resolved_path = "../std/" + path;
                 src = Fs::read_file("../std/" + path);
             } else {
                 return std::nullopt;
             }
+
+            if (imported_paths.count(resolved_path) > 0) {
+                return compiler::CodeGeneratorOutput{};
+            }
+            imported_paths.insert(resolved_path);
 
             if (src.empty()) return compiler::CodeGeneratorOutput{};
 
