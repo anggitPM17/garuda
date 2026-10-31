@@ -61,6 +61,9 @@ public:
             fn_info.instructions = state->instructions;
             output.functions.push_back(fn_info);
 
+            std::string qualified_name = output.module_name + "." + fn->name();
+            output.function_table[qualified_name] = state->base_global_ip;
+            output.function_table[qualified_name + "/" + std::to_string(fn_info.arity)] = state->base_global_ip;
             output.function_table[fn->name()] = state->base_global_ip;
             output.function_table[fn->name() + "/" + std::to_string(fn_info.arity)] = state->base_global_ip;
             function_ip_map_[fn->name()] = state->base_global_ip;
@@ -89,6 +92,9 @@ public:
             fn_info.instructions = state->instructions;
             output.functions.push_back(fn_info);
 
+            std::string qualified_name = output.module_name + "." + fn->name();
+            output.function_table[qualified_name] = state->base_global_ip;
+            output.function_table[qualified_name + "/" + std::to_string(fn_info.arity)] = state->base_global_ip;
             output.function_table[fn->name()] = state->base_global_ip;
             output.function_table[fn->name() + "/" + std::to_string(fn_info.arity)] = state->base_global_ip;
             function_ip_map_[fn->name()] = state->base_global_ip;

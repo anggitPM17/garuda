@@ -470,27 +470,42 @@ private:
         };
 
         auto match_fn = [&](const std::string& name) -> std::optional<std::size_t> {
+            // Prioritas 1: exact match (qualified name)
+            auto it = cg_out.function_table.find(name);
+            if (it != cg_out.function_table.end()) {
+                return it->second;
+            }
+            // Prioritas 2: exact match dengan aritas (name + "/N")
+            for (const auto& [k, v] : cg_out.function_table) {
+                if (k.rfind(name + "/", 0) == 0) {
+                    return v;
+                }
+            }
+            // Prioritas 3: short name exact
             std::string short_name = name;
             auto dot_pos = name.rfind('.');
             if (dot_pos != std::string::npos) {
                 short_name = name.substr(dot_pos + 1);
             }
-
+            it = cg_out.function_table.find(short_name);
+            if (it != cg_out.function_table.end()) {
+                return it->second;
+            }
+            // Prioritas 4: short name dengan aritas (deterministic: pilih offset terkecil)
+            std::optional<std::size_t> best;
             for (const auto& [k, v] : cg_out.function_table) {
                 std::string k_short = k;
                 auto k_dot = k.rfind('.');
                 if (k_dot != std::string::npos) {
                     k_short = k.substr(k_dot + 1);
                 }
-
-                if (k == name || k == short_name ||
-                    k.rfind(name + "/", 0) == 0 ||
-                    k.rfind(short_name + "/", 0) == 0 ||
-                    k_short.rfind(short_name + "/", 0) == 0) {
-                    return v;
+                if (k_short.rfind(short_name + "/", 0) == 0) {
+                    if (!best.has_value() || v < *best) {
+                        best = v;
+                    }
                 }
             }
-            return std::nullopt;
+            return best;
         };
 
         std::size_t trace_count = 0;
