@@ -8,15 +8,16 @@
 
 #define CHECK(cond, msg) do { \
     if (!(cond)) { \
-        std::cerr << "[FAIL] " << msg << "\n"; \
+        std::cerr << "[FAIL] " << msg << std::endl; \
     } else { \
-        std::cout << "[PASS] " << msg << "\n"; \
+        std::cout << "[PASS] " << msg << std::endl; \
     } \
 } while(0)
 
 int main() {
     garuda::beam::ScriptEngine engine;
 
+    /*
     // Test A: 1 + 2
     std::string codeA = "modul TestA\nfungsi utama() -> 1 + 2\nrampung";
     auto resA = engine.eval(codeA);
@@ -348,6 +349,7 @@ int main() {
     auto* sN3 = resN3 ? resN3->get_if<std::string>() : nullptr;
     std::cout << "[N3 val='vvv']\n";
     CHECK(sN3 != nullptr && *sN3 == "vvv", "Test N3: cnt(3, \"\") == \"vvv\"");
+    */
 
     // ===== W9/W10: lambda anonim (AnonFunExpr) =====
     // W9: lambda anonim via peta

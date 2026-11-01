@@ -44,6 +44,7 @@ public:
         CodeGeneratorOutput output;
         if (!module) return output;
 
+        module_name_ = module->name();
         output.module_name = module->name();
 
         for (const auto& fn : module->functions()) {
@@ -105,14 +106,29 @@ public:
         }
 
         // Patch global call/spawn jump addresses
+        auto is_bif_name = [](const std::string& name) {
+            return name == "List.tambah" || name == "List.append" ||
+                   name == "List.panjang" || name == "List.length" ||
+                   name == "List.kepala"  || name == "List.head" ||
+                   name == "List.ekor"    || name == "List.tail" ||
+                   name == "Map.baru"     || name == "Map.new" ||
+                   name == "Map.taruh"    || name == "Map.put" ||
+                   name == "Map.ambil"    || name == "Map.get" ||
+                   name == "Map.hapus"    || name == "Map.remove" ||
+                   name == "Map.kunci"    || name == "Map.keys" ||
+                   name == "Map.nilai"    || name == "Map.values";
+        };
+
         for (std::size_t idx : global_call_patches_) {
             if (idx < global_instructions_.size()) {
                 auto& inst = global_instructions_[idx];
                 if (!inst.args.empty()) {
                     if (auto* atom_val = inst.args[0].literal.get_if<Atom>()) {
-                        auto it = output.function_table.find(atom_val->name);
-                        if (it != output.function_table.end()) {
-                            inst.args[0] = Operand{RegType::Literal, 0, Term(static_cast<std::int64_t>(it->second))};
+                        if (!is_bif_name(atom_val->name)) {
+                            auto it = output.function_table.find(atom_val->name);
+                            if (it != output.function_table.end()) {
+                                inst.args[0] = Operand{RegType::Literal, 0, Term(static_cast<std::int64_t>(it->second))};
+                            }
                         }
                     }
                 }
@@ -552,8 +568,9 @@ private:
                     gen_pattern_bind(clause.pattern, subj_reg);
 
                     std::uint16_t clause_res = 0;
-                    for (const auto& stmt : clause.body) {
-                        clause_res = gen_expr(stmt, false);
+                    for (std::size_t j = 0; j < clause.body.size(); ++j) {
+                        bool stmt_is_tail = is_tail && (j == clause.body.size() - 1);
+                        clause_res = gen_expr(clause.body[j], stmt_is_tail);
                     }
 
                     emit(Opcode::OpMove, {Operand{RegType::X, clause_res, Term()}, Operand{RegType::X, result_reg, Term()}});
@@ -588,7 +605,7 @@ private:
 
                 if (spawn_node->fun().type() == AstNodeType::AnonFunExpr) {
                     auto* anon = static_cast<const AnonFunExprNode*>(&spawn_node->fun());
-                    target_fn_name = "__anon_" + std::to_string(anon_counter_++);
+                    target_fn_name = module_name_ + ".__anon_" + std::to_string(anon_counter_++);
                     auto fn_decl = std::make_shared<FunctionDeclNode>(target_fn_name, anon->params(), anon->body());
                     pending_functions_.push_back(fn_decl);
                 } else if (spawn_node->fun().type() == AstNodeType::CallExpr) {
@@ -608,7 +625,7 @@ private:
             }
             case AstNodeType::AnonFunExpr: {
                 auto* anon = static_cast<const AnonFunExprNode*>(node.get());
-                std::string target_fn_name = "__anon_" + std::to_string(anon_counter_++);
+                std::string target_fn_name = module_name_ + ".__anon_" + std::to_string(anon_counter_++);
                 auto fn_decl = std::make_shared<FunctionDeclNode>(target_fn_name, anon->params(), anon->body());
                 pending_functions_.push_back(fn_decl);
 
@@ -654,7 +671,8 @@ private:
 
                     std::uint16_t then_reg = 0;
                     for (std::size_t j = 0; j < clause.body.size(); ++j) {
-                        then_reg = gen_expr(clause.body[j], false);
+                        bool stmt_is_tail = is_tail && (j == clause.body.size() - 1);
+                        then_reg = gen_expr(clause.body[j], stmt_is_tail);
                     }
                     emit(Opcode::OpMove, {Operand{RegType::X, then_reg, Term()}, Operand{RegType::X, out_reg, Term()}});
 
@@ -667,7 +685,8 @@ private:
 
                     std::uint16_t else_reg = 0;
                     for (std::size_t j = 0; j < if_node->else_body().size(); ++j) {
-                        else_reg = gen_expr(if_node->else_body()[j], false);
+                        bool stmt_is_tail = is_tail && (j == if_node->else_body().size() - 1);
+                        else_reg = gen_expr(if_node->else_body()[j], stmt_is_tail);
                     }
                     emit(Opcode::OpMove, {Operand{RegType::X, else_reg, Term()}, Operand{RegType::X, out_reg, Term()}});
 
@@ -695,6 +714,7 @@ private:
     std::vector<std::size_t> global_call_patches_;
     std::unordered_map<std::string, std::size_t> function_ip_map_;
     std::size_t anon_counter_ = 1;
+    std::string module_name_ = "Main";
 };
 
 } // namespace garuda::compiler
