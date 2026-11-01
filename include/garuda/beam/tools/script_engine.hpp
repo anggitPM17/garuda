@@ -116,6 +116,28 @@ public:
 
             merge_output(combined_out, main_out);
 
+#pragma warning(push)
+#pragma warning(disable: 4996)
+            if (std::getenv("GARUDA_DUMP_BYTECODE") != nullptr) {
+#pragma warning(pop)
+                std::cerr << "=== DUMP function_table ===\n";
+                for (const auto& [k, v] : combined_out.function_table) {
+                    std::cerr << "  " << k << " -> " << v << "\n";
+                }
+                std::cerr << "=== DUMP all_instructions (size=" << combined_out.all_instructions.size() << ") ===\n";
+                for (std::size_t i = 0; i < combined_out.all_instructions.size(); ++i) {
+                    const auto& inst = combined_out.all_instructions[i];
+                    std::cerr << "  " << i << ": op=" << static_cast<int>(inst.op);
+                    for (std::size_t a = 0; a < inst.args.size(); ++a) {
+                        std::cerr << " arg" << a << "={type=" << static_cast<int>(inst.args[a].type)
+                                  << ",idx=" << inst.args[a].index
+                                  << ",lit=" << to_string(inst.args[a].literal) << "}";
+                    }
+                    std::cerr << "\n";
+                }
+                std::cerr << "=== END DUMP ===\n";
+            }
+
             std::size_t start_ip = 0;
             auto it = combined_out.function_table.find("utama");
             if (it == combined_out.function_table.end()) {
@@ -801,46 +823,52 @@ private:
                 }
                 case Opcode::OpCall: {
                     if (!inst.args.empty()) {
+                        Term fn_term = read_operand(inst.args[0]);
                         std::string fn_name;
-                        if (auto* a = inst.args[0].literal.get_if<Atom>()) fn_name = a->name;
-                        else if (auto* s = inst.args[0].literal.get_if<std::string>()) fn_name = *s;
+                        if (auto* a = fn_term.get_if<Atom>()) fn_name = a->name;
+                        else if (auto* s = fn_term.get_if<std::string>()) fn_name = *s;
 
-                        if (handle_builtin(fn_name)) break;
+                        if (!fn_name.empty() && handle_builtin(fn_name)) break;
 
-                        if (auto* i = inst.args[0].literal.get_if<std::int64_t>()) {
+                        if (auto* i = fn_term.get_if<std::int64_t>()) {
                             call_stack.push_back(ip + 1);
                             frame_stack.push_back(x_regs);
                             ip = static_cast<std::size_t>(*i);
                             continue;
                         }
 
-                        auto target_opt = match_fn(fn_name);
-                        if (target_opt.has_value()) {
-                            call_stack.push_back(ip + 1);
-                            frame_stack.push_back(x_regs);
-                            ip = *target_opt;
-                            continue;
+                        if (!fn_name.empty()) {
+                            auto target_opt = match_fn(fn_name);
+                            if (target_opt.has_value()) {
+                                call_stack.push_back(ip + 1);
+                                frame_stack.push_back(x_regs);
+                                ip = *target_opt;
+                                continue;
+                            }
                         }
                     }
                     break;
                 }
                 case Opcode::OpTailCall: {
                     if (!inst.args.empty()) {
+                        Term fn_term = read_operand(inst.args[0]);
                         std::string fn_name;
-                        if (auto* a = inst.args[0].literal.get_if<Atom>()) fn_name = a->name;
-                        else if (auto* s = inst.args[0].literal.get_if<std::string>()) fn_name = *s;
+                        if (auto* a = fn_term.get_if<Atom>()) fn_name = a->name;
+                        else if (auto* s = fn_term.get_if<std::string>()) fn_name = *s;
 
-                        if (handle_builtin(fn_name)) break;
+                        if (!fn_name.empty() && handle_builtin(fn_name)) break;
 
-                        if (auto* i = inst.args[0].literal.get_if<std::int64_t>()) {
+                        if (auto* i = fn_term.get_if<std::int64_t>()) {
                             ip = static_cast<std::size_t>(*i);
                             continue;
                         }
 
-                        auto target_opt = match_fn(fn_name);
-                        if (target_opt.has_value()) {
-                            ip = *target_opt;
-                            continue;
+                        if (!fn_name.empty()) {
+                            auto target_opt = match_fn(fn_name);
+                            if (target_opt.has_value()) {
+                                ip = *target_opt;
+                                continue;
+                            }
                         }
                     }
                     break;

@@ -206,8 +206,13 @@ private:
             emit(Opcode::OpMove, {Operand{RegType::X, temp_regs[i], Term()}, Operand{RegType::X, static_cast<std::uint16_t>(i), Term()}});
         }
         std::size_t global_idx = current_global_ip();
-        emit(Opcode::OpTailCall, {Operand{RegType::Literal, 0, Term(Atom{call->name()})}});
-        global_call_patches_.push_back(global_idx);
+        if (current_func_->var_map.count(call->name())) {
+            std::uint16_t fn_reg = current_func_->var_map[call->name()];
+            emit(Opcode::OpTailCall, {Operand{RegType::X, fn_reg, Term()}});
+        } else {
+            emit(Opcode::OpTailCall, {Operand{RegType::Literal, 0, Term(Atom{call->name()})}});
+            global_call_patches_.push_back(global_idx);
+        }
     }
 
     void gen_pattern_bind(std::shared_ptr<AstNode> pattern, std::uint16_t src_reg) {
@@ -302,6 +307,10 @@ private:
                 }
                 std::uint16_t reg = alloc_reg();
                 current_func_->var_map[var->name()] = reg;
+                emit(Opcode::OpMove, {
+                    Operand{RegType::Literal, 0, Term(Atom{var->name()})},
+                    Operand{RegType::X, reg, Term()}
+                });
                 return reg;
             }
             case AstNodeType::BinaryExpr: {
@@ -400,8 +409,13 @@ private:
                     emit(Opcode::OpMove, {Operand{RegType::X, temp_regs[i], Term()}, Operand{RegType::X, static_cast<std::uint16_t>(i), Term()}});
                 }
                 std::size_t global_idx = current_global_ip();
-                emit(Opcode::OpCall, {Operand{RegType::Literal, 0, Term(Atom{call->name()})}});
-                global_call_patches_.push_back(global_idx);
+                if (current_func_->var_map.count(call->name())) {
+                    std::uint16_t fn_reg = current_func_->var_map[call->name()];
+                    emit(Opcode::OpCall, {Operand{RegType::X, fn_reg, Term()}});
+                } else {
+                    emit(Opcode::OpCall, {Operand{RegType::Literal, 0, Term(Atom{call->name()})}});
+                    global_call_patches_.push_back(global_idx);
+                }
 
                 std::uint16_t ret_reg = alloc_reg();
                 emit(Opcode::OpMove, {Operand{RegType::X, 0, Term()}, Operand{RegType::X, ret_reg, Term()}});
@@ -573,6 +587,16 @@ private:
                 std::size_t global_idx = current_global_ip();
                 emit(Opcode::OpSpawn, {Operand{RegType::Literal, 0, Term(Atom{target_fn_name})}, Operand{RegType::X, out_reg, Term()}});
                 global_call_patches_.push_back(global_idx);
+                return out_reg;
+            }
+            case AstNodeType::AnonFunExpr: {
+                auto* anon = static_cast<const AnonFunExprNode*>(node.get());
+                std::string target_fn_name = "__anon_" + std::to_string(anon_counter_++);
+                auto fn_decl = std::make_shared<FunctionDeclNode>(target_fn_name, anon->params(), anon->body());
+                pending_functions_.push_back(fn_decl);
+
+                std::uint16_t out_reg = alloc_reg();
+                emit(Opcode::OpMove, {Operand{RegType::Literal, 0, Term(Atom{target_fn_name})}, Operand{RegType::X, out_reg, Term()}});
                 return out_reg;
             }
             case AstNodeType::SelfExpr: {
