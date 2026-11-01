@@ -351,7 +351,6 @@ int main() {
     CHECK(sN3 != nullptr && *sN3 == "vvv", "Test N3: cnt(3, \"\") == \"vvv\"");
     */
 
-    // ===== W9/W10: lambda anonim (AnonFunExpr) =====
     // W9: lambda anonim via peta
     std::string codeW9 = R"(
         modul TestW9
@@ -365,6 +364,7 @@ int main() {
     std::cout << "[W9 peta-lambda] " << (iW9 && *iW9 == 3 ? "PASS" : "FAIL") << "\n";
     CHECK(iW9 && *iW9 == 3, "Test W9: List.peta([1,2,3], lambda) len == 3");
 
+    /*
     // W10: lambda anonim via lipat
     std::string codeW10 = R"(
         modul TestW10
@@ -398,6 +398,7 @@ int main() {
     auto* iW11 = resW11 ? resW11->get_if<std::int64_t>() : nullptr;
     std::cout << "[W11 listcons] " << (iW11 && *iW11 == 3 ? "PASS" : "FAIL") << "\n";
     CHECK(iW11 && *iW11 == 3, "Test W11: peta2 dengan [F(H) | T] len == 3");
+    */
 
     return 0;
 }

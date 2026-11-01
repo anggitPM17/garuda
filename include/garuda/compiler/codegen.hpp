@@ -116,7 +116,16 @@ public:
                    name == "Map.ambil"    || name == "Map.get" ||
                    name == "Map.hapus"    || name == "Map.remove" ||
                    name == "Map.kunci"    || name == "Map.keys" ||
-                   name == "Map.nilai"    || name == "Map.values";
+                   name == "Map.nilai"    || name == "Map.values" ||
+                   name == "Json.encode_int" || name == "Json.decode_int" ||
+                   name == "Json.encode_string" || name == "Json.decode_string" ||
+                   name == "Json.encode_bool" || name == "Json.decode_bool" ||
+                   name == "Json.encode_list" || name == "Json.decode_list" ||
+                   name == "Json.encode_map" || name == "Json.decode_map" ||
+                   name == "String.panjang" || name == "String.length" ||
+                   name == "String.potong" || name == "String.pisah" ||
+                   name == "String.rapikan" || name == "String.karakter_ke_int" ||
+                   name == "String.int_ke_karakter";
         };
 
         for (std::size_t idx : global_call_patches_) {
@@ -142,6 +151,7 @@ public:
 private:
     struct FuncState {
         std::string name;
+        std::vector<std::string> param_names;
         std::size_t base_global_ip = 0;
         std::uint16_t next_reg = 0;
         std::vector<Instruction> instructions;
@@ -164,6 +174,7 @@ private:
     }
 
     void gen_function(std::shared_ptr<FunctionDeclNode> fn, std::shared_ptr<FuncState> state) {
+        state->param_names = fn->params();
         for (std::size_t i = 0; i < fn->params().size(); ++i) {
             std::uint16_t reg = alloc_reg(); // Param i -> X[i]
             state->var_map[fn->params()[i]] = reg;
@@ -220,6 +231,11 @@ private:
         }
         for (std::size_t i = 0; i < temp_regs.size(); ++i) {
             emit(Opcode::OpMove, {Operand{RegType::X, temp_regs[i], Term()}, Operand{RegType::X, static_cast<std::uint16_t>(i), Term()}});
+        }
+
+        // Reset formal parameter mappings back to canonical registers (0..N-1) for loop iterations
+        for (std::size_t i = 0; i < current_func_->param_names.size(); ++i) {
+            current_func_->var_map[current_func_->param_names[i]] = static_cast<std::uint16_t>(i);
         }
         std::size_t global_idx = current_global_ip();
         if (current_func_->var_map.count(call->name())) {
@@ -424,6 +440,14 @@ private:
                 std::size_t arity = call->args().size();
                 protect_param_regs(arity);
 
+                std::uint16_t fn_reg = 0;
+                bool is_var_fn = current_func_->var_map.count(call->name()) > 0;
+                if (is_var_fn) {
+                    std::uint16_t orig_fn_reg = current_func_->var_map[call->name()];
+                    fn_reg = alloc_reg();
+                    emit(Opcode::OpMove, {Operand{RegType::X, orig_fn_reg, Term()}, Operand{RegType::X, fn_reg, Term()}});
+                }
+
                 std::vector<std::uint16_t> arg_regs;
                 arg_regs.reserve(arity);
                 for (std::size_t i = 0; i < arity; ++i) {
@@ -441,9 +465,9 @@ private:
                 for (std::size_t i = 0; i < temp_regs.size(); ++i) {
                     emit(Opcode::OpMove, {Operand{RegType::X, temp_regs[i], Term()}, Operand{RegType::X, static_cast<std::uint16_t>(i), Term()}});
                 }
+
                 std::size_t global_idx = current_global_ip();
-                if (current_func_->var_map.count(call->name())) {
-                    std::uint16_t fn_reg = current_func_->var_map[call->name()];
+                if (is_var_fn) {
                     emit(Opcode::OpCall, {Operand{RegType::X, fn_reg, Term()}});
                 } else {
                     emit(Opcode::OpCall, {Operand{RegType::Literal, 0, Term(Atom{call->name()})}});
