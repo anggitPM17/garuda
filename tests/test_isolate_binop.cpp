@@ -376,5 +376,26 @@ int main() {
     std::cout << "[W10 lipat-lambda] " << (iW10 && *iW10 == 6 ? "PASS" : "FAIL") << "\n";
     CHECK(iW10 && *iW10 == 6, "Test W10: List.lipat([1,2,3], 0, lambda) == 6");
 
+    // W11: [H | T] sebagai ekspresi list
+    std::string codeW11 = R"(
+        modul TestW11
+        impor "std/json.grd"
+        fungsi peta2(Daftar, F) ->
+            tinjau Daftar ing
+                [] -> []
+                [H | T] -> [F(H) | peta2(T, F)]
+                _ -> []
+            rampung
+        rampung
+        fungsi dbl(X) -> X * 2 rampung
+        fungsi utama() ->
+            List.panjang(peta2([1, 2, 3], dbl))
+        rampung
+    )";
+    auto resW11 = engine.eval(codeW11);
+    auto* iW11 = resW11 ? resW11->get_if<std::int64_t>() : nullptr;
+    std::cout << "[W11 listcons] " << (iW11 && *iW11 == 3 ? "PASS" : "FAIL") << "\n";
+    CHECK(iW11 && *iW11 == 3, "Test W11: peta2 dengan [F(H) | T] len == 3");
+
     return 0;
 }

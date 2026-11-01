@@ -14,7 +14,7 @@ using namespace garuda::beam;
 
 enum class AstNodeType {
     ModuleDecl, FunctionDecl, BinaryExpr, LiteralExpr, VariableExpr,
-    UnaryExpr, CallExpr, TupleExpr, ListExpr, AtomExpr, BoolExpr, NilExpr,
+    UnaryExpr, CallExpr, TupleExpr, ListExpr, ListConsExpr, AtomExpr, BoolExpr, NilExpr,
     SelfExpr, CetakExpr, SpawnExpr, AnonFunExpr, SendExpr, ReceiveExpr,
     IfExpr, CaseExpr, AssignmentExpr,
     PatternWildcard, PatternVar, PatternLiteral, PatternTuple, PatternListHeadTail, PatternGuard,
@@ -149,6 +149,28 @@ public:
     }
 private:
     std::vector<std::shared_ptr<AstNode>> items_;
+};
+
+class ListConsExprNode : public AstNode {
+public:
+    ListConsExprNode(std::vector<std::shared_ptr<AstNode>> head_items, std::shared_ptr<AstNode> tail)
+        : head_items_(std::move(head_items)), tail_(std::move(tail)) {}
+    AstNodeType type() const override { return AstNodeType::ListConsExpr; }
+    const std::vector<std::shared_ptr<AstNode>>& head_items() const { return head_items_; }
+    const std::shared_ptr<AstNode>& tail() const { return tail_; }
+    std::string to_string() const override {
+        std::string res = "[";
+        for (std::size_t i = 0; i < head_items_.size(); ++i) {
+            if (i > 0) res += ", ";
+            res += head_items_[i]->to_string();
+        }
+        res += " | ";
+        if (tail_) res += tail_->to_string();
+        return res + "]";
+    }
+private:
+    std::vector<std::shared_ptr<AstNode>> head_items_;
+    std::shared_ptr<AstNode> tail_;
 };
 
 class AtomExprNode : public AstNode {

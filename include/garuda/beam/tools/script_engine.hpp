@@ -805,6 +805,26 @@ private:
                     if (inst.args.size() >= 3) {
                         Term val_a = (inst.args[0].type == RegType::Literal) ? inst.args[0].literal : x_regs[inst.args[0].index % 256];
                         Term val_b = (inst.args[1].type == RegType::Literal) ? inst.args[1].literal : x_regs[inst.args[1].index % 256];
+
+                        if (val_a.is<List>() || val_b.is<List>()) {
+                            std::vector<Term> items;
+                            auto add_items = [&](const Term& t) {
+                                if (auto* l = t.get_if<List>()) {
+                                    if (l->items) {
+                                        for (const auto& elem : *l->items) items.push_back(elem);
+                                    }
+                                } else if (!t.is<std::monostate>()) {
+                                    items.push_back(t);
+                                }
+                            };
+                            add_items(val_a);
+                            add_items(val_b);
+                            Term res(List{std::make_shared<const std::vector<Term>>(std::move(items))});
+                            x_regs[inst.args[2].index % 256] = res;
+                            last_result = res;
+                            break;
+                        }
+
                         auto clean_str = [](const Term& t) {
                             std::string s;
                             if (auto* str = t.get_if<std::string>()) s = *str;

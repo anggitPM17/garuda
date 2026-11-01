@@ -381,6 +381,23 @@ private:
                 emit(Opcode::OpMakeList, std::move(args));
                 return out_reg;
             }
+            case AstNodeType::ListConsExpr: {
+                auto* cons = static_cast<const ListConsExprNode*>(node.get());
+                std::vector<Operand> head_args;
+                std::uint16_t head_list_reg = alloc_reg();
+                head_args.push_back(Operand{RegType::X, head_list_reg, Term()});
+
+                for (const auto& item : cons->head_items()) {
+                    std::uint16_t item_reg = gen_expr(item, false);
+                    head_args.push_back(Operand{RegType::X, item_reg, Term()});
+                }
+                emit(Opcode::OpMakeList, std::move(head_args));
+
+                std::uint16_t tail_reg = gen_expr(cons->tail(), false);
+                std::uint16_t out_reg = alloc_reg();
+                emit(Opcode::OpConcat, {Operand{RegType::X, head_list_reg, Term()}, Operand{RegType::X, tail_reg, Term()}, Operand{RegType::X, out_reg, Term()}});
+                return out_reg;
+            }
             case AstNodeType::CallExpr: {
                 auto* call = static_cast<CallExprNode*>(node.get());
                 if (is_tail) {

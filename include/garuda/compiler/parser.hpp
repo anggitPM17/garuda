@@ -427,7 +427,7 @@ private:
             return std::make_shared<TupleExprNode>(items);
         }
 
-        // List [...]
+        // List [...] or List cons [H | T]
         if (check(TokenType::LBracket)) {
             advance();
             std::vector<std::shared_ptr<AstNode>> items;
@@ -435,6 +435,11 @@ private:
                 do {
                     items.push_back(parse_expr());
                 } while (match(TokenType::Comma));
+            }
+            if (match(TokenType::Pipe)) {
+                auto tail = parse_expr();
+                expect(TokenType::RBracket, "Expected ']'");
+                return std::make_shared<ListConsExprNode>(items, tail);
             }
             expect(TokenType::RBracket, "Expected ']'");
             return std::make_shared<ListExprNode>(items);
