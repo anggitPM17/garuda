@@ -349,5 +349,32 @@ int main() {
     std::cout << "[N3 val='vvv']\n";
     CHECK(sN3 != nullptr && *sN3 == "vvv", "Test N3: cnt(3, \"\") == \"vvv\"");
 
+    // ===== W9/W10: lambda anonim (AnonFunExpr) =====
+    // W9: lambda anonim via peta
+    std::string codeW9 = R"(
+        modul TestW9
+        impor "std/json.grd"
+        fungsi utama() ->
+            List.panjang(List.peta([1, 2, 3], fungsi(X) -> X * 2 rampung))
+        rampung
+    )";
+    auto resW9 = engine.eval(codeW9);
+    auto* iW9 = resW9 ? resW9->get_if<std::int64_t>() : nullptr;
+    std::cout << "[W9 peta-lambda] " << (iW9 && *iW9 == 3 ? "PASS" : "FAIL") << "\n";
+    CHECK(iW9 && *iW9 == 3, "Test W9: List.peta([1,2,3], lambda) len == 3");
+
+    // W10: lambda anonim via lipat
+    std::string codeW10 = R"(
+        modul TestW10
+        impor "std/json.grd"
+        fungsi utama() ->
+            List.lipat([1, 2, 3], 0, fungsi(A, H) -> A + H rampung)
+        rampung
+    )";
+    auto resW10 = engine.eval(codeW10);
+    auto* iW10 = resW10 ? resW10->get_if<std::int64_t>() : nullptr;
+    std::cout << "[W10 lipat-lambda] " << (iW10 && *iW10 == 6 ? "PASS" : "FAIL") << "\n";
+    CHECK(iW10 && *iW10 == 6, "Test W10: List.lipat([1,2,3], 0, lambda) == 6");
+
     return 0;
 }
