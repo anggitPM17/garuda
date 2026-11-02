@@ -54,3 +54,9 @@ Target status pengujian: `14 PASS | 0 FAIL | 0 SKIP`.
 - Gunakan penamaan BIF C++ yang konsisten dengan pustaka `std/*.grd`.
 - Bahasa pengantar dokumentasi dan nama modul pustaka standar menggunakan Bahasa Indonesia resmi (*modul*, *fungsi*, *rampung*, *yen*, *lain*, *nalika*).
 - Dilarang keras mengubah bagian register allocation / tail call tanpa menyertakan bukti regresi lulus 100%.
+
+---
+
+## 6. Lisensi Kontribusi
+
+Dengan mengirimkan *Pull Request* atau kontribusi ke repositori ini, Anda setuju bahwa seluruh kontribusi Anda dilesensikan di bawah **Apache License 2.0** (Pasal 5). Hak Cipta proyek utama dipegang oleh **Anggit Prasetyo Mituhu**.

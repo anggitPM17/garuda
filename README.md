@@ -2,7 +2,7 @@
 
 > **Bahasa Pemrograman Fungsional & Actor-Model Indonesia dengan Garuda Virtual Machine (GVM). 100% Karya Anak Bangsa 🇮🇩**
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 [![Version](https://img.shields.io/badge/Version-v67.0.0-blue)](https://richat.my.id)
 [![Build Status](https://img.shields.io/badge/Tests-14%2F14%20PASS%20(100%25)-brightgreen)](https://richat.my.id)
 
@@ -212,10 +212,13 @@ RINGKASAN HASIL TEST: 14 PASS | 0 FAIL | 0 SKIP
 
 ---
 
-## 🤝 Kontribusi & Lisensi
+## 📜 Lisensi & Kontribusi
 
-Panduan kontribusi dapat dibaca pada **[CONTRIBUTING.md](CONTRIBUTING.md)**.
-Proyek ini dilesensikan di bawah **[MIT License](LICENSE)**.
+Proyek ini dilesensikan di bawah **[Apache License 2.0](LICENSE)** — bebas digunakan, dimodifikasi, dan didistribusikan untuk keperluan personal maupun komersial, dengan tetap mempertahankan atribusi dan perlindungan paten bawaan lisensi.
+
+Hak Cipta (c) 2026 **Anggit Prasetyo Mituhu**. Lihat berkas **[NOTICE](NOTICE)** untuk informasi atribusi.
+
+Panduan kontribusi dapat dibaca pada **[CONTRIBUTING.md](CONTRIBUTING.md)**. Silakan ajukan *Issue* atau *Pull Request* di repositori resmi **[GitHub anggitPM17/garuda](https://github.com/anggitPM17/garuda)**.
 
 ---
-**Dibuat dengan ❤️ di Indonesia. &copy; 2026 Garuda BEAM Contributors. 🇮🇩**
+**Dibuat dengan ❤️ di Indonesia. &copy; 2026 Anggit Prasetyo Mituhu. 🇮🇩**
