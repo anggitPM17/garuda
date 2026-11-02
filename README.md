@@ -24,8 +24,10 @@ Bahasa Garuda v67.0.0 hadir dengan ekosistem lengkap: CLI Tooling (`grd`), Web F
 - **🔗 Pipe Operator (`|>`)**: Komposisi fungsi yang bersih tanpa nested function calls.
 - **📚 Pustaka Standar Murni**: List, String, Map, Tuple, Json, Waktu, Matematika, HTTP Client, dan Web Framework.
 - **🌐 Web Framework**: Routing dinamis GET/POST dan eksekusi handler Garuda penuh yang thread-safe.
+- **🏷️ Type System & Annotation**: Type annotation (`X: Int`), type checking minimal (`1 + "a"` -> `:error_type`), Sum Types (`{:Tag, Val}`), dan Generic types (`List<Int>`).
+- **💻 System Modules (`std/system.grd`)**: File I/O (`File.baca`, `File.tulis`, `File.ada`) dan OS Built-ins (`Os.args`, `Os.env`, `Os.exit`).
 - **🛠️ Tooling & IDE Support**: CLI Tooling (`grd`), LSP Server (`garuda-lsp`), dan Ekstensi VS Code (`garuda-vscode-lsp`).
-- **✅ 100% Test Pass Rate**: 14/14 test suite lulus uji (0 Fail, 0 Skip) termasuk isu `List.peta` + lambda.
+- **✅ 100% Test Pass Rate**: 21/21 test suite lulus uji (0 Fail, 0 Skip).
 
 ---
 
@@ -240,10 +242,10 @@ Lihat panduan lengkap pada [docs/lsp-vscode.md](docs/lsp-vscode.md) untuk:
 
 ## 🧪 Suite Pengujian (`grd test`)
 
-Seluruh 14 test suite lulus 100% tanpa error:
+Seluruh 21 test suite lulus 100% tanpa error:
 ```text
 ======================================================
-RINGKASAN HASIL TEST: 14 PASS | 0 FAIL | 0 SKIP
+RINGKASAN HASIL TEST: 21 PASS | 0 FAIL | 0 SKIP
 ======================================================
 ```
 
@@ -255,12 +257,19 @@ RINGKASAN HASIL TEST: 14 PASS | 0 FAIL | 0 SKIP
 6. **String Module** (21 tests)
 7. **Map Module** (8 tests)
 8. **Tuple Module** (6 tests)
-9. **Interpolasi String**
-10. **Guard Clause (`nalika`)**
-11. **Pipe Operator (`|>`)**
-12. **Actor Concurrency** (12 assertions)
-13. **JSON Encoder/Decoder**
-14. **Isolate Binop (KB-001)** — `List.peta` / `List.saring` + lambda **PASS**
+9. **Testing Framework** (`std/test.grd`)
+10. **Interpolasi String**
+11. **Guard Clause (`nalika`)**
+12. **Pipe Operator (`|>`)**
+13. **Actor Concurrency** (12 assertions)
+14. **JSON Encoder/Decoder**
+15. **Error Handling** (`coba`/`tangkap`)
+16. **Type Annotation Parser** (`X: Int`)
+17. **Type Checking Minimal** (`1 + "a"` -> `:error_type`)
+18. **Sum Types & Pattern Matching** (`{:Tag, Val}`)
+19. **Generic Types Parser** (`List<Int>`)
+20. **System Modules** (`std/system.grd` File/OS)
+21. **Isolate Binop (KB-001)** — `List.peta` / `List.saring` + lambda **PASS**
 
 ---
 
