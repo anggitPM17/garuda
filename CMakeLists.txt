@@ -100,6 +100,9 @@ target_link_libraries(garuda_pipe_tests PRIVATE garuda)
 add_executable(garuda_interp_tests tests/test_interp.cpp)
 target_link_libraries(garuda_interp_tests PRIVATE garuda)
 
+add_executable(garuda_guard_tests tests/test_guard.cpp)
+target_link_libraries(garuda_guard_tests PRIVATE garuda)
+
 add_executable(grdc src/grdc.cpp)
 target_link_libraries(grdc PRIVATE garuda)
 

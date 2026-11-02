@@ -124,7 +124,7 @@ public:
                 else if (word == "ing" || word == "in") type = TokenType::In;
                 else if (word == "yen" || word == "if") type = TokenType::If;
                 else if (word == "lain" || word == "else") type = TokenType::Else;
-                else if (word == "ketika" || word == "when") type = TokenType::When;
+                else if (word == "ketika" || word == "when" || word == "nalika") type = TokenType::When;
                 else if (word == "diri" || word == "self") type = TokenType::Self;
                 else if (word == "cetak" || word == "puts") type = TokenType::Print;
                 else if (word == "kirim" || word == "send") type = TokenType::Send;

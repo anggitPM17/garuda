@@ -106,6 +106,13 @@ private:
             } while (match(TokenType::Comma));
         }
         expect(TokenType::RParen, "Expected ')' after parameters");
+
+        std::shared_ptr<AstNode> guard_cond = nullptr;
+        if (check(TokenType::When) || (check(TokenType::Identifier) && peek().text == "nalika")) {
+            advance();
+            guard_cond = parse_expr();
+        }
+
         expect(TokenType::Arrow, "Expected '->' before function body");
 
         std::vector<std::shared_ptr<AstNode>> body;
@@ -114,6 +121,14 @@ private:
             match(TokenType::Comma);
         }
         expect(TokenType::End, "Expected 'rampung'/'end' to close function declaration");
+
+        if (guard_cond) {
+            std::vector<std::shared_ptr<AstNode>> else_body = {std::make_shared<NilExprNode>()};
+            std::vector<IfClause> clauses = {{guard_cond, body}};
+            auto if_guard = std::make_shared<IfExprNode>(clauses, else_body);
+            std::vector<std::shared_ptr<AstNode>> guarded_body = {if_guard};
+            return std::make_shared<FunctionDeclNode>(name_tok.text, std::move(params), std::move(guarded_body));
+        }
 
         return std::make_shared<FunctionDeclNode>(name_tok.text, std::move(params), std::move(body));
     }
