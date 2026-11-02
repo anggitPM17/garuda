@@ -204,7 +204,9 @@ private:
             }
             if (inst.op == compiler::Opcode::OpCall ||
                 inst.op == compiler::Opcode::OpTailCall ||
-                inst.op == compiler::Opcode::OpSpawn) {
+                inst.op == compiler::Opcode::OpSpawn ||
+                inst.op == compiler::Opcode::OpTryBegin ||
+                inst.op == compiler::Opcode::OpJump) {
                 if (!inst.args.empty() && inst.args[0].type == compiler::RegType::Literal) {
                     if (auto* ip_val = inst.args[0].literal.get_if<std::int64_t>()) {
                         inst.args[0].literal = Term(static_cast<std::int64_t>(offset + *ip_val));
@@ -229,6 +231,37 @@ private:
 #pragma warning(disable: 4996)
         bool is_tracing = (std::getenv("GARUDA_TRACE") != nullptr);
 #pragma warning(pop)
+
+        struct TryFrame {
+            std::size_t catch_ip;
+            std::size_t call_stack_depth;
+            std::size_t frame_stack_depth;
+        };
+        std::vector<TryFrame> try_stack;
+        bool exception_raised = false;
+
+        auto raise_error = [&](const Term& err_val, const std::string& err_msg) -> bool {
+            if (!try_stack.empty()) {
+                auto tf = try_stack.back();
+                try_stack.pop_back();
+                while (call_stack.size() > tf.call_stack_depth) call_stack.pop_back();
+                while (frame_stack.size() > tf.frame_stack_depth) frame_stack.pop_back();
+                x_regs[0] = err_val;
+                last_result = err_val;
+                ip = tf.catch_ip > 0 ? tf.catch_ip - 1 : 0;
+                exception_raised = true;
+                return true;
+            } else {
+                std::cerr << "Error Uncaught Exception: " << err_msg << "\n";
+                if (!call_stack.empty()) {
+                    std::cerr << "  Stack trace:\n";
+                    for (int s = static_cast<int>(call_stack.size()) - 1; s >= 0; --s) {
+                        std::cerr << "    at IP " << call_stack[s] << "\n";
+                    }
+                }
+                return false;
+            }
+        };
 
         auto handle_builtin = [&](const std::string& fn_name) -> bool {
             auto is_fn = [](const std::string& name, const std::string& base) {
@@ -960,6 +993,31 @@ private:
                 last_result = res;
                 return true;
             }
+
+            // Error Built-ins
+            if (is_mod_fn(fn_name, "Error", "lempar") || is_mod_fn(fn_name, "Error", "throw")) {
+                std::string msg = clean_str(x_regs[0]);
+                Term err_term = x_regs[0];
+                if (raise_error(err_term, msg)) return true;
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "Error", "pesan") || is_mod_fn(fn_name, "Error", "message")) {
+                std::string msg = clean_str(x_regs[0]);
+                Term res(msg);
+                x_regs[0] = res;
+                last_result = res;
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "Error", "jenis") || is_mod_fn(fn_name, "Error", "kind")) {
+                std::string k = "error_user";
+                if (auto* a = x_regs[0].get_if<Atom>()) k = a->name;
+                Term res(Atom{k});
+                x_regs[0] = res;
+                last_result = res;
+                return true;
+            }
             return false;
         };
 
@@ -1031,6 +1089,20 @@ private:
             }
 
             switch (inst.op) {
+                case Opcode::OpTryBegin: {
+                    if (!inst.args.empty() && inst.args[0].type == compiler::RegType::Literal) {
+                        if (auto* ip_val = inst.args[0].literal.get_if<std::int64_t>()) {
+                            try_stack.push_back({static_cast<std::size_t>(*ip_val), call_stack.size(), frame_stack.size()});
+                        }
+                    }
+                    break;
+                }
+                case Opcode::OpTryEnd: {
+                    if (!try_stack.empty()) {
+                        try_stack.pop_back();
+                    }
+                    break;
+                }
                 case Opcode::OpMakeTuple: {
                     if (!inst.args.empty()) {
                         std::vector<Term> items;
@@ -1253,7 +1325,11 @@ private:
                     if (inst.args.size() >= 3) {
                         Term val_a = (inst.args[0].type == RegType::Literal) ? inst.args[0].literal : x_regs[inst.args[0].index % 256];
                         Term val_b = (inst.args[1].type == RegType::Literal) ? inst.args[1].literal : x_regs[inst.args[1].index % 256];
-                        if (val_a.get_if<std::int64_t>() && val_b.get_if<std::int64_t>() && *val_b.get_if<std::int64_t>() != 0) {
+                        if (val_b.get_if<std::int64_t>() && *val_b.get_if<std::int64_t>() == 0) {
+                            if (raise_error(Term(Atom{"error_div"}), "Division by zero")) continue;
+                            return std::nullopt;
+                        }
+                        if (val_a.get_if<std::int64_t>() && val_b.get_if<std::int64_t>()) {
                             Term res(*val_a.get_if<std::int64_t>() / *val_b.get_if<std::int64_t>());
                             x_regs[inst.args[2].index % 256] = res;
                             last_result = res;
@@ -1308,7 +1384,13 @@ private:
                         if (auto* a = fn_term.get_if<Atom>()) fn_name = a->name;
                         else if (auto* s = fn_term.get_if<std::string>()) fn_name = *s;
 
-                        if (!fn_name.empty() && handle_builtin(fn_name)) break;
+                        if (!fn_name.empty() && handle_builtin(fn_name)) {
+                            if (exception_raised) {
+                                exception_raised = false;
+                                break;
+                            }
+                            break;
+                        }
 
                         if (auto* i = fn_term.get_if<std::int64_t>()) {
                             call_stack.push_back(ip + 1);
@@ -1337,6 +1419,10 @@ private:
                         else if (auto* s = fn_term.get_if<std::string>()) fn_name = *s;
 
                         if (!fn_name.empty() && handle_builtin(fn_name)) {
+                            if (exception_raised) {
+                                exception_raised = false;
+                                break;
+                            }
                             Term ret_val = !last_result.is<std::monostate>() ? last_result : x_regs[0];
                             if (!call_stack.empty()) {
                                 ip = call_stack.back() - 1;

@@ -1,0 +1,15 @@
+modul Error
+
+# Modul Error Handling Bahasa Garuda (std/error.grd)
+
+fungsi lempar(Pesan) ->
+    Error.lempar(Pesan)
+rampung
+
+fungsi pesan(E) ->
+    Error.pesan(E)
+rampung
+
+fungsi jenis(E) ->
+    Error.jenis(E)
+rampung

@@ -145,7 +145,9 @@ public:
                    name == "HttpServer.stop"  || name == "HttpServer.daftar_route" ||
                    name == "HttpServer.register_route" || name == "HttpServer.daftar_handler" ||
                    name == "HttpServer.register_handler" || name == "HttpServer.jalankan" ||
-                   name == "HttpServer.run" || name == "cetak" || name == "print" || name == "IO.cetak";
+                   name == "HttpServer.run" || name == "cetak" || name == "print" || name == "IO.cetak" ||
+                   name == "Error.lempar" || name == "Error.throw" || name == "Error.pesan" ||
+                   name == "Error.message" || name == "Error.jenis" || name == "Error.kind";
         };
 
         for (std::size_t idx : global_call_patches_) {
@@ -531,6 +533,8 @@ private:
             case AstNodeType::TryCatchExpr: {
                 auto* tc = static_cast<TryCatchNode*>(node.get());
 
+                std::uint16_t out_reg = alloc_reg();
+
                 std::size_t local_try_begin = current_func_->instructions.size();
                 emit(Opcode::OpTryBegin, {Operand{RegType::Literal, 0, Term(0LL)}});
 
@@ -540,6 +544,9 @@ private:
                 }
 
                 emit(Opcode::OpTryEnd, {});
+                if (try_res_reg != 0) {
+                    emit(Opcode::OpMove, {Operand{RegType::X, try_res_reg, Term()}, Operand{RegType::X, out_reg, Term()}});
+                }
 
                 std::size_t local_jump_end = current_func_->instructions.size();
                 emit(Opcode::OpJump, {Operand{RegType::Literal, 0, Term(0LL)}});
@@ -554,13 +561,15 @@ private:
                 for (const auto& stmt : tc->catch_body()) {
                     catch_res_reg = gen_expr(stmt, false);
                 }
+                if (catch_res_reg != 0) {
+                    emit(Opcode::OpMove, {Operand{RegType::X, catch_res_reg, Term()}, Operand{RegType::X, out_reg, Term()}});
+                }
 
                 std::size_t end_ip = current_global_ip();
                 current_func_->instructions[local_jump_end].args[0] =
                     Operand{RegType::Literal, 0, Term(static_cast<std::int64_t>(end_ip))};
 
-                std::uint16_t out_reg = alloc_reg();
-                emit(Opcode::OpMove, {Operand{RegType::X, catch_res_reg != 0 ? catch_res_reg : try_res_reg, Term()}, Operand{RegType::X, out_reg, Term()}});
+                emit(Opcode::OpMove, {Operand{RegType::X, out_reg, Term()}, Operand{RegType::X, 0, Term()}});
                 return out_reg;
             }
             case AstNodeType::TryOperatorExpr: {
