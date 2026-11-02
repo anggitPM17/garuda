@@ -205,8 +205,7 @@ private:
             if (inst.op == compiler::Opcode::OpCall ||
                 inst.op == compiler::Opcode::OpTailCall ||
                 inst.op == compiler::Opcode::OpSpawn ||
-                inst.op == compiler::Opcode::OpTryBegin ||
-                inst.op == compiler::Opcode::OpJump) {
+                inst.op == compiler::Opcode::OpTryBegin) {
                 if (!inst.args.empty() && inst.args[0].type == compiler::RegType::Literal) {
                     if (auto* ip_val = inst.args[0].literal.get_if<std::int64_t>()) {
                         inst.args[0].literal = Term(static_cast<std::int64_t>(offset + *ip_val));
@@ -1018,6 +1017,65 @@ private:
                 last_result = res;
                 return true;
             }
+
+            // System Built-ins: File
+            if (is_mod_fn(fn_name, "File", "baca") || is_mod_fn(fn_name, "File", "read")) {
+                std::string path = clean_str(x_regs[0]);
+                std::string content = Fs::read_file(path);
+                Term res(content);
+                x_regs[0] = res;
+                last_result = res;
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "File", "tulis") || is_mod_fn(fn_name, "File", "write")) {
+                std::string path = clean_str(x_regs[0]);
+                std::string content = clean_str(x_regs[1]);
+                std::ofstream f(path);
+                if (f.is_open()) {
+                    f << content;
+                    f.close();
+                }
+                Term res(Atom{"ok"});
+                x_regs[0] = res;
+                last_result = res;
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "File", "ada") || is_mod_fn(fn_name, "File", "exists")) {
+                std::string path = clean_str(x_regs[0]);
+                bool exists = Fs::exists(path);
+                Term res(Atom{exists ? "true" : "false"});
+                x_regs[0] = res;
+                last_result = res;
+                return true;
+            }
+
+            // System Built-ins: Os
+            if (is_mod_fn(fn_name, "Os", "args")) {
+                std::vector<Term> items;
+                Term res(List{std::make_shared<const std::vector<Term>>(std::move(items))});
+                x_regs[0] = res;
+                last_result = res;
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "Os", "env")) {
+                std::string var_name = clean_str(x_regs[0]);
+                const char* val = std::getenv(var_name.c_str());
+                std::string res_str = val ? val : "";
+                Term res(res_str);
+                x_regs[0] = res;
+                last_result = res;
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "Os", "exit")) {
+                Term res(Atom{"nil"});
+                x_regs[0] = res;
+                last_result = res;
+                return true;
+            }
             return false;
         };
 
@@ -1464,7 +1522,7 @@ private:
                     break;
                 }
                 case Opcode::OpReturn: {
-                    Term ret_val = !last_result.is<std::monostate>() ? last_result : x_regs[0];
+                    Term ret_val = !x_regs[0].is<std::monostate>() ? x_regs[0] : last_result;
                     if (!call_stack.empty()) {
                         ip = call_stack.back() - 1;
                         call_stack.pop_back();

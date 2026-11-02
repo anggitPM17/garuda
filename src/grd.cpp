@@ -106,6 +106,7 @@ int cmd_test() {
         {"Type Checking Minimal", "garuda_type_check_tests.exe", false, ""},
         {"Sum Types & Pattern Matching", "garuda_sum_type_tests.exe", false, ""},
         {"Generic Types Parser", "garuda_generic_tests.exe", false, ""},
+        {"System Modules (File/Os)", "garuda_system_tests.exe", false, ""},
         {"Isolate Binop (KB-001)", "garuda_isolate_binop_tests.exe", false, ""}
     };
 

@@ -1,0 +1,27 @@
+modul System
+
+# Pustaka Standar Sistem & File I/O Bahasa Garuda (std/system.grd)
+
+fungsi baca_file(Path) ->
+    File.baca(Path)
+rampung
+
+fungsi tulis_file(Path, Isi) ->
+    File.tulis(Path, Isi)
+rampung
+
+fungsi ada_file(Path) ->
+    File.ada(Path)
+rampung
+
+fungsi argumen() ->
+    Os.args()
+rampung
+
+fungsi env(Nama) ->
+    Os.env(Nama)
+rampung
+
+fungsi keluar(Kode) ->
+    Os.exit(Kode)
+rampung

@@ -147,7 +147,10 @@ public:
                    name == "HttpServer.register_handler" || name == "HttpServer.jalankan" ||
                    name == "HttpServer.run" || name == "cetak" || name == "print" || name == "IO.cetak" ||
                    name == "Error.lempar" || name == "Error.throw" || name == "Error.pesan" ||
-                   name == "Error.message" || name == "Error.jenis" || name == "Error.kind";
+                   name == "Error.message" || name == "Error.jenis" || name == "Error.kind" ||
+                   name == "File.baca" || name == "File.read" || name == "File.tulis" ||
+                   name == "File.write" || name == "File.ada" || name == "File.exists" ||
+                   name == "Os.args" || name == "Os.env" || name == "Os.exit";
         };
 
         for (std::size_t idx : global_call_patches_) {

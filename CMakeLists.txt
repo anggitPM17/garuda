@@ -149,6 +149,9 @@ target_link_libraries(garuda_sum_type_tests PRIVATE garuda)
 add_executable(garuda_generic_tests tests/test_generic.cpp)
 target_link_libraries(garuda_generic_tests PRIVATE garuda)
 
+add_executable(garuda_system_tests tests/test_system.cpp)
+target_link_libraries(garuda_system_tests PRIVATE garuda)
+
 add_executable(grd src/grd.cpp)
 target_link_libraries(grd PRIVATE garuda)
 
