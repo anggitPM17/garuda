@@ -127,7 +127,9 @@ public:
                    name == "String.rapikan" || name == "String.karakter_ke_int" ||
                    name == "String.int_ke_karakter" ||
                    name == "Waktu.sekarang" || name == "Waktu.now" ||
-                   name == "Waktu.tunggu"   || name == "Waktu.sleep";
+                   name == "Waktu.tunggu"   || name == "Waktu.sleep" ||
+                   name == "Http.ambil"     || name == "Http.get" ||
+                   name == "Http.kirim_json"|| name == "Http.post_json";
         };
 
         for (std::size_t idx : global_call_patches_) {

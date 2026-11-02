@@ -33,6 +33,13 @@ endif()
 
 find_package(Threads REQUIRED)
 
+include(FetchContent)
+FetchContent_Declare(httplib
+    GIT_REPOSITORY https://github.com/yhirose/cpp-httplib
+    GIT_TAG v0.14.1
+    GIT_SHALLOW TRUE)
+FetchContent_MakeAvailable(httplib)
+
 add_library(sqlite3 STATIC src/vendor/sqlite3/sqlite3.c)
 target_include_directories(sqlite3 PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/vendor/sqlite3>
@@ -58,7 +65,7 @@ add_library(Garuda::garuda ALIAS garuda)
 target_include_directories(garuda INTERFACE
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
-target_link_libraries(garuda INTERFACE Threads::Threads sqlite3 mbedtls)
+target_link_libraries(garuda INTERFACE Threads::Threads sqlite3 mbedtls httplib::httplib)
 target_compile_features(garuda INTERFACE cxx_std_20)
 
 add_executable(garuda_ultra src/main.cpp)

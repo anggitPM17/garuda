@@ -1,17 +1,12 @@
 modul Http
 
-fungsi get(Url) ->
-    yen Url != "" ->
-        {:ok, Url}
-    lain ->
-        {:error, :url_cacat}
-    rampung
+# Modul HTTP Client Murni Bahasa Garuda (std/http.grd)
+# Wrapper BIF Http.ambil (GET) dan Http.kirim_json (POST)
+
+fungsi ambil(Url) ->
+    Http.ambil(Url)
 rampung
 
-fungsi post(Url, Isi) ->
-    yen Url != "" ->
-        {:ok, Isi}
-    lain ->
-        {:error, :url_cacat}
-    rampung
+fungsi kirim_json(Url, Data) ->
+    Http.kirim_json(Url, Data)
 rampung

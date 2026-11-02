@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <array>
 #include <chrono>
+#include <httplib.h>
 #include <iostream>
 #include <map>
 #include <memory>
@@ -288,6 +289,49 @@ private:
                 Term res(List{std::make_shared<const std::vector<Term>>(std::move(new_items))});
                 x_regs[0] = res;
                 last_result = res;
+                return true;
+            }
+
+            // Http Built-ins
+            if (is_mod_fn(fn_name, "Http", "ambil") || is_mod_fn(fn_name, "Http", "get")) {
+                std::string url = clean_str(x_regs[0]);
+                std::size_t scheme_pos = url.find("://");
+                std::string host_port = (scheme_pos != std::string::npos) ? url.substr(0, url.find('/', scheme_pos + 3)) : url;
+                std::string path = (scheme_pos != std::string::npos && url.find('/', scheme_pos + 3) != std::string::npos) ? url.substr(url.find('/', scheme_pos + 3)) : "/";
+                httplib::Client cli(host_port);
+                cli.set_connection_timeout(5, 0);
+                cli.set_read_timeout(5, 0);
+                auto res = cli.Get(path.c_str());
+                if (res && res->status == 200) {
+                    Term result(res->body);
+                    x_regs[0] = result;
+                    last_result = result;
+                    return true;
+                }
+                Term err(Atom{"error_http"});
+                x_regs[0] = err;
+                last_result = err;
+                return true;
+            }
+            if (is_mod_fn(fn_name, "Http", "kirim_json") || is_mod_fn(fn_name, "Http", "post_json")) {
+                std::string url = clean_str(x_regs[0]);
+                std::string data = clean_str(x_regs[1]);
+                std::size_t scheme_pos = url.find("://");
+                std::string host_port = (scheme_pos != std::string::npos) ? url.substr(0, url.find('/', scheme_pos + 3)) : url;
+                std::string path = (scheme_pos != std::string::npos && url.find('/', scheme_pos + 3) != std::string::npos) ? url.substr(url.find('/', scheme_pos + 3)) : "/";
+                httplib::Client cli(host_port);
+                cli.set_connection_timeout(5, 0);
+                cli.set_read_timeout(5, 0);
+                auto res = cli.Post(path.c_str(), data, "application/json");
+                if (res && res->status == 200) {
+                    Term result(res->body);
+                    x_regs[0] = result;
+                    last_result = result;
+                    return true;
+                }
+                Term err(Atom{"error_http"});
+                x_regs[0] = err;
+                last_result = err;
                 return true;
             }
 
