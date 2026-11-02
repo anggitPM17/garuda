@@ -1,32 +1,20 @@
 {
-  "name": "garuda-lang",
-  "displayName": "Garuda Language Support",
-  "description": "Rich language support for Garuda Programming Language (.grd)",
-  "version": "1.0.0",
-  "publisher": "garuda-lang",
-  "main": "./extension.js",
+  "name": "garuda",
+  "displayName": "Garuda Language",
+  "description": "Syntax highlighting dan task runner untuk Bahasa Garuda",
+  "version": "0.1.0",
   "engines": {
-    "vscode": "^1.60.0"
+    "vscode": "^1.70.0"
   },
   "categories": [
-    "Programming Languages",
-    "Snippets"
-  ],
-  "activationEvents": [
-    "onLanguage:garuda"
+    "Programming Languages"
   ],
   "contributes": {
     "languages": [
       {
         "id": "garuda",
-        "aliases": [
-          "Garuda",
-          "garuda",
-          "grd"
-        ],
-        "extensions": [
-          ".grd"
-        ],
+        "aliases": ["Garuda", "garuda"],
+        "extensions": [".grd"],
         "configuration": "./language-configuration.json"
       }
     ],
@@ -36,23 +24,6 @@
         "scopeName": "source.garuda",
         "path": "./syntaxes/garuda.tmLanguage.json"
       }
-    ],
-    "snippets": [
-      {
-        "language": "garuda",
-        "path": "./snippets/garuda.json"
-      }
-    ],
-    "configuration": {
-      "type": "object",
-      "title": "Garuda Language Server",
-      "properties": {
-        "garuda.languageServer.executable": {
-          "type": "string",
-          "default": "garuda_lsp_server",
-          "description": "Path to Garuda LSP Server Executable"
-        }
-      }
-    }
+    ]
   }
 }
