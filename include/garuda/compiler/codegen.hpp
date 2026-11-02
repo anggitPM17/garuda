@@ -347,6 +347,35 @@ private:
             }
             case AstNodeType::BinaryExpr: {
                 auto* bin = static_cast<BinaryExprNode*>(node.get());
+                if (bin->op() == "|>") {
+                    if (bin->right_ptr()->type() == AstNodeType::CallExpr) {
+                        auto* call_node = static_cast<CallExprNode*>(bin->right_ptr().get());
+                        std::vector<std::shared_ptr<AstNode>> new_args;
+                        new_args.reserve(call_node->args().size() + 1);
+                        new_args.push_back(bin->left_ptr());
+                        for (const auto& arg : call_node->args()) {
+                            new_args.push_back(arg);
+                        }
+                        auto desugared_call = std::make_shared<CallExprNode>(call_node->name(), std::move(new_args));
+                        return gen_expr(desugared_call, is_tail);
+                    } else if (bin->right_ptr()->type() == AstNodeType::VariableExpr) {
+                        auto* var_node = static_cast<VariableNode*>(bin->right_ptr().get());
+                        std::vector<std::shared_ptr<AstNode>> new_args = {bin->left_ptr()};
+                        auto desugared_call = std::make_shared<CallExprNode>(var_node->name(), std::move(new_args));
+                        return gen_expr(desugared_call, is_tail);
+                    } else {
+                        std::uint16_t fn_val_reg = gen_expr(bin->right_ptr(), false);
+                        std::uint16_t arg_val_reg = gen_expr(bin->left_ptr(), false);
+                        std::uint16_t t_arg = alloc_reg();
+                        emit(Opcode::OpMove, {Operand{RegType::X, arg_val_reg, Term()}, Operand{RegType::X, t_arg, Term()}});
+                        emit(Opcode::OpMove, {Operand{RegType::X, t_arg, Term()}, Operand{RegType::X, 0, Term()}});
+                        emit(Opcode::OpCall, {Operand{RegType::X, fn_val_reg, Term()}});
+                        std::uint16_t ret_reg = alloc_reg();
+                        emit(Opcode::OpMove, {Operand{RegType::X, 0, Term()}, Operand{RegType::X, ret_reg, Term()}});
+                        return ret_reg;
+                    }
+                }
+
                 std::uint16_t left_reg = gen_expr(bin->left_ptr(), false);
                 std::uint16_t save_left_reg = alloc_reg();
                 emit(Opcode::OpMove, {Operand{RegType::X, left_reg, Term()}, Operand{RegType::X, save_left_reg, Term()}});

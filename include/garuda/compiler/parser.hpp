@@ -188,11 +188,21 @@ private:
     }
 
     std::shared_ptr<AstNode> parse_assign() {
-        auto left = parse_send();
+        auto left = parse_pipe();
         if (check(TokenType::Assign)) {
             advance();
             auto right = parse_assign();
             return std::make_shared<AssignmentExprNode>(left, right);
+        }
+        return left;
+    }
+
+    std::shared_ptr<AstNode> parse_pipe() {
+        auto left = parse_send();
+        while (check(TokenType::Pipe)) {
+            advance();
+            auto right = parse_send();
+            left = std::make_shared<BinaryExprNode>("|>", left, right);
         }
         return left;
     }

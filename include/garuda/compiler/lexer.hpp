@@ -215,6 +215,7 @@ public:
             if (c == '<' && peek(1) == '=') { tokens.push_back({TokenType::Lte, "<=", line_, start_col}); pos_ += 2; col_ += 2; continue; }
             if (c == '>' && peek(1) == '=') { tokens.push_back({TokenType::Gte, ">=", line_, start_col}); pos_ += 2; col_ += 2; continue; }
             if (c == '+' && peek(1) == '+') { tokens.push_back({TokenType::Concat, "++", line_, start_col}); pos_ += 2; col_ += 2; continue; }
+            if (c == '|' && peek(1) == '>') { tokens.push_back({TokenType::Pipe, "|>", line_, start_col}); pos_ += 2; col_ += 2; continue; }
 
             // Single-char Symbols & Operators
             if (c == '+') { tokens.push_back({TokenType::Plus, "+", line_, start_col}); pos_++; col_++; continue; }
