@@ -125,7 +125,10 @@ public:
                    name == "String.panjang" || name == "String.length" ||
                    name == "String.potong" || name == "String.pisah" ||
                    name == "String.rapikan" || name == "String.karakter_ke_int" ||
-                   name == "String.int_ke_karakter" ||
+                   name == "String.int_ke_karakter" || name == "String.ganti" ||
+                   name == "String.cari" || name == "String.mulai_dengan" ||
+                   name == "String.akhir_dengan" || name == "String.balik" ||
+                   name == "String.ulang" || name == "String.ke_besar_awal" ||
                    name == "Waktu.sekarang" || name == "Waktu.now" ||
                    name == "Waktu.tunggu"   || name == "Waktu.sleep" ||
                    name == "Http.ambil"     || name == "Http.get" ||

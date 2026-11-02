@@ -2,42 +2,23 @@ modul String
 
 # Modul Manipulasi String Murni Bahasa Garuda (std/string.grd)
 
-fungsi panjang(Teks) ->
-    String.panjang(Teks)
-rampung
+# === Fungsi dasar (10 fungsi) ===
+fungsi panjang(Teks) -> String.panjang(Teks) rampung
+fungsi besar(Teks) -> String.besar(Teks) rampung
+fungsi kecil(Teks) -> String.kecil(Teks) rampung
+fungsi potong(Teks, Mula, Panjang) -> String.potong(Teks, Mula, Panjang) rampung
+fungsi gabung(Teks1, Teks2) -> Teks1 ++ Teks2 rampung
+fungsi pisah(Teks, Pembatas) -> String.pisah(Teks, Pembatas) rampung
+fungsi mengandung(Teks, Sub) -> String.mengandung(Teks, Sub) rampung
+fungsi rapikan(Teks) -> String.rapikan(Teks) rampung
+fungsi karakter_ke_int(Karakter) -> String.karakter_ke_int(Karakter) rampung
+fungsi int_ke_karakter(Kode) -> String.int_ke_karakter(Kode) rampung
 
-fungsi besar(Teks) ->
-    String.besar(Teks)
-rampung
-
-fungsi kecil(Teks) ->
-    String.kecil(Teks)
-rampung
-
-fungsi potong(Teks, Mula, Panjang) ->
-    String.potong(Teks, Mula, Panjang)
-rampung
-
-fungsi gabung(Teks1, Teks2) ->
-    Teks1 ++ Teks2
-rampung
-
-fungsi pisah(Teks, Pembatas) ->
-    String.pisah(Teks, Pembatas)
-rampung
-
-fungsi mengandung(Teks, Sub) ->
-    String.mengandung(Teks, Sub)
-rampung
-
-fungsi rapikan(Teks) ->
-    String.rapikan(Teks)
-rampung
-
-fungsi karakter_ke_int(Karakter) ->
-    String.karakter_ke_int(Karakter)
-rampung
-
-fungsi int_ke_karakter(Kode) ->
-    String.int_ke_karakter(Kode)
-rampung
+# === Fungsi baru (7 fungsi) ===
+fungsi ganti(Teks, Dari, Ke) -> String.ganti(Teks, Dari, Ke) rampung
+fungsi cari(Teks, Sub) -> String.cari(Teks, Sub) rampung
+fungsi mulai_dengan(Teks, Prefix) -> String.mulai_dengan(Teks, Prefix) rampung
+fungsi akhir_dengan(Teks, Suffix) -> String.akhir_dengan(Teks, Suffix) rampung
+fungsi balik(Teks) -> String.balik(Teks) rampung
+fungsi ulang(Teks, N) -> String.ulang(Teks, N) rampung
+fungsi ke_besar_awal(Teks) -> String.ke_besar_awal(Teks) rampung

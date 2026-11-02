@@ -611,6 +611,91 @@ private:
                 last_result = res;
                 return true;
             }
+
+            // String.ganti(S, From, To)
+            if (is_fn(fn_name, "ganti") || is_mod_fn(fn_name, "String", "ganti")) {
+                std::string s = clean_str(x_regs[0]);
+                std::string from = clean_str(x_regs[1]);
+                std::string to = clean_str(x_regs[2]);
+                if (!from.empty()) {
+                    std::size_t pos = 0;
+                    while ((pos = s.find(from, pos)) != std::string::npos) {
+                        s.replace(pos, from.length(), to);
+                        pos += to.length();
+                    }
+                }
+                Term res(s);
+                x_regs[0] = res;
+                last_result = res;
+                return true;
+            }
+
+            // String.cari(S, Sub)
+            if (is_fn(fn_name, "cari") || is_mod_fn(fn_name, "String", "cari")) {
+                std::string s = clean_str(x_regs[0]);
+                std::string sub = clean_str(x_regs[1]);
+                std::size_t pos = s.find(sub);
+                int64_t idx = (pos == std::string::npos) ? -1 : static_cast<int64_t>(pos);
+                Term res(idx);
+                x_regs[0] = res;
+                last_result = res;
+                return true;
+            }
+
+            // String.mulai_dengan(S, Prefix)
+            if (is_fn(fn_name, "mulai_dengan") || is_mod_fn(fn_name, "String", "mulai_dengan")) {
+                std::string s = clean_str(x_regs[0]);
+                std::string prefix = clean_str(x_regs[1]);
+                bool res_b = (s.rfind(prefix, 0) == 0);
+                Term res(Atom{res_b ? "true" : "false"});
+                x_regs[0] = res;
+                last_result = res;
+                return true;
+            }
+
+            // String.akhir_dengan(S, Suffix)
+            if (is_fn(fn_name, "akhir_dengan") || is_mod_fn(fn_name, "String", "akhir_dengan")) {
+                std::string s = clean_str(x_regs[0]);
+                std::string suffix = clean_str(x_regs[1]);
+                bool res_b = (s.size() >= suffix.size() &&
+                              s.compare(s.size() - suffix.size(), suffix.size(), suffix) == 0);
+                Term res(Atom{res_b ? "true" : "false"});
+                x_regs[0] = res;
+                last_result = res;
+                return true;
+            }
+
+            // String.balik(S)
+            if (is_fn(fn_name, "balik") || is_mod_fn(fn_name, "String", "balik")) {
+                std::string s = clean_str(x_regs[0]);
+                std::reverse(s.begin(), s.end());
+                Term res(s);
+                x_regs[0] = res;
+                last_result = res;
+                return true;
+            }
+
+            // String.ulang(S, N)
+            if (is_fn(fn_name, "ulang") || is_mod_fn(fn_name, "String", "ulang")) {
+                std::string s = clean_str(x_regs[0]);
+                int64_t n = x_regs[1].get_if<int64_t>() ? *x_regs[1].get_if<int64_t>() : 0;
+                std::string result;
+                for (int64_t i = 0; i < n; ++i) result += s;
+                Term res(result);
+                x_regs[0] = res;
+                last_result = res;
+                return true;
+            }
+
+            // String.ke_besar_awal(S)
+            if (is_fn(fn_name, "ke_besar_awal") || is_mod_fn(fn_name, "String", "ke_besar_awal")) {
+                std::string s = clean_str(x_regs[0]);
+                if (!s.empty()) s[0] = static_cast<char>(std::toupper(static_cast<unsigned char>(s[0])));
+                Term res(s);
+                x_regs[0] = res;
+                last_result = res;
+                return true;
+            }
             return false;
         };
 

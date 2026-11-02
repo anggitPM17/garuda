@@ -105,8 +105,88 @@ int main() {
     CHECK(s11 != nullptr && *s11 == "a", "Test 11 int_ke_karakter must be 'a'");
     std::cout << "[Test 11] int_ke_karakter(97): '" << *s11 << "' [PASS]\n";
 
+    // Test 12: String.ganti("halo dunia", "dunia", "garuda") == "halo garuda"
+    std::string code12 = "modul Test12\nimpor \"std/string.grd\"\nfungsi utama() -> String.ganti(\"halo dunia\", \"dunia\", \"garuda\")\nrampung";
+    auto res12 = engine.eval(code12);
+    CHECK(res12.has_value(), "Test 12 must return value");
+    auto* s12 = res12->get_if<std::string>();
+    CHECK(s12 != nullptr && *s12 == "halo garuda", "Test 12: String.ganti('halo dunia', 'dunia', 'garuda') == 'halo garuda'");
+    std::cout << "[Test 12] String.ganti: '" << *s12 << "' [PASS]\n";
+
+    // Test 13: String.cari("halo dunia", "dunia") == 5
+    std::string code13 = "modul Test13\nimpor \"std/string.grd\"\nfungsi utama() -> String.cari(\"halo dunia\", \"dunia\")\nrampung";
+    auto res13 = engine.eval(code13);
+    CHECK(res13.has_value(), "Test 13 must return value");
+    auto* i13 = res13->get_if<std::int64_t>();
+    CHECK(i13 != nullptr && *i13 == 5, "Test 13: String.cari('halo dunia', 'dunia') == 5");
+    std::cout << "[Test 13] String.cari: " << *i13 << " [PASS]\n";
+
+    // Test 14: String.cari("halo", "xyz") == -1
+    std::string code14 = "modul Test14\nimpor \"std/string.grd\"\nfungsi utama() -> String.cari(\"halo\", \"xyz\")\nrampung";
+    auto res14 = engine.eval(code14);
+    CHECK(res14.has_value(), "Test 14 must return value");
+    auto* i14 = res14->get_if<std::int64_t>();
+    CHECK(i14 != nullptr && *i14 == -1, "Test 14: String.cari('halo', 'xyz') == -1");
+    std::cout << "[Test 14] String.cari not found: " << *i14 << " [PASS]\n";
+
+    // Test 15: String.mulai_dengan("halo dunia", "halo") == true
+    std::string code15 = "modul Test15\nimpor \"std/string.grd\"\nfungsi utama() -> String.mulai_dengan(\"halo dunia\", \"halo\")\nrampung";
+    auto res15 = engine.eval(code15);
+    CHECK(res15.has_value(), "Test 15 must return value");
+    auto* a15 = res15->get_if<garuda::beam::Atom>();
+    CHECK(a15 != nullptr && (a15->name == "true" || a15->name == "benar"), "Test 15: String.mulai_dengan('halo dunia', 'halo') == true");
+    std::cout << "[Test 15] String.mulai_dengan: true [PASS]\n";
+
+    // Test 16: String.mulai_dengan("halo dunia", "dunia") == false
+    std::string code16 = "modul Test16\nimpor \"std/string.grd\"\nfungsi utama() -> String.mulai_dengan(\"halo dunia\", \"dunia\")\nrampung";
+    auto res16 = engine.eval(code16);
+    CHECK(res16.has_value(), "Test 16 must return value");
+    auto* a16 = res16->get_if<garuda::beam::Atom>();
+    CHECK(a16 != nullptr && (a16->name == "false" || a16->name == "salah"), "Test 16: String.mulai_dengan('halo dunia', 'dunia') == false");
+    std::cout << "[Test 16] String.mulai_dengan false: false [PASS]\n";
+
+    // Test 17: String.akhir_dengan("halo dunia", "dunia") == true
+    std::string code17 = "modul Test17\nimpor \"std/string.grd\"\nfungsi utama() -> String.akhir_dengan(\"halo dunia\", \"dunia\")\nrampung";
+    auto res17 = engine.eval(code17);
+    CHECK(res17.has_value(), "Test 17 must return value");
+    auto* a17 = res17->get_if<garuda::beam::Atom>();
+    CHECK(a17 != nullptr && (a17->name == "true" || a17->name == "benar"), "Test 17: String.akhir_dengan('halo dunia', 'dunia') == true");
+    std::cout << "[Test 17] String.akhir_dengan: true [PASS]\n";
+
+    // Test 18: String.akhir_dengan("halo dunia", "halo") == false
+    std::string code18 = "modul Test18\nimpor \"std/string.grd\"\nfungsi utama() -> String.akhir_dengan(\"halo dunia\", \"halo\")\nrampung";
+    auto res18 = engine.eval(code18);
+    CHECK(res18.has_value(), "Test 18 must return value");
+    auto* a18 = res18->get_if<garuda::beam::Atom>();
+    CHECK(a18 != nullptr && (a18->name == "false" || a18->name == "salah"), "Test 18: String.akhir_dengan('halo dunia', 'halo') == false");
+    std::cout << "[Test 18] String.akhir_dengan false: false [PASS]\n";
+
+    // Test 19: String.balik("halo") == "olah"
+    std::string code19 = "modul Test19\nimpor \"std/string.grd\"\nfungsi utama() -> String.balik(\"halo\")\nrampung";
+    auto res19 = engine.eval(code19);
+    CHECK(res19.has_value(), "Test 19 must return value");
+    auto* s19 = res19->get_if<std::string>();
+    CHECK(s19 != nullptr && *s19 == "olah", "Test 19: String.balik('halo') == 'olah'");
+    std::cout << "[Test 19] String.balik: '" << *s19 << "' [PASS]\n";
+
+    // Test 20: String.ulang("ab", 3) == "ababab"
+    std::string code20 = "modul Test20\nimpor \"std/string.grd\"\nfungsi utama() -> String.ulang(\"ab\", 3)\nrampung";
+    auto res20 = engine.eval(code20);
+    CHECK(res20.has_value(), "Test 20 must return value");
+    auto* s20 = res20->get_if<std::string>();
+    CHECK(s20 != nullptr && *s20 == "ababab", "Test 20: String.ulang('ab', 3) == 'ababab'");
+    std::cout << "[Test 20] String.ulang: '" << *s20 << "' [PASS]\n";
+
+    // Test 21: String.ke_besar_awal("halo") == "Halo"
+    std::string code21 = "modul Test21\nimpor \"std/string.grd\"\nfungsi utama() -> String.ke_besar_awal(\"halo\")\nrampung";
+    auto res21 = engine.eval(code21);
+    CHECK(res21.has_value(), "Test 21 must return value");
+    auto* s21 = res21->get_if<std::string>();
+    CHECK(s21 != nullptr && *s21 == "Halo", "Test 21: String.ke_besar_awal('halo') == 'Halo'");
+    std::cout << "[Test 21] String.ke_besar_awal: '" << *s21 << "' [PASS]\n";
+
     std::cout << "\n========================================\n";
-    std::cout << "ALL 11 G1 & G7 std/string.grd TESTS PASSED 100% WITH REAL CHECK MACRO!\n";
+    std::cout << "ALL 21 G1 & G7 std/string.grd TESTS PASSED 100% WITH REAL CHECK MACRO!\n";
     std::cout << "========================================\n";
     return 0;
 }
