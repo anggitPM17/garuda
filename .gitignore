@@ -30,6 +30,7 @@ Makefile
 # IDE & Editor files
 .vs/
 .vscode/
+!.vscode/tasks.json
 .idea/
 *.user
 *.suo

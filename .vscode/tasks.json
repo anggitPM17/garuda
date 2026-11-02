@@ -1,0 +1,43 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "grd: Run current file",
+      "type": "shell",
+      "command": ".\\build\\Release\\grd.exe",
+      "args": ["run", "${file}"],
+      "group": "build",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "grd: Test all",
+      "type": "shell",
+      "command": ".\\build\\Release\\grd.exe",
+      "args": ["test"],
+      "group": "test",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "grd: New project",
+      "type": "shell",
+      "command": ".\\build\\Release\\grd.exe",
+      "args": ["new", "${input:projectName}"],
+      "problemMatcher": []
+    }
+  ],
+  "inputs": [
+    {
+      "id": "projectName",
+      "type": "promptString",
+      "description": "Nama proyek Garuda baru"
+    }
+  ]
+}
