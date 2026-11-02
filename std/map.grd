@@ -1,23 +1,17 @@
 modul Map
 
-# Modul Manipulasi Peta/Kamus Bahasa Garuda (std/map.grd)
+# Modul Manipulasi Map Bahasa Garuda (std/map.grd)
 
-fungsi baru() ->
-    Map.baru()
-rampung
+# === Fungsi dasar (BIF) ===
+fungsi baru() -> Map.baru() rampung
+fungsi taruh(M, K, V) -> Map.taruh(M, K, V) rampung
+fungsi ambil(M, K) -> Map.ambil(M, K) rampung
+fungsi hapus(M, K) -> Map.hapus(M, K) rampung
+fungsi kunci(M) -> Map.kunci(M) rampung
+fungsi nilai(M) -> Map.nilai(M) rampung
 
-fungsi taruh(Peta, Kunci, Nilai) ->
-    Map.taruh(Peta, Kunci, Nilai)
-rampung
-
-fungsi ambil(Peta, Kunci) ->
-    Map.ambil(Peta, Kunci)
-rampung
-
-fungsi hapus(Peta, Kunci) ->
-    Map.hapus(Peta, Kunci)
-rampung
-
-fungsi panjang(Peta) ->
-    Map.panjang(Peta)
-rampung
+# === Fungsi baru ===
+fungsi ukuran(M) -> Map.ukuran(M) rampung
+fungsi mengandung_kunci(M, K) -> Map.mengandung_kunci(M, K) rampung
+fungsi kosong(M) -> Map.kosong(M) rampung
+fungsi gabung(M1, M2) -> Map.gabung(M1, M2) rampung

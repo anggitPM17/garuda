@@ -1,0 +1,8 @@
+modul Tuple
+
+# Modul Manipulasi Tuple Bahasa Garuda (std/tuple.grd)
+
+fungsi elemen(T, I) -> Tuple.elemen(T, I) rampung
+fungsi panjang(T) -> Tuple.panjang(T) rampung
+fungsi ke_list(T) -> Tuple.ke_list(T) rampung
+fungsi gabung(T1, T2) -> Tuple.gabung(T1, T2) rampung

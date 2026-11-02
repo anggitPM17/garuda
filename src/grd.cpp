@@ -60,6 +60,8 @@ int cmd_test() {
         {"HTTP Client (GET/POST)", "garuda_http_tests.exe", false, ""},
         {"HTTP Server", "garuda_http_server_tests.exe", false, ""},
         {"String Module", "garuda_string_grd_tests.exe", false, ""},
+        {"Map Module", "garuda_map_grd_tests.exe", false, ""},
+        {"Tuple Module", "garuda_tuple_grd_tests.exe", false, ""},
         {"Interpolasi String", "garuda_interp_tests.exe", false, ""},
         {"Guard Clause (nalika)", "garuda_guard_tests.exe", false, ""},
         {"Pipe Operator (|>)", "garuda_pipe_tests.exe", false, ""},

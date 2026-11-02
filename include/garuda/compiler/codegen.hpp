@@ -117,6 +117,14 @@ public:
                    name == "Map.hapus"    || name == "Map.remove" ||
                    name == "Map.kunci"    || name == "Map.keys" ||
                    name == "Map.nilai"    || name == "Map.values" ||
+                   name == "Map.ukuran"   || name == "Map.size" ||
+                   name == "Map.mengandung_kunci" || name == "Map.has_key" ||
+                   name == "Map.kosong"   || name == "Map.empty" ||
+                   name == "Map.gabung"   || name == "Map.merge" ||
+                   name == "Tuple.elemen" || name == "Tuple.get" ||
+                   name == "Tuple.panjang"|| name == "Tuple.length" ||
+                   name == "Tuple.ke_list"|| name == "Tuple.to_list" ||
+                   name == "Tuple.gabung" || name == "Tuple.concat" ||
                    name == "Json.encode_int" || name == "Json.decode_int" ||
                    name == "Json.encode_string" || name == "Json.decode_string" ||
                    name == "Json.encode_bool" || name == "Json.decode_bool" ||

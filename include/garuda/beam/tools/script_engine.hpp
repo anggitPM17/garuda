@@ -506,6 +506,134 @@ private:
                 return true;
             }
 
+            // Map.ukuran(M)
+            if (is_mod_fn(fn_name, "Map", "ukuran") || is_mod_fn(fn_name, "Map", "size")) {
+                int64_t sz = 0;
+                if (auto* tup = x_regs[0].get_if<Tuple>()) {
+                    if (tup->items) sz = static_cast<int64_t>(tup->items->size());
+                }
+                Term res(sz);
+                x_regs[0] = res;
+                last_result = res;
+                return true;
+            }
+
+            // Map.mengandung_kunci(M, K)
+            if (is_mod_fn(fn_name, "Map", "mengandung_kunci") || is_mod_fn(fn_name, "Map", "has_key")) {
+                std::string k = clean_str(x_regs[1]);
+                bool found = false;
+                if (auto* tup = x_regs[0].get_if<Tuple>()) {
+                    if (tup->items) {
+                        for (const auto& item : *tup->items) {
+                            if (auto* entry = item.get_if<Tuple>()) {
+                                if (entry->items && entry->items->size() >= 2) {
+                                    if (clean_str((*entry->items)[0]) == k) { found = true; break; }
+                                }
+                            }
+                        }
+                    }
+                }
+                Term res(Atom{found ? "true" : "false"});
+                x_regs[0] = res;
+                last_result = res;
+                return true;
+            }
+
+            // Map.kosong(M)
+            if (is_mod_fn(fn_name, "Map", "kosong") || is_mod_fn(fn_name, "Map", "empty")) {
+                bool is_empty = true;
+                if (auto* tup = x_regs[0].get_if<Tuple>()) {
+                    if (tup->items && !tup->items->empty()) is_empty = false;
+                }
+                Term res(Atom{is_empty ? "true" : "false"});
+                x_regs[0] = res;
+                last_result = res;
+                return true;
+            }
+
+            // Map.gabung(M1, M2)
+            if (is_mod_fn(fn_name, "Map", "gabung") || is_mod_fn(fn_name, "Map", "merge")) {
+                std::vector<Term> entries;
+                std::set<std::string> seen;
+                auto add_entries = [&](const Term& t) {
+                    if (auto* tup = t.get_if<Tuple>()) {
+                        if (tup->items) {
+                            for (const auto& item : *tup->items) {
+                                if (auto* entry = item.get_if<Tuple>()) {
+                                    if (entry->items && entry->items->size() >= 2) {
+                                        std::string k = clean_str((*entry->items)[0]);
+                                        if (seen.insert(k).second) {
+                                            entries.push_back(item);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                };
+                add_entries(x_regs[1]);
+                add_entries(x_regs[0]);
+                Term res(Tuple{std::make_shared<const std::vector<Term>>(std::move(entries))});
+                x_regs[0] = res;
+                last_result = res;
+                return true;
+            }
+
+            // Tuple Built-ins
+            if (is_mod_fn(fn_name, "Tuple", "elemen") || is_mod_fn(fn_name, "Tuple", "get")) {
+                int64_t idx = x_regs[1].get_if<int64_t>() ? *x_regs[1].get_if<int64_t>() : 0;
+                Term result(Atom{"error_index"});
+                if (auto* tup = x_regs[0].get_if<Tuple>()) {
+                    if (tup->items && idx >= 0 && static_cast<std::size_t>(idx) < tup->items->size()) {
+                        result = (*tup->items)[static_cast<std::size_t>(idx)];
+                    }
+                }
+                x_regs[0] = result;
+                last_result = result;
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "Tuple", "panjang") || is_mod_fn(fn_name, "Tuple", "length")) {
+                int64_t sz = 0;
+                if (auto* tup = x_regs[0].get_if<Tuple>()) {
+                    if (tup->items) sz = static_cast<int64_t>(tup->items->size());
+                }
+                Term res(sz);
+                x_regs[0] = res;
+                last_result = res;
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "Tuple", "ke_list") || is_mod_fn(fn_name, "Tuple", "to_list")) {
+                std::vector<Term> items;
+                if (auto* tup = x_regs[0].get_if<Tuple>()) {
+                    if (tup->items) {
+                        for (const auto& item : *tup->items) items.push_back(item);
+                    }
+                }
+                Term res(List{std::make_shared<const std::vector<Term>>(std::move(items))});
+                x_regs[0] = res;
+                last_result = res;
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "Tuple", "gabung") || is_mod_fn(fn_name, "Tuple", "concat")) {
+                std::vector<Term> items;
+                auto add_items = [&](const Term& t) {
+                    if (auto* tup = t.get_if<Tuple>()) {
+                        if (tup->items) {
+                            for (const auto& item : *tup->items) items.push_back(item);
+                        }
+                    }
+                };
+                add_items(x_regs[0]);
+                add_items(x_regs[1]);
+                Term res(Tuple{std::make_shared<const std::vector<Term>>(std::move(items))});
+                x_regs[0] = res;
+                last_result = res;
+                return true;
+            }
+
             if (is_fn(fn_name, "panjang") || fn_name == "string_length") {
                 std::string s = clean_str(x_regs[0]);
                 Term res(static_cast<std::int64_t>(s.length()));
