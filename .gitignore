@@ -43,6 +43,7 @@ Makefile
 ccache/
 .tmp/
 temp/
+node_modules/
 
 # Databases & Storage
 *.db

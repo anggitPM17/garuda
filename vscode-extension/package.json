@@ -1,0 +1,37 @@
+{
+  "name": "garuda-vscode-lsp",
+  "displayName": "Garuda Language LSP Client",
+  "description": "VS Code LSP Client extension untuk Bahasa Garuda",
+  "version": "0.1.0",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "activationEvents": [
+    "onLanguage:garuda"
+  ],
+  "main": "./out/extension.js",
+  "scripts": {
+    "compile": "tsc -b",
+    "watch": "tsc -b -w"
+  },
+  "contributes": {
+    "languages": [
+      {
+        "id": "garuda",
+        "aliases": ["Garuda", "garuda"],
+        "extensions": [".grd"]
+      }
+    ]
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^18.0.0",
+    "@types/vscode": "^1.80.0",
+    "typescript": "^5.0.4"
+  }
+}
