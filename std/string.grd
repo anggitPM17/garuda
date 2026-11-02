@@ -1,10 +1,43 @@
 modul String
 
-# Modul Manipulasi String Bahasa Garuda (std/string.grd)
-# Catatan: Fungsi panjang(), besar(), kecil(), potong(), pisah(), mengandung(),
-# rapikan(), karakter_ke_int(), dan int_ke_karakter() dieksekusi secara native
-# oleh GVM runtime (ScriptEngine handle_builtin / stdlib/string.hpp).
+# Modul Manipulasi String Murni Bahasa Garuda (std/string.grd)
+
+fungsi panjang(Teks) ->
+    String.panjang(Teks)
+rampung
+
+fungsi besar(Teks) ->
+    String.besar(Teks)
+rampung
+
+fungsi kecil(Teks) ->
+    String.kecil(Teks)
+rampung
+
+fungsi potong(Teks, Mula, Panjang) ->
+    String.potong(Teks, Mula, Panjang)
+rampung
 
 fungsi gabung(Teks1, Teks2) ->
     Teks1 ++ Teks2
+rampung
+
+fungsi pisah(Teks, Pembatas) ->
+    String.pisah(Teks, Pembatas)
+rampung
+
+fungsi mengandung(Teks, Sub) ->
+    String.mengandung(Teks, Sub)
+rampung
+
+fungsi rapikan(Teks) ->
+    String.rapikan(Teks)
+rampung
+
+fungsi karakter_ke_int(Karakter) ->
+    String.karakter_ke_int(Karakter)
+rampung
+
+fungsi int_ke_karakter(Kode) ->
+    String.int_ke_karakter(Kode)
 rampung
