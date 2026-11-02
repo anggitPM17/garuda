@@ -142,7 +142,9 @@ public:
                    name == "Http.ambil"     || name == "Http.get" ||
                    name == "Http.kirim_json"|| name == "Http.post_json" ||
                    name == "HttpServer.mulai" || name == "HttpServer.start" ||
-                   name == "HttpServer.stop";
+                   name == "HttpServer.stop"  || name == "HttpServer.daftar_route" ||
+                   name == "HttpServer.register_route" || name == "HttpServer.jalankan" ||
+                   name == "HttpServer.run";
         };
 
         for (std::size_t idx : global_call_patches_) {

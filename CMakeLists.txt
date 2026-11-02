@@ -122,6 +122,9 @@ target_link_libraries(garuda_matematika_tests PRIVATE garuda)
 add_executable(garuda_http_server_tests tests/test_http_server.cpp)
 target_link_libraries(garuda_http_server_tests PRIVATE garuda)
 
+add_executable(garuda_web_grd_tests tests/test_web_grd.cpp)
+target_link_libraries(garuda_web_grd_tests PRIVATE garuda)
+
 add_executable(grd src/grd.cpp)
 target_link_libraries(grd PRIVATE garuda)
 

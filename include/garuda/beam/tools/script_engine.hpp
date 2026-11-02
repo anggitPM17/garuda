@@ -16,6 +16,7 @@
 #include <iostream>
 #include <map>
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <string>
 #include <thread>
@@ -25,6 +26,14 @@
 
 namespace garuda::beam {
 
+struct DynamicRoute {
+    std::string method;
+    std::string path;
+    std::string handler_name;
+};
+
+static std::vector<DynamicRoute> g_dynamic_routes;
+static std::mutex g_dynamic_routes_mutex;
 static std::shared_ptr<httplib::Server> g_http_server;
 static std::thread g_http_server_thread;
 static std::atomic<bool> g_http_server_running{false};
@@ -343,11 +352,12 @@ private:
             // HttpServer Built-ins
             if (is_mod_fn(fn_name, "HttpServer", "mulai") || is_mod_fn(fn_name, "HttpServer", "start")) {
                 int64_t port = x_regs[0].get_if<int64_t>() ? *x_regs[0].get_if<int64_t>() : 8080;
-                if (g_http_server_running) {
-                    Term err(Atom{"error_server_running"});
-                    x_regs[0] = err;
-                    last_result = err;
-                    return true;
+                if (g_http_server_running && g_http_server) {
+                    g_http_server->stop();
+                    if (g_http_server_thread.joinable()) {
+                        g_http_server_thread.join();
+                    }
+                    g_http_server_running = false;
                 }
                 g_http_server = std::make_shared<httplib::Server>();
                 g_http_server->Get("/hello", [](const httplib::Request&, httplib::Response& res) {
@@ -374,6 +384,58 @@ private:
                     }
                     g_http_server_running = false;
                 }
+                Term res(Atom{"ok"});
+                x_regs[0] = res;
+                last_result = res;
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "HttpServer", "daftar_route") || is_mod_fn(fn_name, "HttpServer", "register_route")) {
+                std::string method = clean_str(x_regs[0]);
+                std::string path = clean_str(x_regs[1]);
+                std::string handler = clean_str(x_regs[2]);
+                {
+                    std::lock_guard<std::mutex> lock(g_dynamic_routes_mutex);
+                    g_dynamic_routes.push_back({method, path, handler});
+                }
+                Term res(Atom{"ok"});
+                x_regs[0] = res;
+                last_result = res;
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "HttpServer", "jalankan") || is_mod_fn(fn_name, "HttpServer", "run")) {
+                int64_t port = x_regs[0].get_if<int64_t>() ? *x_regs[0].get_if<int64_t>() : 8080;
+                if (g_http_server_running && g_http_server) {
+                    g_http_server->stop();
+                    if (g_http_server_thread.joinable()) {
+                        g_http_server_thread.join();
+                    }
+                    g_http_server_running = false;
+                }
+                g_http_server = std::make_shared<httplib::Server>();
+
+                {
+                    std::lock_guard<std::mutex> lock(g_dynamic_routes_mutex);
+                    for (const auto& r : g_dynamic_routes) {
+                        std::string h_name = r.handler_name;
+                        if (r.method == "GET" || r.method == "get") {
+                            g_http_server->Get(r.path.c_str(), [h_name](const httplib::Request&, httplib::Response& res) {
+                                res.set_content("Route GET -> " + h_name, "text/plain");
+                            });
+                        } else if (r.method == "POST" || r.method == "post") {
+                            g_http_server->Post(r.path.c_str(), [h_name](const httplib::Request& req, httplib::Response& res) {
+                                res.set_content("Route POST " + req.body + " -> " + h_name, "text/plain");
+                            });
+                        }
+                    }
+                }
+
+                g_http_server_running = true;
+                g_http_server_thread = std::thread([port]() {
+                    g_http_server->listen("127.0.0.1", static_cast<int>(port));
+                });
+                std::this_thread::sleep_for(std::chrono::milliseconds(300));
                 Term res(Atom{"ok"});
                 x_regs[0] = res;
                 last_result = res;

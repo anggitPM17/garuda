@@ -1,29 +1,24 @@
 modul Web
 
-fungsi router() ->
-    :router_ok
+# Modul Web Framework Bahasa Garuda (std/web.grd)
+# Lapisan routing dinamis di atas HttpServer
+
+# Daftarkan route (method, path, handler_name)
+fungsi daftar_route(Method, Path, Handler) ->
+    HttpServer.daftar_route(Method, Path, Handler)
 rampung
 
-fungsi get(Router, Path, Handler) ->
-    yen Path != "" ->
-        :ok
-    lain ->
-        {:error, :path_salah}
-    rampung
+# Jalankan server dengan route dinamis yang sudah didaftarkan
+fungsi jalankan(Port) ->
+    HttpServer.jalankan(Port)
 rampung
 
-fungsi post(Router, Path, Handler) ->
-    yen Path != "" ->
-        :ok
-    lain ->
-        {:error, :path_salah}
-    rampung
+# Shorthand untuk route GET
+fungsi get(Path, Handler) ->
+    daftar_route("GET", Path, Handler)
 rampung
 
-fungsi start(Router, Port) ->
-    yen Port > 0 ->
-        :ok
-    lain ->
-        {:error, :port_salah}
-    rampung
+# Shorthand untuk route POST
+fungsi post(Path, Handler) ->
+    daftar_route("POST", Path, Handler)
 rampung
