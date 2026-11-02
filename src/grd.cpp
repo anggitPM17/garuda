@@ -2,10 +2,12 @@
 #include "garuda/beam/tools/script_engine.hpp"
 #include "garuda/beam/io/filesystem.hpp"
 
+#include <cctype>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -16,6 +18,7 @@ void print_help() {
     std::cout << "Usage: grd <perintah> [argumen]\n\n";
     std::cout << "Perintah:\n";
     std::cout << "  run <file.grd>     Jalankan skrip Garuda\n";
+    std::cout << "  repl               REPL interaktif (Read-Eval-Print Loop)\n";
     std::cout << "  test               Jalankan semua test suite\n";
     std::cout << "  new <nama>         Buat proyek Garuda baru\n";
     std::cout << "  --help, -h         Tampilkan bantuan ini\n";
@@ -148,6 +151,121 @@ int cmd_new(const std::string& name) {
     }
 }
 
+int count_open_blocks(const std::string& src) {
+    int opens = 0;
+    int closes = 0;
+    auto count_word = [&](const std::string& word) {
+        int n = 0;
+        size_t pos = 0;
+        while ((pos = src.find(word, pos)) != std::string::npos) {
+            bool left_ok = (pos == 0) || !std::isalnum(static_cast<unsigned char>(src[pos - 1]));
+            bool right_ok = (pos + word.length() >= src.length()) || !std::isalnum(static_cast<unsigned char>(src[pos + word.length()]));
+            if (left_ok && right_ok) n++;
+            pos += word.length();
+        }
+        return n;
+    };
+    opens += count_word("fungsi");
+    opens += count_word("yen");
+    opens += count_word("tinjau");
+    opens += count_word("cakra");
+    opens += count_word("tampa");
+    closes += count_word("rampung");
+    return opens - closes;
+}
+
+int cmd_repl() {
+    garuda::beam::ScriptEngine engine;
+    std::vector<std::string> history;
+    std::string line;
+
+    std::cout << "Garuda REPL v0.1.0 (v67.0.0)\n";
+    std::cout << "Ketik :help untuk bantuan, :quit untuk keluar.\n\n";
+
+    while (true) {
+        std::cout << "garuda> ";
+        if (!std::getline(std::cin, line)) break;
+
+        size_t start = line.find_first_not_of(" \t\r\n");
+        if (start == std::string::npos) continue;
+        size_t end = line.find_last_not_of(" \t\r\n");
+        line = line.substr(start, end - start + 1);
+
+        if (line == ":quit" || line == ":q") {
+            std::cout << "Sampai jumpa!\n";
+            break;
+        }
+        if (line == ":help" || line == ":h") {
+            std::cout << "Perintah khusus:\n";
+            std::cout << "  :quit, :q     Keluar dari REPL\n";
+            std::cout << "  :help, :h     Tampilkan bantuan ini\n";
+            std::cout << "  :reset        Reset state engine\n";
+            std::cout << "  :history      Tampilkan history input\n";
+            std::cout << "  :load <file>  Load file .grd\n";
+            std::cout << "\nInput Garuda biasa akan dievaluasi.\n";
+            std::cout << "Multi-line: akhiri dengan 'rampung' untuk menutup blok.\n";
+            continue;
+        }
+        if (line == ":reset") {
+            engine = garuda::beam::ScriptEngine();
+            std::cout << "Engine di-reset.\n";
+            continue;
+        }
+        if (line == ":history") {
+            for (size_t i = 0; i < history.size(); ++i) {
+                std::cout << "  " << (i + 1) << ": " << history[i] << "\n";
+            }
+            continue;
+        }
+        if (line.rfind(":load ", 0) == 0) {
+            std::string path = line.substr(6);
+            size_t s = path.find_first_not_of(" \t");
+            if (s != std::string::npos) path = path.substr(s);
+            std::ifstream f(path);
+            if (!f.is_open()) {
+                std::cerr << "Error: tidak bisa buka file '" << path << "'\n";
+                continue;
+            }
+            std::stringstream ss;
+            ss << f.rdbuf();
+            std::string src = ss.str();
+            auto res = engine.eval(src);
+            if (res) {
+                std::cout << "=> " << garuda::beam::to_string(*res) << "\n";
+            } else {
+                std::cout << "=> (tidak ada hasil)\n";
+            }
+            continue;
+        }
+
+        history.push_back(line);
+
+        std::string full_input = line;
+        int open_blocks = count_open_blocks(full_input);
+        while (open_blocks > 0) {
+            std::cout << "     > ";
+            std::string next;
+            if (!std::getline(std::cin, next)) break;
+            full_input += "\n" + next;
+            history.push_back(next);
+            open_blocks = count_open_blocks(full_input);
+        }
+
+        std::string code_to_eval = full_input;
+        if (code_to_eval.find("modul ") == std::string::npos) {
+            code_to_eval = "modul ReplScript\nfungsi utama() -> " + full_input + "\nrampung";
+        }
+
+        auto res = engine.eval(code_to_eval);
+        if (res) {
+            std::cout << "=> " << garuda::beam::to_string(*res) << "\n";
+        } else {
+            std::cout << "=> (tidak ada hasil)\n";
+        }
+    }
+    return 0;
+}
+
 int main(int argc, char** argv) {
     if (argc < 2) {
         print_help();
@@ -162,6 +280,9 @@ int main(int argc, char** argv) {
     if (cmd == "--version" || cmd == "-v") {
         print_version();
         return 0;
+    }
+    if (cmd == "repl") {
+        return cmd_repl();
     }
     if (cmd == "run") {
         if (argc < 3) {

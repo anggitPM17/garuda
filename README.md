@@ -187,10 +187,25 @@ rampung
 
 ### CLI Tooling (`grd`)
 - `grd run <file.grd>` — Mengeksekusi skrip Garuda.
+- `grd repl` — Shell REPL interaktif (*Read-Eval-Print Loop*).
 - `grd test` — Jalankan 14 suite pengujian C++ secara otomatis.
 - `grd new <nama>` — Membuat struktur proyek Garuda baru.
 - `grd --help` — Menampilkan informasi bantuan.
 - `grd --version` — Menampilkan versi runtime.
+
+### REPL Interaktif (`grd repl`)
+
+```powershell
+.\build\Release\grd.exe repl
+garuda> 1 + 2
+=> 3
+garuda> List.peta([1, 2, 3], fungsi(X) -> X * 2 rampung)
+=> [2, 4, 6]
+garuda> Map.ambil(Map.taruh(Map.baru(), "a", 100), "a")
+=> 100
+garuda> :quit
+Sampai jumpa!
+```
 
 ### LSP & VS Code Extension
 Lihat panduan lengkap pada [docs/lsp-vscode.md](docs/lsp-vscode.md) untuk:
