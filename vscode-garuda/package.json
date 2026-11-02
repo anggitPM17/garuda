@@ -24,6 +24,12 @@
         "scopeName": "source.garuda",
         "path": "./syntaxes/garuda.tmLanguage.json"
       }
+    ],
+    "snippets": [
+      {
+        "language": "garuda",
+        "path": "./snippets/garuda.json"
+      }
     ]
   }
 }
