@@ -68,7 +68,7 @@ int cmd_test() {
         {"Pipe Operator (|>)", "garuda_pipe_tests.exe", false, ""},
         {"Actor Concurrency", "garuda_actor_tests.exe", false, ""},
         {"JSON Encoder/Decoder", "garuda_json_grd_tests.exe", false, ""},
-        {"Isolate Binop (KB-001)", "garuda_isolate_binop_tests.exe", true, "KB-001: peta/saring + lambda hang (deferred)"}
+        {"Isolate Binop (KB-001)", "garuda_isolate_binop_tests.exe", false, ""}
     };
 
     std::cout << "=======================================================\n";
