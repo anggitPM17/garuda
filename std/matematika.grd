@@ -1,0 +1,41 @@
+modul Matematika
+
+# Modul Operasi Matematika Murni Bahasa Garuda (std/matematika.grd)
+
+fungsi pangkat(Base, Exp) nalika Exp >= 0 ->
+    yen Exp == 0 -> 1
+    lain -> Base * pangkat(Base, Exp - 1)
+    rampung
+rampung
+
+fungsi abs(X) ->
+    yen X < 0 -> -X
+    lain -> X
+    rampung
+rampung
+
+fungsi min(A, B) ->
+    yen A < B -> A
+    lain -> B
+    rampung
+rampung
+
+fungsi max(A, B) ->
+    yen A > B -> A
+    lain -> B
+    rampung
+rampung
+
+fungsi akar_loop(X, Acc) ->
+    yen Acc * Acc > X -> Acc - 1
+    lain -> akar_loop(X, Acc + 1)
+    rampung
+rampung
+
+fungsi akar(X) nalika X >= 0 ->
+    akar_loop(X, 0)
+rampung
+
+fungsi pembulatan(X) ->
+    X
+rampung
