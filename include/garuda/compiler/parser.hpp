@@ -297,6 +297,55 @@ private:
         return parse_primary();
     }
 
+    std::shared_ptr<AstNode> parse_string_interpolation(const std::string& str) {
+        std::size_t i = 0;
+        std::shared_ptr<AstNode> result = nullptr;
+
+        while (i < str.length()) {
+            std::size_t start = str.find("#{", i);
+            if (start == std::string::npos) {
+                std::string literal_part = str.substr(i);
+                if (!literal_part.empty()) {
+                    auto lit_node = std::make_shared<LiteralNode>(Term(literal_part));
+                    result = result ? std::make_shared<BinaryExprNode>("++", result, lit_node) : std::static_pointer_cast<AstNode>(lit_node);
+                }
+                break;
+            }
+
+            std::string literal_part = str.substr(i, start - i);
+            if (!literal_part.empty()) {
+                auto lit_node = std::make_shared<LiteralNode>(Term(literal_part));
+                result = result ? std::make_shared<BinaryExprNode>("++", result, lit_node) : std::static_pointer_cast<AstNode>(lit_node);
+            }
+
+            std::size_t end = str.find('}', start + 2);
+            if (end == std::string::npos) {
+                std::string literal_part = str.substr(start);
+                auto lit_node = std::make_shared<LiteralNode>(Term(literal_part));
+                result = result ? std::make_shared<BinaryExprNode>("++", result, lit_node) : std::static_pointer_cast<AstNode>(lit_node);
+                break;
+            }
+
+            std::string expr_str = str.substr(start + 2, end - (start + 2));
+            Lexer expr_lexer(expr_str);
+            auto expr_tokens = expr_lexer.tokenize();
+            if (!expr_tokens.empty()) {
+                Parser expr_parser(expr_tokens);
+                auto expr_ast = expr_parser.parse_expr();
+                if (expr_ast) {
+                    result = result ? std::make_shared<BinaryExprNode>("++", result, expr_ast) : expr_ast;
+                }
+            }
+
+            i = end + 1;
+        }
+
+        if (!result) {
+            result = std::make_shared<LiteralNode>(Term(""));
+        }
+        return result;
+    }
+
     std::shared_ptr<AstNode> parse_primary() {
         if (check(TokenType::Number)) {
             std::int64_t v = std::stoll(advance().text);
@@ -307,7 +356,11 @@ private:
             return std::make_shared<LiteralNode>(Term(v));
         }
         if (check(TokenType::String)) {
-            return std::make_shared<LiteralNode>(Term(advance().text));
+            std::string str_val = advance().text;
+            if (str_val.find("#{") != std::string::npos) {
+                return parse_string_interpolation(str_val);
+            }
+            return std::make_shared<LiteralNode>(Term(str_val));
         }
         if (check(TokenType::Atom)) {
             return std::make_shared<AtomExprNode>(advance().text);
