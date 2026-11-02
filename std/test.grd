@@ -1,0 +1,51 @@
+modul Test
+
+# Modul Testing Framework Bahasa Garuda (std/test.grd)
+
+fungsi sama(Actual, Expected, Nama) ->
+    yen Actual == Expected ->
+        cetak("[PASS] " ++ Nama)
+        :ok
+    lain ->
+        cetak("[FAIL] " ++ Nama)
+        :error
+    rampung
+rampung
+
+fungsi harus_benar(Kondisi, Nama) ->
+    yen Kondisi == benar ->
+        cetak("[PASS] " ++ Nama)
+        :ok
+    lain ->
+        cetak("[FAIL] " ++ Nama)
+        :error
+    rampung
+rampung
+
+fungsi harus_salah(Kondisi, Nama) ->
+    yen Kondisi == salah ->
+        cetak("[PASS] " ++ Nama)
+        :ok
+    lain ->
+        cetak("[FAIL] " ++ Nama)
+        :error
+    rampung
+rampung
+
+fungsi gagal(Nama) ->
+    cetak("[FAIL] " ++ Nama)
+    :error
+rampung
+
+fungsi ringkasan(Lulus, Gagal) ->
+    cetak("Ringkasan Test: " ++ Lulus ++ " PASS | " ++ Gagal ++ " FAIL")
+    yen Gagal == 0 ->
+        :ok
+    lain ->
+        :error
+    rampung
+rampung
+
+fungsi utama() ->
+    :ok
+rampung

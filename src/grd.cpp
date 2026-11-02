@@ -17,12 +17,36 @@ void print_help() {
     std::cout << "Garuda CLI Tooling (grd) v0.1.0\n";
     std::cout << "Usage: grd <perintah> [argumen]\n\n";
     std::cout << "Perintah:\n";
-    std::cout << "  run <file.grd>     Jalankan skrip Garuda\n";
-    std::cout << "  repl               REPL interaktif (Read-Eval-Print Loop)\n";
-    std::cout << "  test               Jalankan semua test suite\n";
-    std::cout << "  new <nama>         Buat proyek Garuda baru\n";
-    std::cout << "  --help, -h         Tampilkan bantuan ini\n";
-    std::cout << "  --version, -v      Tampilkan versi\n";
+    std::cout << "  run <file.grd>       Jalankan skrip Garuda\n";
+    std::cout << "  repl                 REPL interaktif (Read-Eval-Print Loop)\n";
+    std::cout << "  test                 Jalankan semua test suite C++\n";
+    std::cout << "  test-file <file.grd> Jalankan berkas pengujian Garuda\n";
+    std::cout << "  new <nama>           Buat proyek Garuda baru\n";
+    std::cout << "  --help, -h           Tampilkan bantuan ini\n";
+    std::cout << "  --version, -v        Tampilkan versi\n";
+}
+
+int cmd_test_file(const std::string& path) {
+    if (!fs::exists(path)) {
+        std::cerr << "Error: File '" << path << "' tidak ditemukan!\n";
+        return 1;
+    }
+    std::string source = garuda::beam::Fs::read_file(path);
+    if (source.empty()) {
+        std::cerr << "Error: File '" << path << "' kosong atau gagal dibaca!\n";
+        return 1;
+    }
+    garuda::beam::ScriptEngine engine;
+    auto res = engine.eval(source);
+    if (!res) {
+        std::cerr << "Error: Gagal mengevaluasi test file '" << path << "'!\n";
+        return 1;
+    }
+    std::string result_str = garuda::beam::to_string(*res);
+    if (result_str == "error") {
+        return 1;
+    }
+    return 0;
 }
 
 void print_version() {
@@ -66,6 +90,7 @@ int cmd_test() {
         {"String Module", "garuda_string_grd_tests.exe", false, ""},
         {"Map Module", "garuda_map_grd_tests.exe", false, ""},
         {"Tuple Module", "garuda_tuple_grd_tests.exe", false, ""},
+        {"Testing Framework", "garuda_test_framework_tests.exe", false, ""},
         {"Interpolasi String", "garuda_interp_tests.exe", false, ""},
         {"Guard Clause (nalika)", "garuda_guard_tests.exe", false, ""},
         {"Pipe Operator (|>)", "garuda_pipe_tests.exe", false, ""},
@@ -293,6 +318,13 @@ int main(int argc, char** argv) {
     }
     if (cmd == "test") {
         return cmd_test();
+    }
+    if (cmd == "test-file") {
+        if (argc < 3) {
+            std::cerr << "Error: Perintah 'grd test-file' memerlukan argumen file .grd\n";
+            return 1;
+        }
+        return cmd_test_file(argv[2]);
     }
     if (cmd == "new") {
         if (argc < 3) {

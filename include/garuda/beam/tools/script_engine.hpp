@@ -249,6 +249,16 @@ private:
                        name.rfind(mod + "." + base + "/", 0) == 0;
             };
 
+            // I/O Built-ins
+            if (is_fn(fn_name, "cetak") || is_fn(fn_name, "print") || is_mod_fn(fn_name, "IO", "cetak")) {
+                std::string s = clean_str(x_regs[0]);
+                std::cout << s << std::endl;
+                Term res(s);
+                x_regs[0] = res;
+                last_result = res;
+                return true;
+            }
+
             auto get_seq_size = [](const Term& t) -> int64_t {
                 if (auto* lst = t.get_if<List>()) {
                     return lst->items ? static_cast<int64_t>(lst->items->size()) : 0;

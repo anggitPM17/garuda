@@ -131,6 +131,9 @@ target_link_libraries(garuda_web_handler_tests PRIVATE garuda)
 add_executable(garuda_benchmark_runner benchmarks/benchmark_runner.cpp)
 target_link_libraries(garuda_benchmark_runner PRIVATE garuda)
 
+add_executable(garuda_test_framework_tests tests/test_test_framework.cpp)
+target_link_libraries(garuda_test_framework_tests PRIVATE garuda)
+
 add_executable(grd src/grd.cpp)
 target_link_libraries(grd PRIVATE garuda)
 

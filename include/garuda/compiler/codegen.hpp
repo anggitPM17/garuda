@@ -145,7 +145,7 @@ public:
                    name == "HttpServer.stop"  || name == "HttpServer.daftar_route" ||
                    name == "HttpServer.register_route" || name == "HttpServer.daftar_handler" ||
                    name == "HttpServer.register_handler" || name == "HttpServer.jalankan" ||
-                   name == "HttpServer.run";
+                   name == "HttpServer.run" || name == "cetak" || name == "print" || name == "IO.cetak";
         };
 
         for (std::size_t idx : global_call_patches_) {

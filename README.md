@@ -189,9 +189,32 @@ rampung
 - `grd run <file.grd>` — Mengeksekusi skrip Garuda.
 - `grd repl` — Shell REPL interaktif (*Read-Eval-Print Loop*).
 - `grd test` — Jalankan 14 suite pengujian C++ secara otomatis.
+- `grd test-file <file.grd>` — Jalankan berkas pengujian Bahasa Garuda (`std/test.grd`).
 - `grd new <nama>` — Membuat struktur proyek Garuda baru.
 - `grd --help` — Menampilkan informasi bantuan.
 - `grd --version` — Menampilkan versi runtime.
+
+### Testing Framework (`std/test.grd`)
+
+```garuda
+modul TestMatematika
+impor "std/test.grd"
+
+fungsi utama() ->
+    H1 = Test.sama(1 + 1, 2, "penjumlahan 1+1")
+    H2 = Test.harus_benar(2 * 3 == 6, "perkalian 2*3")
+    Test.ringkasan(2, 0)
+rampung
+```
+
+Eksekusi pengujian berkas dengan `grd test-file`:
+```powershell
+.\build\Release\grd.exe test-file test_matematika.grd
+# Output:
+# [PASS] penjumlahan 1+1
+# [PASS] perkalian 2*3
+# Ringkasan Test: 2 PASS | 0 FAIL
+```
 
 ### REPL Interaktif (`grd repl`)
 
