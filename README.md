@@ -203,7 +203,7 @@ impor "std/test.grd"
 fungsi utama() ->
     H1 = Test.sama(1 + 1, 2, "penjumlahan 1+1")
     H2 = Test.harus_benar(2 * 3 == 6, "perkalian 2*3")
-    Test.ringkasan(2, 0)
+    Test.ringkasan([H1, H2])
 rampung
 ```
 

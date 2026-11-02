@@ -1,4 +1,5 @@
 modul Test
+impor "std/list.grd"
 
 # Modul Testing Framework Bahasa Garuda (std/test.grd)
 
@@ -37,7 +38,11 @@ fungsi gagal(Nama) ->
     :error
 rampung
 
-fungsi ringkasan(Lulus, Gagal) ->
+# Test.ringkasan(HasilList) — otomatis menghitung Lulus & Gagal dari List
+fungsi ringkasan(Hasil) ->
+    Jumlah = List.panjang(Hasil)
+    Lulus = List.panjang(List.saring(Hasil, fungsi(X) -> X == :ok rampung))
+    Gagal = Jumlah - Lulus
     cetak("Ringkasan Test: " ++ Lulus ++ " PASS | " ++ Gagal ++ " FAIL")
     yen Gagal == 0 ->
         :ok

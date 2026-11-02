@@ -42,8 +42,13 @@ int cmd_test_file(const std::string& path) {
         std::cerr << "Error: Gagal mengevaluasi test file '" << path << "'!\n";
         return 1;
     }
+    if (auto* atom = res->get_if<garuda::beam::Atom>()) {
+        if (atom->name == "error") {
+            return 1;
+        }
+    }
     std::string result_str = garuda::beam::to_string(*res);
-    if (result_str == "error") {
+    if (result_str == "error" || result_str == ":error") {
         return 1;
     }
     return 0;

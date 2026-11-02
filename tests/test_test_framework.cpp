@@ -67,17 +67,17 @@ int main() {
     bool is_ok4 = res4 && garuda::beam::to_string(*res4) == "ok";
     CHECK(is_ok4, "Test TF4: Test.harus_salah(salah) == :ok");
 
-    // Test TF5: Test.ringkasan(3, 0) -> :ok
+    // Test TF5: Test.ringkasan([:ok, :ok, :ok]) -> :ok
     std::string code5 = R"(
         modul TestTF5
         impor "std/test.grd"
         fungsi utama() ->
-            Test.ringkasan(3, 0)
+            Test.ringkasan([:ok, :ok, :ok])
         rampung
     )";
     auto res5 = engine.eval(code5);
     bool is_ok5 = res5 && garuda::beam::to_string(*res5) == "ok";
-    CHECK(is_ok5, "Test TF5: Test.ringkasan(3, 0) == :ok");
+    CHECK(is_ok5, "Test TF5: Test.ringkasan([:ok, :ok, :ok]) == :ok");
 
     std::cout << "\n🎉 ALL TESTING FRAMEWORK TESTS PASSED PERFECTLY!\n";
     return 0;
