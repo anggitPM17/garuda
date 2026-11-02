@@ -109,6 +109,9 @@ target_link_libraries(garuda_waktu_tests PRIVATE garuda)
 add_executable(garuda_matematika_tests tests/test_matematika.cpp)
 target_link_libraries(garuda_matematika_tests PRIVATE garuda)
 
+add_executable(grd src/grd.cpp)
+target_link_libraries(grd PRIVATE garuda)
+
 add_executable(grdc src/grdc.cpp)
 target_link_libraries(grdc PRIVATE garuda)
 
