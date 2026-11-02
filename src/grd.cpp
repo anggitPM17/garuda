@@ -103,6 +103,7 @@ int cmd_test() {
         {"JSON Encoder/Decoder", "garuda_json_grd_tests.exe", false, ""},
         {"Error Handling (coba/tangkap)", "garuda_error_tests.exe", false, ""},
         {"Type Annotation Parser", "garuda_type_annotation_tests.exe", false, ""},
+        {"Type Checking Minimal", "garuda_type_check_tests.exe", false, ""},
         {"Isolate Binop (KB-001)", "garuda_isolate_binop_tests.exe", false, ""}
     };
 

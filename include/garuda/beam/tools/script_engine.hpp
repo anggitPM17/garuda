@@ -1283,6 +1283,11 @@ private:
                         Term val_a = (a.type == RegType::Literal) ? a.literal : x_regs[a.index % 256];
                         Term val_b = (b.type == RegType::Literal) ? b.literal : x_regs[b.index % 256];
 
+                        if (val_a.get_if<std::string>() || val_b.get_if<std::string>()) {
+                            if (raise_error(Term(Atom{"error_type"}), "Type error: cannot add string with +")) continue;
+                            return std::nullopt;
+                        }
+
                         if (val_a.get_if<std::int64_t>() && val_b.get_if<std::int64_t>()) {
                             Term res(*val_a.get_if<std::int64_t>() + *val_b.get_if<std::int64_t>());
                             x_regs[dst.index % 256] = res;
@@ -1293,6 +1298,9 @@ private:
                             Term res(da + db);
                             x_regs[dst.index % 256] = res;
                             last_result = res;
+                        } else {
+                            if (raise_error(Term(Atom{"error_type"}), "Type mismatch in OpAdd")) continue;
+                            return std::nullopt;
                         }
                     }
                     break;
