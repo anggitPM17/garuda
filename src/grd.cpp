@@ -59,6 +59,7 @@ int cmd_test() {
         {"Matematika", "garuda_matematika_tests.exe", false, ""},
         {"HTTP Client (GET/POST)", "garuda_http_tests.exe", false, ""},
         {"HTTP Server", "garuda_http_server_tests.exe", false, ""},
+        {"Web Handler Garuda", "garuda_web_handler_tests.exe", false, ""},
         {"String Module", "garuda_string_grd_tests.exe", false, ""},
         {"Map Module", "garuda_map_grd_tests.exe", false, ""},
         {"Tuple Module", "garuda_tuple_grd_tests.exe", false, ""},

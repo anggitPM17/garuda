@@ -1,7 +1,12 @@
 modul Web
 
 # Modul Web Framework Bahasa Garuda (std/web.grd)
-# Lapisan routing dinamis di atas HttpServer
+# Lapisan routing dinamis & handler Garuda di atas HttpServer
+
+# Daftarkan kode Garuda sebagai handler
+fungsi daftar_handler(Nama, Kode) ->
+    HttpServer.daftar_handler(Nama, Kode)
+rampung
 
 # Daftarkan route (method, path, handler_name)
 fungsi daftar_route(Method, Path, Handler) ->
@@ -15,10 +20,10 @@ rampung
 
 # Shorthand untuk route GET
 fungsi get(Path, Handler) ->
-    daftar_route("GET", Path, Handler)
+    HttpServer.daftar_route("GET", Path, Handler)
 rampung
 
 # Shorthand untuk route POST
 fungsi post(Path, Handler) ->
-    daftar_route("POST", Path, Handler)
+    HttpServer.daftar_route("POST", Path, Handler)
 rampung

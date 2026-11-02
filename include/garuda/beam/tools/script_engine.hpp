@@ -34,6 +34,9 @@ struct DynamicRoute {
 
 static std::vector<DynamicRoute> g_dynamic_routes;
 static std::mutex g_dynamic_routes_mutex;
+static std::map<std::string, std::string> g_handler_code;
+static std::mutex g_handler_mutex;
+static std::mutex g_engine_mutex;
 static std::shared_ptr<httplib::Server> g_http_server;
 static std::thread g_http_server_thread;
 static std::atomic<bool> g_http_server_running{false};
@@ -390,6 +393,19 @@ private:
                 return true;
             }
 
+            if (is_mod_fn(fn_name, "HttpServer", "daftar_handler") || is_mod_fn(fn_name, "HttpServer", "register_handler")) {
+                std::string nama = clean_str(x_regs[0]);
+                std::string kode = clean_str(x_regs[1]);
+                {
+                    std::lock_guard<std::mutex> lock(g_handler_mutex);
+                    g_handler_code[nama] = kode;
+                }
+                Term res(Atom{"ok"});
+                x_regs[0] = res;
+                last_result = res;
+                return true;
+            }
+
             if (is_mod_fn(fn_name, "HttpServer", "daftar_route") || is_mod_fn(fn_name, "HttpServer", "register_route")) {
                 std::string method = clean_str(x_regs[0]);
                 std::string path = clean_str(x_regs[1]);
@@ -421,11 +437,59 @@ private:
                         std::string h_name = r.handler_name;
                         if (r.method == "GET" || r.method == "get") {
                             g_http_server->Get(r.path.c_str(), [h_name](const httplib::Request&, httplib::Response& res) {
-                                res.set_content("Route GET -> " + h_name, "text/plain");
+                                std::string code_to_run = "";
+                                {
+                                    std::lock_guard<std::mutex> lock(g_handler_mutex);
+                                    if (g_handler_code.count(h_name)) {
+                                        code_to_run = g_handler_code[h_name];
+                                    }
+                                }
+                                if (!code_to_run.empty()) {
+                                    std::lock_guard<std::mutex> lock(g_engine_mutex);
+                                    ScriptEngine h_engine;
+                                    auto eval_res = h_engine.eval(code_to_run);
+                                    if (eval_res) {
+                                        std::string body;
+                                        if (auto* str = eval_res->get_if<std::string>()) {
+                                            body = *str;
+                                        } else {
+                                            body = garuda::beam::to_string(*eval_res);
+                                        }
+                                        res.set_content(body, "text/plain");
+                                    } else {
+                                        res.set_content("error", "text/plain");
+                                    }
+                                } else {
+                                    res.set_content("Route GET -> " + h_name, "text/plain");
+                                }
                             });
                         } else if (r.method == "POST" || r.method == "post") {
                             g_http_server->Post(r.path.c_str(), [h_name](const httplib::Request& req, httplib::Response& res) {
-                                res.set_content("Route POST " + req.body + " -> " + h_name, "text/plain");
+                                std::string code_to_run = "";
+                                {
+                                    std::lock_guard<std::mutex> lock(g_handler_mutex);
+                                    if (g_handler_code.count(h_name)) {
+                                        code_to_run = g_handler_code[h_name];
+                                    }
+                                }
+                                if (!code_to_run.empty()) {
+                                    std::lock_guard<std::mutex> lock(g_engine_mutex);
+                                    ScriptEngine h_engine;
+                                    auto eval_res = h_engine.eval(code_to_run);
+                                    if (eval_res) {
+                                        std::string body;
+                                        if (auto* str = eval_res->get_if<std::string>()) {
+                                            body = *str;
+                                        } else {
+                                            body = garuda::beam::to_string(*eval_res);
+                                        }
+                                        res.set_content(body, "text/plain");
+                                    } else {
+                                        res.set_content("error", "text/plain");
+                                    }
+                                } else {
+                                    res.set_content("Route POST " + req.body + " -> " + h_name, "text/plain");
+                                }
                             });
                         }
                     }
@@ -1262,7 +1326,23 @@ private:
                         if (auto* a = fn_term.get_if<Atom>()) fn_name = a->name;
                         else if (auto* s = fn_term.get_if<std::string>()) fn_name = *s;
 
-                        if (!fn_name.empty() && handle_builtin(fn_name)) break;
+                        if (!fn_name.empty() && handle_builtin(fn_name)) {
+                            Term ret_val = !last_result.is<std::monostate>() ? last_result : x_regs[0];
+                            if (!call_stack.empty()) {
+                                ip = call_stack.back() - 1;
+                                call_stack.pop_back();
+                                if (!frame_stack.empty()) {
+                                    x_regs = frame_stack.back();
+                                    frame_stack.pop_back();
+                                }
+                                x_regs[0] = ret_val;
+                                last_result = ret_val;
+                                break;
+                            } else {
+                                x_regs[0] = ret_val;
+                                return ret_val;
+                            }
+                        }
 
                         if (auto* i = fn_term.get_if<std::int64_t>()) {
                             ip = static_cast<std::size_t>(*i);

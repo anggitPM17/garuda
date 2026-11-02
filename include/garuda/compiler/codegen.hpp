@@ -143,7 +143,8 @@ public:
                    name == "Http.kirim_json"|| name == "Http.post_json" ||
                    name == "HttpServer.mulai" || name == "HttpServer.start" ||
                    name == "HttpServer.stop"  || name == "HttpServer.daftar_route" ||
-                   name == "HttpServer.register_route" || name == "HttpServer.jalankan" ||
+                   name == "HttpServer.register_route" || name == "HttpServer.daftar_handler" ||
+                   name == "HttpServer.register_handler" || name == "HttpServer.jalankan" ||
                    name == "HttpServer.run";
         };
 
