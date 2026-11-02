@@ -102,6 +102,7 @@ int cmd_test() {
         {"Actor Concurrency", "garuda_actor_tests.exe", false, ""},
         {"JSON Encoder/Decoder", "garuda_json_grd_tests.exe", false, ""},
         {"Error Handling (coba/tangkap)", "garuda_error_tests.exe", false, ""},
+        {"Type Annotation Parser", "garuda_type_annotation_tests.exe", false, ""},
         {"Isolate Binop (KB-001)", "garuda_isolate_binop_tests.exe", false, ""}
     };
 

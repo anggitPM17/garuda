@@ -137,6 +137,9 @@ target_link_libraries(garuda_test_framework_tests PRIVATE garuda)
 add_executable(garuda_error_tests tests/test_error.cpp)
 target_link_libraries(garuda_error_tests PRIVATE garuda)
 
+add_executable(garuda_type_annotation_tests tests/test_type_annotation.cpp)
+target_link_libraries(garuda_type_annotation_tests PRIVATE garuda)
+
 add_executable(grd src/grd.cpp)
 target_link_libraries(grd PRIVATE garuda)
 

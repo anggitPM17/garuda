@@ -103,9 +103,38 @@ private:
             do {
                 const Token& p_tok = expect(TokenType::Identifier, "Expected parameter name");
                 params.push_back(p_tok.text);
+                if (check(TokenType::Colon) || (check(TokenType::Atom) && peek().text.empty())) {
+                    advance(); // skip ':'
+                    if (check(TokenType::Identifier)) {
+                        advance(); // skip type
+                        if (check(TokenType::Lt)) {
+                            advance();
+                            while (!check(TokenType::Gt) && !is_at_end()) advance();
+                            if (check(TokenType::Gt)) advance();
+                        }
+                    }
+                }
             } while (match(TokenType::Comma));
         }
         expect(TokenType::RParen, "Expected ')' after parameters");
+
+        if (check(TokenType::Arrow)) {
+            std::size_t save_pos = pos_;
+            advance(); // skip '->'
+            if (check(TokenType::Identifier)) {
+                advance(); // skip return type
+                if (check(TokenType::Lt)) {
+                    advance();
+                    while (!check(TokenType::Gt) && !is_at_end()) advance();
+                    if (check(TokenType::Gt)) advance();
+                }
+                if (!check(TokenType::Arrow)) {
+                    pos_ = save_pos;
+                }
+            } else {
+                pos_ = save_pos;
+            }
+        }
 
         std::shared_ptr<AstNode> guard_cond = nullptr;
         if (check(TokenType::When) || (check(TokenType::Identifier) && peek().text == "nalika")) {

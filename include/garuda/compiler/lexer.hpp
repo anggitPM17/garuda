@@ -142,16 +142,27 @@ public:
                 continue;
             }
 
-            // Atoms: `:ok`, `:error`
+            // Colon `:` vs Atom `:ok`
             if (c == ':') {
                 std::size_t start_col = col_;
-                pos_++; col_++;
-                std::size_t start_pos = pos_;
-                while (pos_ < source_.length() && (std::isalnum(source_[pos_]) || source_[pos_] == '_')) {
+                bool preceded_by_word = (pos_ > 0 && (std::isalnum(static_cast<unsigned char>(source_[pos_ - 1])) || source_[pos_ - 1] == '_' || source_[pos_ - 1] == ')'));
+                bool followed_by_ident = (pos_ + 1 < source_.length() && (std::isalpha(static_cast<unsigned char>(source_[pos_ + 1])) || source_[pos_ + 1] == '_'));
+
+                if (!preceded_by_word && followed_by_ident) {
+                    // Atom: `:ok`, `:error`
                     pos_++; col_++;
+                    std::size_t start_pos = pos_;
+                    while (pos_ < source_.length() && (std::isalnum(static_cast<unsigned char>(source_[pos_])) || source_[pos_] == '_')) {
+                        pos_++; col_++;
+                    }
+                    tokens.push_back({TokenType::Atom, source_.substr(start_pos, pos_ - start_pos), line_, start_col});
+                    continue;
+                } else {
+                    // Colon `:`
+                    pos_++; col_++;
+                    tokens.push_back({TokenType::Colon, ":", line_, start_col});
+                    continue;
                 }
-                tokens.push_back({TokenType::Atom, source_.substr(start_pos, pos_ - start_pos), line_, start_col});
-                continue;
             }
 
             // Numbers: Hex (`0x1F`), Biner (`0b1010`), Float (`3.14`), Int (`42`)
