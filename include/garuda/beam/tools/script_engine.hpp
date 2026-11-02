@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include <array>
+#include <atomic>
 #include <chrono>
 #include <httplib.h>
 #include <iostream>
@@ -23,6 +24,10 @@
 #include <set>
 
 namespace garuda::beam {
+
+static std::shared_ptr<httplib::Server> g_http_server;
+static std::thread g_http_server_thread;
+static std::atomic<bool> g_http_server_running{false};
 
 class ScriptEngine {
 public:
@@ -332,6 +337,46 @@ private:
                 Term err(Atom{"error_http"});
                 x_regs[0] = err;
                 last_result = err;
+                return true;
+            }
+
+            // HttpServer Built-ins
+            if (is_mod_fn(fn_name, "HttpServer", "mulai") || is_mod_fn(fn_name, "HttpServer", "start")) {
+                int64_t port = x_regs[0].get_if<int64_t>() ? *x_regs[0].get_if<int64_t>() : 8080;
+                if (g_http_server_running) {
+                    Term err(Atom{"error_server_running"});
+                    x_regs[0] = err;
+                    last_result = err;
+                    return true;
+                }
+                g_http_server = std::make_shared<httplib::Server>();
+                g_http_server->Get("/hello", [](const httplib::Request&, httplib::Response& res) {
+                    res.set_content("Halo dari Garuda Server!", "text/plain");
+                });
+                g_http_server->Post("/echo", [](const httplib::Request& req, httplib::Response& res) {
+                    res.set_content("Echo: " + req.body, "text/plain");
+                });
+                g_http_server_running = true;
+                g_http_server_thread = std::thread([port]() {
+                    g_http_server->listen("127.0.0.1", static_cast<int>(port));
+                });
+                std::this_thread::sleep_for(std::chrono::milliseconds(300));
+                Term res(Atom{"ok"});
+                x_regs[0] = res;
+                last_result = res;
+                return true;
+            }
+            if (is_mod_fn(fn_name, "HttpServer", "stop")) {
+                if (g_http_server_running && g_http_server) {
+                    g_http_server->stop();
+                    if (g_http_server_thread.joinable()) {
+                        g_http_server_thread.join();
+                    }
+                    g_http_server_running = false;
+                }
+                Term res(Atom{"ok"});
+                x_regs[0] = res;
+                last_result = res;
                 return true;
             }
 

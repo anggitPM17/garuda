@@ -335,8 +335,8 @@ private:
 
             std::size_t end = str.find('}', start + 2);
             if (end == std::string::npos) {
-                std::string literal_part = str.substr(start);
-                auto lit_node = std::make_shared<LiteralNode>(Term(literal_part));
+                std::string remaining_part = str.substr(start);
+                auto lit_node = std::make_shared<LiteralNode>(Term(remaining_part));
                 result = result ? std::make_shared<BinaryExprNode>("++", result, lit_node) : std::static_pointer_cast<AstNode>(lit_node);
                 break;
             }

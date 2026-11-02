@@ -116,6 +116,9 @@ target_link_libraries(garuda_waktu_tests PRIVATE garuda)
 add_executable(garuda_matematika_tests tests/test_matematika.cpp)
 target_link_libraries(garuda_matematika_tests PRIVATE garuda)
 
+add_executable(garuda_http_server_tests tests/test_http_server.cpp)
+target_link_libraries(garuda_http_server_tests PRIVATE garuda)
+
 add_executable(grd src/grd.cpp)
 target_link_libraries(grd PRIVATE garuda)
 
@@ -160,7 +163,6 @@ if(GARUDA_BUILD_TESTS)
   add_executable(garuda_chat_server_tests tests/test_chat_server.cpp)
   add_executable(garuda_json_tests tests/test_json.cpp)
   add_executable(garuda_http_tests tests/test_http.cpp)
-  add_executable(garuda_http_server_tests tests/test_http_server.cpp)
   add_executable(garuda_db_tests tests/test_db.cpp)
   add_executable(garuda_fullstack_tests tests/test_fullstack.cpp)
   add_executable(garuda_semantic_tests tests/test_semantic.cpp)

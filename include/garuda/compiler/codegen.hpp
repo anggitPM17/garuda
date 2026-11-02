@@ -129,7 +129,9 @@ public:
                    name == "Waktu.sekarang" || name == "Waktu.now" ||
                    name == "Waktu.tunggu"   || name == "Waktu.sleep" ||
                    name == "Http.ambil"     || name == "Http.get" ||
-                   name == "Http.kirim_json"|| name == "Http.post_json";
+                   name == "Http.kirim_json"|| name == "Http.post_json" ||
+                   name == "HttpServer.mulai" || name == "HttpServer.start" ||
+                   name == "HttpServer.stop";
         };
 
         for (std::size_t idx : global_call_patches_) {

@@ -58,6 +58,7 @@ int cmd_test() {
         {"Waktu & Durasi", "garuda_waktu_tests.exe", false, ""},
         {"Matematika", "garuda_matematika_tests.exe", false, ""},
         {"HTTP Client (GET/POST)", "garuda_http_tests.exe", false, ""},
+        {"HTTP Server", "garuda_http_server_tests.exe", false, ""},
         {"String Module", "garuda_string_grd_tests.exe", false, ""},
         {"Interpolasi String", "garuda_interp_tests.exe", false, ""},
         {"Guard Clause (nalika)", "garuda_guard_tests.exe", false, ""},

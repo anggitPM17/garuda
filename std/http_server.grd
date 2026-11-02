@@ -1,17 +1,12 @@
 modul HttpServer
 
-fungsi serve(Port) ->
-    yen Port > 0 ->
-        :ok
-    lain ->
-        {:error, :port_salah}
-    rampung
+# Modul HTTP Server Bahasa Garuda (std/http_server.grd)
+# Wrapper BIF HttpServer.mulai dan HttpServer.stop (cpp-httplib)
+
+fungsi mulai(Port) ->
+    HttpServer.mulai(Port)
 rampung
 
-fungsi route(Path) ->
-    yen Path != "" ->
-        :ok
-    lain ->
-        {:error, :path_salah}
-    rampung
+fungsi stop() ->
+    HttpServer.stop()
 rampung
