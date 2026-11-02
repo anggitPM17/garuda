@@ -228,6 +228,9 @@ RINGKASAN HASIL TEST: 14 PASS | 0 FAIL | 0 SKIP
 
 ## 📖 Dokumentasi Lengkap
 
+- 🚀 **[Getting Started (docs/getting-started.md)](docs/getting-started.md)** — Panduan 10 menit untuk pengguna baru.
+- 📘 **[Tutorial Pertama (docs/tutorial-pertama.md)](docs/tutorial-pertama.md)** — Tutorial Todo List CLI 30 menit.
+- ❓ **[FAQ (docs/faq.md)](docs/faq.md)** — Jawaban pertanyaan umum seputar Bahasa Garuda.
 - 📖 **[Sintaks Bahasa (docs/sintaks.md)](docs/sintaks.md)** — Panduan sintaks dan keyword.
 - 📦 **[Pustaka Standar (docs/pustaka-standar.md)](docs/pustaka-standar.md)** — Referensi fungsi `std/*.grd`.
 - 🌐 **[Web Framework (docs/web-framework.md)](docs/web-framework.md)** — Panduan backend web.
