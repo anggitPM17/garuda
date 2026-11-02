@@ -125,7 +125,9 @@ public:
                    name == "String.panjang" || name == "String.length" ||
                    name == "String.potong" || name == "String.pisah" ||
                    name == "String.rapikan" || name == "String.karakter_ke_int" ||
-                   name == "String.int_ke_karakter";
+                   name == "String.int_ke_karakter" ||
+                   name == "Waktu.sekarang" || name == "Waktu.now" ||
+                   name == "Waktu.tunggu"   || name == "Waktu.sleep";
         };
 
         for (std::size_t idx : global_call_patches_) {
@@ -200,9 +202,10 @@ private:
     }
 
     void protect_param_regs(std::size_t arity) {
+        std::size_t num_regs_to_protect = std::max(arity, static_cast<std::size_t>(1));
         std::vector<std::pair<std::string, std::uint16_t>> to_move;
         for (const auto& [vname, vreg] : current_func_->var_map) {
-            if (vreg < arity) {
+            if (vreg < num_regs_to_protect) {
                 to_move.emplace_back(vname, vreg);
             }
         }

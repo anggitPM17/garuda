@@ -10,11 +10,13 @@
 
 #include <algorithm>
 #include <array>
+#include <chrono>
 #include <iostream>
 #include <map>
 #include <memory>
 #include <optional>
 #include <string>
+#include <thread>
 #include <vector>
 
 #include <set>
@@ -284,6 +286,26 @@ private:
                 }
                 new_items.push_back(x_regs[1]);
                 Term res(List{std::make_shared<const std::vector<Term>>(std::move(new_items))});
+                x_regs[0] = res;
+                last_result = res;
+                return true;
+            }
+
+            // Waktu Built-ins
+            if (is_mod_fn(fn_name, "Waktu", "sekarang") || is_mod_fn(fn_name, "Waktu", "now")) {
+                auto now_ms = std::chrono::duration_cast<std::chrono::milliseconds>(
+                    std::chrono::system_clock::now().time_since_epoch()).count();
+                Term res(static_cast<int64_t>(now_ms));
+                x_regs[0] = res;
+                last_result = res;
+                return true;
+            }
+            if (is_mod_fn(fn_name, "Waktu", "tunggu") || is_mod_fn(fn_name, "Waktu", "sleep")) {
+                int64_t ms = x_regs[0].get_if<int64_t>() ? *x_regs[0].get_if<int64_t>() : 0;
+                if (ms > 0) {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(ms));
+                }
+                Term res(Atom{"nil"});
                 x_regs[0] = res;
                 last_result = res;
                 return true;

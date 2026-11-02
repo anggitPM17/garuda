@@ -1,0 +1,20 @@
+modul Waktu
+
+# Modul Waktu & Durasi Murni Bahasa Garuda (std/waktu.grd)
+
+fungsi sekarang() ->
+    Waktu.sekarang()
+rampung
+
+fungsi tunggu(Ms) ->
+    Waktu.tunggu(Ms)
+rampung
+
+fungsi durasi_mulai() ->
+    Waktu.sekarang()
+rampung
+
+fungsi durasi_selesai(Start) ->
+    Now = Waktu.sekarang()
+    Now - Start
+rampung
