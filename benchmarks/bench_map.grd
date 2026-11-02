@@ -1,0 +1,10 @@
+modul BenchMap
+impor "std/map.grd"
+
+fungsi utama() ->
+    M0 = Map.baru()
+    M1 = Map.taruh(M0, "k1", 100)
+    M2 = Map.taruh(M1, "k2", 200)
+    M3 = Map.taruh(M2, "k3", 300)
+    Map.ambil(M3, "k3")
+rampung

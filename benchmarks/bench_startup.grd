@@ -1,0 +1,5 @@
+modul BenchStartup
+
+fungsi utama() ->
+    "Halo"
+rampung

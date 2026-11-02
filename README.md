@@ -29,6 +29,21 @@ Bahasa Garuda v67.0.0 hadir dengan ekosistem lengkap: CLI Tooling (`grd`), Web F
 
 ---
 
+## 📊 Benchmark Performa Nyata
+
+Diukur pada Windows 10 (MSVC 2022 x64, Build Release), 3 iterasi eksekusi (nilai Median). Laporan lengkap pada **[benchmarks/RESULTS.md](benchmarks/RESULTS.md)**.
+
+| Kategori Benchmark | Deskripsi Pengujian | Median (ms) | Min (ms) | Max (ms) |
+| :--- | :--- | :---: | :---: | :---: |
+| **Startup Engine** | Evaluation & execution `hello_world` | **0.032 ms** | 0.024 ms | 0.360 ms |
+| **Actor Concurrency** | `cakra` spawn process + `kirim` pesan | **0.071 ms** | 0.067 ms | 0.271 ms |
+| **Map Operations** | `Map.taruh` multi-entry + `Map.ambil` | **1.086 ms** | 0.935 ms | 1.216 ms |
+| **String Manipulation** | `String.ganti` + `String.balik` (17 std/string) | **1.538 ms** | 1.298 ms | 1.543 ms |
+| **Functional List** | `List.peta` dengan lambda anonim | **4.236 ms** | 4.076 ms | 4.478 ms |
+| **JSON Serialization** | `Json.encode_list` + `Json.decode_list` | **7.661 ms** | 7.078 ms | 11.251 ms |
+
+---
+
 ## 🚀 Quick Start
 
 ### 1. Kompilasi CLI `grd` (Windows MSVC / CMake)

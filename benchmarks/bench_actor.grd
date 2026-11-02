@@ -1,0 +1,8 @@
+modul BenchActor
+
+fungsi utama() ->
+    Pid = cakra fungsi() ->
+        tampa _ -> nil rampung
+    rampung
+    kirim(Pid, "pesan_benchmark")
+rampung
