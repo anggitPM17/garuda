@@ -1,0 +1,9 @@
+modul TodoList
+impor "std/map.grd"
+
+fungsi utama() ->
+    TugasAwal = Map.baru()
+    Tugas1 = Map.taruh(TugasAwal, "1", "Belajar Sintaks Garuda")
+    Tugas2 = Map.taruh(Tugas1, "2", "Bangun REST Server Garuda")
+    Map.ambil(Tugas2, "2")
+rampung

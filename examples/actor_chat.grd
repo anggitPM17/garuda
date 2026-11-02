@@ -1,0 +1,12 @@
+modul ActorChat
+
+fungsi utama() ->
+    Pid = cakra fungsi() ->
+        tampa
+            {salam, Pesan} -> cetak("Pesan diterima di Actor: " ++ Pesan)
+            _ -> cetak("Pesan tidak dikenal")
+        rampung
+    rampung
+
+    kirim(Pid, {salam, "Garuda Actor Concurrency"})
+rampung

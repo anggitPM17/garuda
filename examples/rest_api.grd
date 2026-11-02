@@ -1,0 +1,10 @@
+modul RestAPI
+impor "std/web.grd"
+
+fungsi utama() ->
+    Web.daftar_handler("h_status", "\"OK - Bahasa Garuda Web Backend Online\"")
+    Web.daftar_handler("h_hitung", "100 + 200")
+    Web.get("/status", "h_status")
+    Web.get("/hitung", "h_hitung")
+    Web.jalankan(8080)
+rampung

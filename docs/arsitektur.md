@@ -1,29 +1,67 @@
-# 🦅 Arsitektur Mesin & Compiler Garuda (GVM)
+# Arsitektur Internal Garuda Virtual Machine (GVM)
 
-Dokumen ini menjelaskan alur arsitektur lengkap dari kode sumber `.grd` hingga dieksekusi oleh Virtual Machine GVM.
+Dokumentasi rancangan sistem internal compiler dan runtime GVM v67.0.0.
 
 ---
 
-## 1. Diagram Alur Eksekusi
+## 1. Komponen Utama Arsitektur
 
-```text
-┌────────────────┐     ┌──────────────┐     ┌────────────────┐     ┌────────────────┐
-│ Source (.grd)  │ ──> │ Lexer & Tok  │ ──> │ Recursive Parser│ ──>│ AST Tree Nodes │
-└────────────────┘     └──────────────┘     └────────────────┘     └───────┬────────┘
-                                                                           │
-┌────────────────┐     ┌──────────────┐     ┌────────────────┐             │
-│ Exec & Results │ <── │ GVM Runtime  │ <── │ Codegen Output │ <───────────┘
-└────────────────┘     └──────────────┘     └────────────────┘
+```
+                   +------------------------------+
+                   |  Berkas Skrip Garuda (.grd)  |
+                   +--------------+---------------+
+                                  |
+                                  v
+                   +------------------------------+
+                   |      Lexer & Tokenizer       |
+                   +--------------+---------------+
+                                  | Token Stream
+                                  v
+                   +------------------------------+
+                   |       Parser & AST           |
+                   +--------------+---------------+
+                                  | AST Tree
+                                  v
+                   +------------------------------+
+                   | CodeGenerator (codegen.hpp)  |
+                   +--------------+---------------+
+                                  | Bytecode & Function Table
+                                  v
+                   +------------------------------+
+                   | ScriptEngine (interpreter)   |
+                   | - GVM Register Machine       |
+                   | - BIF Handler (C++ Native)   |
+                   +------------------------------+
 ```
 
+1. **Lexer & Parser**: Mengubah teks skrip `.grd` menjadi *Abstract Syntax Tree* (AST).
+2. **CodeGenerator (`include/garuda/compiler/codegen.hpp`)**: Mengubah AST menjadi instruksi *Register-based Bytecode* dan membangun `function_table`.
+3. **ScriptEngine (`include/garuda/beam/tools/script_engine.hpp`)**:
+   - Runtime *Interpreter* berbasis register `x_regs` (256 register).
+   - Penanganan Built-In Functions (BIF) C++ native (`handle_builtin`).
+   - Eksekusi instruksi bytecode `OpCall`, `OpTailCall`, `OpReturn`, `OpSpawn`, `OpSend`, `OpReceive`.
+
 ---
 
-## 2. Komponen Utama Engine
+## 2. Instruksi Bytecode Utama (Opcodes)
 
-1. **Lexer (`lexer.hpp`)**: Mengubah teks kode sumber menjadi alokasi Token dengan pelacakan baris dan kolom.
-2. **Parser (`parser.hpp`)**: *Recursive Descent Parser* dengan *Precedence Climbing* 11 tingkat.
-3. **AST Hierarchy (`ast.hpp`)**: Struktur data pohon abstrak terstruktur untuk modul, fungsi, percabangan, dan ekspresi aktor.
-4. **Code Generator (`codegen.hpp`)**: Menelusuri AST, melakukan alokasi register X, dan menghasilkan instruksi *Opcode GVM*.
-5. **Bytecode Serializer (`bytecode_writer.hpp` & `bytecode_reader.hpp`)**: Menyimpan dan membaca berkas biner `.gvm` 32-bytes header + FNV1a Checksum.
-6. **GVM Interpreter (`interpreter.hpp`)**: Virtual Machine berbasis Register (X 256) & Call Stack Frame Isolation.
-7. **Actor Runtime (`actor_runtime.hpp`)**: Penjadwal aktor $O(1)$ *Ready Queue*, *preemptive reduction counter* (4000/slice), dan per-process Generational GC.
+| Opcode | Deskripsi Operasi |
+| :--- | :--- |
+| `OpMove` | Memindahkan nilai dari register / literal ke register tujuan |
+| `OpAdd` / `OpSub` / `OpMul` / `OpDiv` | Operasi aritmatika pada register / literal |
+| `OpConcat` | Penggabungan String atau List (`++`) |
+| `OpCall` | Pemanggilan fungsi (push `call_stack` dan `frame_stack`, lompat ke IP) |
+| `OpTailCall` | Pemanggilan ekor (*Tail Call Optimization*) — mengganti frame tanpa alokasi stack baru |
+| `OpReturn` | Pengembalian nilai dari fungsi dan pemulihan frame stack |
+| `OpMakeTuple` / `OpGetTupleElem` | Alokasi dan pembacaan elemen Tuple |
+| `OpMakeList` / `OpGetListLen` / `OpGetListElem` | Alokasi dan manipulasi List |
+| `OpSpawn` / `OpSend` / `OpReceive` | Operasi Actor concurrency GVM |
+
+---
+
+## 3. Penanganan Pemanggilan Ekor BIF (*Tail Call Optimization*)
+
+Saat fungsi skrip Garuda melakukan pemanggilan ekor ke fungsi BIF (misal `fungsi get(P, H) -> HttpServer.daftar_route("GET", P, H) rampung`):
+1. `CodeGenerator` mentranspilasi pemanggilan tersebut menjadi `OpTailCall`.
+2. Pada GVM interpreter, `OpTailCall` mendeteksi bahwa fungsi target merupakan BIF C++ (`handle_builtin`).
+3. Setelah BIF dieksekusi, GVM secara otomatis melakukan pembersihan stack frame (*pop call stack*) dan mengembalikan nilai ke pemanggil fungsi tingkat atas, mencegah kebocoran memori atau *infinite loop*.

@@ -1,0 +1,5 @@
+modul HelloWorld
+
+fungsi utama() ->
+    "Halo dari Bahasa Garuda v67.0.0!"
+rampung

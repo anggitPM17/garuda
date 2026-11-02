@@ -1,0 +1,8 @@
+modul DataPipeline
+impor "std/list.grd"
+
+fungsi utama() ->
+    Angka = [1, 2, 3, 4, 5]
+    Kuadrat = List.peta(Angka, fungsi(X) -> X * X rampung)
+    Kuadrat
+rampung

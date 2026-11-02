@@ -1,0 +1,7 @@
+modul JsonProcessor
+impor "std/json.grd"
+
+fungsi utama() ->
+    JsonString = Json.encode_list(["Garuda", "GVM", "2026"])
+    JsonString
+rampung

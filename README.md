@@ -1,145 +1,221 @@
-# 🦅 GVM — Garuda Virtual Machine
+# 🦅 Bahasa Garuda (v67.0.0)
 
-> **Runtime Terdistribusi C++ Setara Erlang/OTP. 100% Karya Anak Bangsa 🇮🇩**
+> **Bahasa Pemrograman Fungsional & Actor-Model Indonesia dengan Garuda Virtual Machine (GVM). 100% Karya Anak Bangsa 🇮🇩**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Platform](https://img.shields.io/badge/Platform-C%2B%2B17%20%7C%20Android%20NDK%20%7C%20WASM-blue)](https://richat.my.id)
-[![Production Status](https://img.shields.io/badge/Production-Live%20ONLINE-22c55e)](https://richat.my.id)
-[![RAM Usage](https://img.shields.io/badge/RAM-536%20KB%20--%201.8%20MB-brightgreen)](https://richat.my.id)
-[![Performance](https://img.shields.io/badge/RPS-3.8x%20vs%20Erlang-orange)](https://richat.my.id)
+[![Version](https://img.shields.io/badge/Version-v67.0.0-blue)](https://richat.my.id)
+[![Build Status](https://img.shields.io/badge/Tests-14%2F14%20PASS%20(100%25)-brightgreen)](https://richat.my.id)
 
 ---
 
-<p align="center">
-  <img src="site/assets/garuda-logo.svg" alt="Garuda Logo" width="140" height="140">
-</p>
+## 🌐 Ringkasan
 
-## 🌐 Ringkasan Proyek
+**Bahasa Garuda** adalah bahasa pemrograman fungsional modern bergaya Erlang/Elixir yang dieksekusi di atas **Garuda Virtual Machine (GVM)**. Bahasa Garuda dirancang untuk aplikasi terdistribusi, *actor concurrency*, *web backend*, dan *system tooling* berlatensi ultra-rendah dengan konsumsi memori yang sangat efisien.
 
-**Garuda Virtual Machine (GVM)** adalah *distributed actor-model runtime* C++17 berkinerja tinggi yang dirancang sebagai alternatif **Erlang/OTP** yang jauh lebih hemat memori dan berlatensi ultra-rendah. 
-
-GVM dibangun tanpa dependensi berat, mengusung arsitektur *header-only*, serta mendukung eksekusi terdistribusi di server Linux, WebAssembly (WASM) di browser, hingga C++ Native Layer pada aplikasi **RICHAT (Android)**.
-
-Portal Resmi & Live Production aktif di **[https://richat.my.id/](https://richat.my.id/)**.
+Bahasa Garuda v67.0.0 hadir dengan ekosistem lengkap: CLI Tooling (`grd`), Web Framework (`std/web.grd`), Language Server Protocol (LSP), serta Ekstensi VS Code.
 
 ---
 
-## 🏛️ Ekosistem Portal Utama (Live Demo)
+## ✨ Fitur Utama
 
-Portal utama di **[richat.my.id](https://richat.my.id/)** menyediakan 7 modul ekosistem terpadu:
-
-| Destinasi Modul | Deskripsi & Kegunaan | URL Akses |
-| :--- | :--- | :--- |
-| 🏟️ **Stadion Garuda** | Interactive Web Playground untuk mengeksekusi kode Garuda. | [Masuk Stadion](https://richat.my.id/stadion/) |
-| 🌐 **WASM Client** | Execution Environment berbasis WebAssembly langsung di browser. | [Buka WASM](https://richat.my.id/playground_wasm) |
-| 🎮 **Garuda Arena** | Game multiplayer real-time 30 FPS berbasis Actor Model & SQLite Leaderboard. | [Mainkan Game](https://richat.my.id/assets/game.html) |
-| 📊 **Dashboard GVM** | Dashboard monitoring Prometheus metrics, RAM/CPU, dan RPS real-time. | [Buka Dashboard](https://richat.my.id/dashboard) |
-| 📦 **GPM Packages** | Katalog pustaka resmi & modul package manager bahasa Garuda. | [Lihat Packages](https://richat.my.id/packages) |
-| 🐙 **Repository** | Kode sumber resmi di GitHub. | [GitHub Repo](https://github.com/anggitPM17/garuda) |
-| 📱 **Unduh RICHAT** | Aplikasi Android resmi dengan fitur Auto-Update terpadu. | [Unduh APK](https://update.richat.my.id/) |
+- **⚡ Fungsional & Ekspresif**: First-class functions, lambda anonim, pattern matching, guard clauses (`nalika`), dan pipe operator (`|>`).
+- **🎭 Actor Model Concurrency**: `cakra` (spawn process), `kirim` (send message), `tampa` (receive), dan `diri` (self PID).
+- **🛡️ Guard Clause (`nalika`)**: Validasi parameter fungsi secara deklaratif sebelum fungsi dieksekusi.
+- **🔗 Pipe Operator (`|>`)**: Komposisi fungsi yang bersih tanpa nested function calls.
+- **📚 Pustaka Standar Murni**: List, String, Map, Tuple, Json, Waktu, Matematika, HTTP Client, dan Web Framework.
+- **🌐 Web Framework**: Routing dinamis GET/POST dan eksekusi handler Garuda penuh yang thread-safe.
+- **🛠️ Tooling & IDE Support**: CLI Tooling (`grd`), LSP Server (`garuda-lsp`), dan Ekstensi VS Code (`garuda-vscode-lsp`).
+- **✅ 100% Test Pass Rate**: 14/14 test suite lulus uji (0 Fail, 0 Skip) termasuk isu `List.peta` + lambda.
 
 ---
 
-## ✨ Fitur Utama Runtime
+## 🚀 Quick Start
 
-* **⚡ OTP Behaviours**: Implementasi lengkap `GenServer`, `Supervisor` trees, `Application`, `PubSub`, dan `GenStatem` state machines.
-* **🌐 Cluster Terdistribusi**: `DistNode`, `GlobalRegistry` berbasis Raft consensus, `ClusterManager`, dan `ProcessGroup (PG)`.
-* **🗄️ Storage Mnesia & SQLite**: In-memory & DiscCopies Set/Bag tables, Tiered Storage (Hot/Warm/Cold), TTL Sweeper, dan integrasi SQLite WAL.
-* **🔒 End-to-End Cryptography**: AES-GCM 256, X25519 DH, Key Transparency Merkle Tree, Sealed Sender, & JWT Auth.
-* **🎮 Garuda Arena Game Engine**: Real-time 30 FPS multiplayer game engine berbasis Actor Model dengan Papan Skor Abadi SQLite.
-* **📊 Live Monitoring Dashboard**: Web Dashboard visualisasi Prometheus metrics dengan grafik pergerakan pesan dan konsumsi RAM real-time.
-* **📦 GPM Package Manager**: Registry katalog package resmi untuk modul bahasa Garuda.
-* **📱 Android NDK Engine**: C++ Native Layer untuk sinkronisasi offline dan komunikasi real-time pada aplikasi RICHAT.
+### 1. Kompilasi CLI `grd` (Windows MSVC / CMake)
 
----
-
-## 📊 Benchmark Performa Produksi (VPS Ubuntu 1GB RAM)
-
-| Metrik Performa | Erlang/OTP Server | Garuda BEAM C++ Engine | Tingkat Efisiensi |
-| :--- | :---: | :---: | :---: |
-| **RAM Usage (Idle)** | ~69.4 MB - 92.8 MB | **~536 KB - 1.8 MB** | **38x - 50x Lebih Hemat** |
-| **Requests / Sec (RPS)** | ~50 req/s | **191.65 req/s** | **3.8x Lebih Cepat** |
-| **Availability (Load Test)** | 99.2% | **100.00% (0 Failed)** | **100% Zero Error** |
-| **Chaos Recovery (SIGKILL)** | ~10 detik | **< 5 detik** | **2x Lebih Tangguh** |
-
----
-
-## 📐 Arsitektur Sistem
-
-```
-                 +-----------------------------------+
-                 |     Android RICHAT App (Kotlin)   |
-                 |     + C++ Native Layer (NDK)      |
-                 +-----------------+-----------------+
-                                   | WebSocket (WSS) / REST
-                                   v
-+----------------------------------+----------------------------------+
-|                   NGINX Reverse Proxy (HTTPS/WSS)                   |
-|                      Domain: richat.my.id                           |
-+----+--------------------+-------------------+-------------------+---+
-     |                    |                   |                   |
-     v                    v                   v                   v
-/dashboard            /packages          /assets/game.html       /api/ & /ws
-  (HTML5/Chart.js)      (GPM Catalogue)    (HTML5 Canvas)       (Port 9002)
-     |                    |                   |                   |
-     +--------------------+-------------------+-------------------+
-                                   |
-                                   v
-                 +-----------------------------------+
-                 |    Garuda BEAM C++ Server (GVM)   |
-                 |  - OTP Scheduler & GenServer      |
-                 |  - Garuda Arena Game Engine       |
-                 |  - GPM Registry & SQLite DB       |
-                 +-----------------------------------+
-```
-
----
-
-## 🚀 Cara Build & Menjalankan
-
-### Linux / macOS (CMake & Make)
-```bash
-# 1. Clone repository
-git clone https://github.com/anggitPM17/garuda.git
-cd garuda/garuda_v67_0_production/garuda_v67.0.0
-
-# 2. Build via CMake
-mkdir -p build && cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release
-make garuda_richat_server -j$(nproc)
-
-# 3. Jalankan server
-./garuda_richat_server 9002
-```
-
-### Windows (PowerShell & CMake)
 ```powershell
-cmake -B build -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release
-cmake --build build --config Release
-.\build\garuda_richat_server.exe 9002
+cmake -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build --config Release --target grd
 ```
 
-### Docker Container
-```bash
-docker build -t garuda-beam .
-docker run --rm -p 9002:9002 garuda-beam
+### 2. Program Pertama (Hello World)
+
+Buat berkas `halo.grd`:
+```garuda
+modul Halo
+
+fungsi utama() ->
+    cetak("Halo dari Bahasa Garuda!")
+rampung
+```
+
+Jalankan skrip menggunakan `grd`:
+```powershell
+.\build\Release\grd.exe run halo.grd
+# Output: => "Halo dari Bahasa Garuda!"
+```
+
+### 3. Buat Proyek Baru
+
+```powershell
+.\build\Release\grd.exe new proyek_saya
+cd proyek_saya
+..\build\Release\grd.exe run utama.grd
+```
+
+### 4. Jalankan Seluruh Test Suite
+
+```powershell
+.\build\Release\grd.exe test
+# Output: RINGKASAN HASIL TEST: 14 PASS | 0 FAIL | 0 SKIP
 ```
 
 ---
 
-## 📚 Dokumentasi & Catatan Rilis
+## 📐 Struktur Repositori
 
-* 🏆 **[Peta Pencapaian Ekosistem (ACHIEVEMENTS.md)](ACHIEVEMENTS.md)** — Rangkuman 6 pilar ekosistem GVM.
-* 📝 **[Catatan Rilis & History (CHANGELOG.md)](CHANGELOG.md)** — History rilis v67.0.0 dan catatan perubahan.
-* 🔑 **[Panduan Deployment CI/CD (README_DEPLOY.md)](README_DEPLOY.md)** — Setup GitHub Secrets & SSH Deploy Key.
+```text
+garuda_v67.0.0/
+├── src/                  # Kode Sumber C++ (grd.cpp, grdc.cpp, gvm_admin.cpp)
+├── include/              # Header C++ GVM & Compiler
+│   └── garuda/
+│       ├── beam/tools/script_engine.hpp   # Runtime Interpreter & BIFs
+│       └── compiler/codegen.hpp            # Code Generator & Bytecode
+├── std/                  # Pustaka Standar Bahasa Garuda (.grd)
+│   ├── list.grd, string.grd, map.grd, tuple.grd
+│   ├── json.grd, waktu.grd, matematika.grd
+│   ├── http.grd, http_server.grd, web.grd
+├── tests/                # Test Suite C++ (14 Executables)
+├── lsp/                  # Language Server Protocol (Node.js / TypeScript)
+├── vscode-extension/     # Ekstensi Client VS Code
+├── docs/                 # Dokumentasi Lengkap
+└── examples/             # Contoh Program Nyata
+```
 
 ---
 
-## 📜 Lisensi & Kontribusi
+## 📚 Pustaka Standar
 
-Proyek ini dilesensikan di bawah **[MIT License](LICENSE)** — bebas digunakan, dimodifikasi, dan didistribusikan untuk keperluan personal maupun komersial.
+| Modul | Berkas | Fungsi Utama | Status |
+| :--- | :--- | :--- | :---: |
+| **List** | `std/list.grd` | `panjang`, `kepala`, `ekor`, `tambah`, `balik`, `anggota`, `peta`, `saring`, `lipat` | ✅ |
+| **String** | `std/string.grd` | 17 fungsi (`panjang`, `potong`, `pisah`, `ganti`, `cari`, `mulai_dengan`, `akhir_dengan`, `balik`, `ulang`, `ke_besar_awal`, `rapikan`, dll) | ✅ |
+| **Map** | `std/map.grd` | 10 fungsi (`baru`, `taruh`, `ambil`, `hapus`, `ukuran`, `mengandung_kunci`, `kosong`, `gabung`) | ✅ |
+| **Tuple** | `std/tuple.grd` | `elemen`, `panjang`, `ke_list`, `gabung` | ✅ |
+| **JSON** | `std/json.grd` | `encode_int`, `decode_int`, `encode_string`, `decode_string`, `encode_bool`, `decode_bool`, `encode_list`, `decode_list`, `encode_map`, `decode_map` | ✅ |
+| **Waktu** | `std/waktu.grd` | `sekarang`, `tunggu`, `durasi_mulai`, `durasi_selesai` | ✅ |
+| **Matematika** | `std/matematika.grd` | `pangkat`, `abs`, `min`, `max`, `akar`, `pembulatan` | ✅ |
+| **HTTP Client** | `std/http.grd` | `ambil` (GET), `kirim_json` (POST) | ✅ |
+| **HTTP Server** | `std/http_server.grd` | `mulai`, `stop` | ✅ |
+| **Web Framework** | `std/web.grd` | `daftar_route`, `get`, `post`, `daftar_handler`, `jalankan` | ✅ |
 
-Kontribusi sangat disambut baik! Silakan ajukan *Issue* atau *Pull Request* di repositori resmi **[GitHub anggitPM17/garuda](https://github.com/anggitPM17/garuda)**.
+---
+
+## 💡 Contoh Program
+
+### 1. Fungsional dengan `List.peta` & `List.saring`
+```garuda
+modul ContohFungsional
+impor "std/list.grd"
+
+fungsi utama() ->
+    Angka = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+    Genap = List.saring(Angka, fungsi(X) -> X % 2 == 0 rampung)
+    Hasil = List.peta(Genap, fungsi(X) -> X * 10 rampung)
+    cetak(Hasil)  -- [20, 40, 60, 80, 100]
+rampung
+```
+
+### 2. Web Framework REST Server
+```garuda
+modul WebApp
+impor "std/web.grd"
+
+fungsi utama() ->
+    Web.daftar_handler("h_halo", "\"Halo dari Bahasa Garuda Web Framework!\"")
+    Web.daftar_handler("h_hitung", "40 + 2")
+    Web.get("/halo", "h_halo")
+    Web.get("/hitung", "h_hitung")
+    Web.jalankan(8080)
+rampung
+```
+
+### 3. Concurrency Model Actor (`cakra`)
+```garuda
+modul ContohAktor
+
+fungsi utama() ->
+    Pid = cakra fungsi() ->
+        tampa
+            {halo, Teks} -> cetak("Pesan Diterima: " ++ Teks)
+            _ -> cetak("Pesan Lain")
+        rampung
+    rampung
+
+    kirim(Pid, {halo, "Garuda BEAM"})
+rampung
+```
+
+---
+
+## 🛠️ Tooling & IDE Support
+
+### CLI Tooling (`grd`)
+- `grd run <file.grd>` — Mengeksekusi skrip Garuda.
+- `grd test` — Jalankan 14 suite pengujian C++ secara otomatis.
+- `grd new <nama>` — Membuat struktur proyek Garuda baru.
+- `grd --help` — Menampilkan informasi bantuan.
+- `grd --version` — Menampilkan versi runtime.
+
+### LSP & VS Code Extension
+Lihat panduan lengkap pada [docs/lsp-vscode.md](docs/lsp-vscode.md) untuk:
+- Autocomplete 68 simbol (21 keyword & 47 fungsi stdlib).
+- Hover documentation Markdown real-time.
+- Diagnostik sintaks kesalahan kurung/string.
+
+---
+
+## 🧪 Suite Pengujian (`grd test`)
+
+Seluruh 14 test suite lulus 100% tanpa error:
+```text
+======================================================
+RINGKASAN HASIL TEST: 14 PASS | 0 FAIL | 0 SKIP
+======================================================
+```
+
+1. **Waktu & Durasi**
+2. **Matematika**
+3. **HTTP Client (GET/POST)**
+4. **HTTP Server**
+5. **Web Handler Garuda**
+6. **String Module** (21 tests)
+7. **Map Module** (8 tests)
+8. **Tuple Module** (6 tests)
+9. **Interpolasi String**
+10. **Guard Clause (`nalika`)**
+11. **Pipe Operator (`|>`)**
+12. **Actor Concurrency** (12 assertions)
+13. **JSON Encoder/Decoder**
+14. **Isolate Binop (KB-001)** — `List.peta` / `List.saring` + lambda **PASS**
+
+---
+
+## 📖 Dokumentasi Lengkap
+
+- 📖 **[Sintaks Bahasa (docs/sintaks.md)](docs/sintaks.md)** — Panduan sintaks dan keyword.
+- 📦 **[Pustaka Standar (docs/pustaka-standar.md)](docs/pustaka-standar.md)** — Referensi fungsi `std/*.grd`.
+- 🌐 **[Web Framework (docs/web-framework.md)](docs/web-framework.md)** — Panduan backend web.
+- 🎨 **[LSP & VS Code (docs/lsp-vscode.md)](docs/lsp-vscode.md)** — Penggunaan IDE & Autocomplete.
+- 🏛️ **[Arsitektur GVM (docs/arsitektur.md)](docs/arsitektur.md)** — Desain internal compiler & interpreter.
+- 📂 **[Contoh Program (examples/)](examples/)** — Kode contoh yang siap dijalankan.
+
+---
+
+## 🤝 Kontribusi & Lisensi
+
+Panduan kontribusi dapat dibaca pada **[CONTRIBUTING.md](CONTRIBUTING.md)**.
+Proyek ini dilesensikan di bawah **[MIT License](LICENSE)**.
 
 ---
 **Dibuat dengan ❤️ di Indonesia. &copy; 2026 Garuda BEAM Contributors. 🇮🇩**

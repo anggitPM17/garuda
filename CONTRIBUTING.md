@@ -1,54 +1,56 @@
-# 🤝 Panduan Kontribusi Garuda
+# Panduan Kontribusi Bahasa Garuda
 
-Terima kasih telah tertarik untuk berkontribusi pada proyek **Garuda**! Proyek ini dikembangkan dengan komitmen tinggi terhadap kualitas kode, determinisme build, dan stabilitas performa.
+Terima kasih atas minat Anda untuk berkontribusi pada pengembangan **Bahasa Garuda v67.0.0**!
 
 ---
 
-## 🚀 1. Cara Memulai
+## 1. Persyaratan Pengembang
 
-### Prasyarat
-- **Compiler**: MSVC (Visual Studio 2022/2026), GCC 11+, atau Clang 13+ dengan dukungan C++20.
-- **Build System**: CMake 3.14+ dan Ninja / MSBuild.
-- **PowerShell**: Untuk menjalankan skrip pengujian lokal.
+- Compiler C++20 (MSVC 2022 / GCC 10+ / Clang 12+)
+- CMake 3.20+
+- Node.js 18+ (untuk LSP & Ekstensi VS Code)
 
-### Langkah Build & Tes Lokal
-```bash
-# 1. Clone repositori
-git clone https://github.com/richat/garuda.git
-cd garuda
+---
 
-# 2. Konfigurasi CMake
-cmake -B build -G "Ninja" -DCMAKE_BUILD_TYPE=Release
+## 2. Langkah Kompilasi Proyek
 
-# 3. Jalankan seluruh test suite dengan skrip watchdog
-powershell -ExecutionPolicy Bypass -File scripts/run_tests.ps1
+```powershell
+# 1. Konfigurasi CMake
+cmake -B build -DCMAKE_BUILD_TYPE=Release
+
+# 2. Kompilasi CLI Tooling grd
+cmake --build build --config Release --target grd
 ```
 
 ---
 
-## 📝 2. Aturan Commit & Pull Request
+## 3. Menjalankan Suite Pengujian
 
-1. **Satu Fitur / Bugfix Per PR**: Buat Pull Request yang berfokus pada satu tujuan spesifik.
-2. **Wajib Menyertakan Tes**: Setiap perubahan atau penambahan fitur WAJIB disertai dengan unit test atau E2E test di folder `tests/`.
-3. **Lulus 100% CI/CD**: PR hanya akan digabungkan (merge) jika seluruh test suite lulus di runner lokal dan GitHub Actions CI.
-4. **Disiplin Pesan Commit**: Gunakan pesan commit yang deskriptif dalam Bahasa Indonesia atau Inggris, contoh:
-   - `feat(io): tambah modul rate_limiter`
-   - `fix(compiler): perbaiki penanganan error sintaks pada parser`
+Seluruh pengujian unit C++ wajib **PASS 100%** sebelum mengajukan Pull Request:
 
----
+```powershell
+.\build\Release\grd.exe test
+```
 
-## 🎨 3. Standar Kode & Style Guide
-
-- **Bahasa**: C++20 murni tanpa dependensi eksternal yang tidak perlu.
-- **Penamaan**:
-  - Class / Struct: `PascalCase` (contoh: `HealthChecker`, `QueryBuilder`).
-  - Function / Method / Variable: `snake_case` (contoh: `get_secret`, `is_allowed`).
-  - Constant / Enum: `PascalCase` atau `UPPER_CASE`.
-- **Formatting**: Gunakan indentasi 4 spasi (bukan tab) dan pastikan tidak ada whitespace ekstra di akhir baris.
+Target status pengujian: `14 PASS | 0 FAIL | 0 SKIP`.
 
 ---
 
-## 💬 4. Diskusi & Komunikasi
+## 4. Cara Menambahkan Fungsi BIF / Modul Baru
 
-- **Bug & Permintaan Fitur**: Gunakan [GitHub Issues](https://github.com/richat/garuda/issues) dengan template yang disediakan.
-- **Tanya Jawab & Ide**: Gunakan [GitHub Discussions](https://github.com/richat/garuda/discussions).
+1. **Implementasi BIF C++**:
+   Tambahkan logika handler pada `handle_builtin` di `include/garuda/beam/tools/script_engine.hpp`.
+2. **Pendaftaran Nama BIF**:
+   Daftarkan nama fungsi pada lambda `is_bif_name` di `include/garuda/compiler/codegen.hpp`.
+3. **Pustaka Standar Garuda**:
+   Daftarkan wrapper murni fungsi pada berkas modul terkait di `std/*.grd`.
+4. **Unit Test**:
+   Tambahkan pengujian unit C++ di direktori `tests/` dan daftarkan executable pada `CMakeLists.txt` serta `src/grd.cpp`.
+
+---
+
+## 5. Pedoman Kode (*Code Style*)
+
+- Gunakan penamaan BIF C++ yang konsisten dengan pustaka `std/*.grd`.
+- Bahasa pengantar dokumentasi dan nama modul pustaka standar menggunakan Bahasa Indonesia resmi (*modul*, *fungsi*, *rampung*, *yen*, *lain*, *nalika*).
+- Dilarang keras mengubah bagian register allocation / tail call tanpa menyertakan bukti regresi lulus 100%.
