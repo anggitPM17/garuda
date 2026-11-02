@@ -1,0 +1,9 @@
+modul JsonParser
+impor "std/json.grd"
+impor "std/map.grd"
+
+fungsi utama() ->
+    JsonNum = "42"
+    Angka = Json.decode_int(JsonNum)
+    Angka * 2
+rampung

@@ -1,0 +1,18 @@
+modul TodoAPI
+impor "std/web.grd"
+impor "std/json.grd"
+impor "std/map.grd"
+impor "std/waktu.grd"
+
+fungsi utama() ->
+    Web.daftar_handler("h_todos", "Json.encode_list([\"Belajar Bahasa Garuda\", \"Bangun Web Backend REST API\"])")
+    Web.daftar_handler("h_todo1", "Json.encode_map(Map.taruh(Map.taruh(Map.baru(), \"id\", 1), \"judul\", \"Belajar Bahasa Garuda\"))")
+    Web.daftar_handler("h_stats", "Json.encode_map(Map.taruh(Map.taruh(Map.baru(), \"total\", 2), \"status\", \"aktif\"))")
+
+    Web.get("/todos", "h_todos")
+    Web.get("/todo/1", "h_todo1")
+    Web.get("/stats", "h_stats")
+
+    Web.jalankan(8080)
+    Waktu.tunggu(1000)
+rampung

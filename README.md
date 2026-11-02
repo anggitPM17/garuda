@@ -171,6 +171,16 @@ fungsi utama() ->
 rampung
 ```
 
+### 4. Contoh Aplikasi Nyata (`examples/`)
+
+| Aplikasi Contoh | Deskripsi & Fitur | Cara Menjalankan |
+| :--- | :--- | :--- |
+| 🌐 **[todo_api](examples/todo_api/)** | RESTful Web API Todo List (`std/web.grd`, `std/json.grd`, `std/map.grd`) | `grd run examples/todo_api/utama.grd` |
+| 💬 **[chat_server](examples/chat_server/)** | Chat Server dengan Actor Concurrency & Web Endpoint | `grd run examples/chat_server/utama.grd` |
+| 📊 **[data_analysis](examples/data_analysis/)** | Pipeline Analisis Data Nilai Siswa (`List.saring`, `List.peta`) | `grd run examples/data_analysis/utama.grd` |
+| ⚙️ **[json_parser](examples/json_parser/)** | Deserialisasi & Pemrosesan Format JSON (`std/json.grd`) | `grd run examples/json_parser/utama.grd` |
+| 🧮 **[calculator](examples/calculator/)** | Kalkulator Fungsional dengan Pattern Matching & Guard Clause | `grd run examples/calculator/utama.grd` |
+
 ---
 
 ## 🛠️ Tooling & IDE Support

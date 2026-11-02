@@ -1,0 +1,9 @@
+modul DataAnalysis
+impor "std/list.grd"
+
+fungsi utama() ->
+    Nilai = [85, 92, 78, 95, 88, 70, 65, 100, 82, 90]
+    Lulus = List.saring(Nilai, fungsi(X) -> X >= 80 rampung)
+    Kuadrat = List.peta(Lulus, fungsi(X) -> X * 2 rampung)
+    Kuadrat
+rampung

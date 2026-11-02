@@ -1,0 +1,12 @@
+modul ChatServer
+impor "std/web.grd"
+impor "std/json.grd"
+impor "std/waktu.grd"
+
+fungsi utama() ->
+    Web.daftar_handler("h_room", "Json.encode_list([\"Ahmad: Halo!\", \"Budi: Selamat datang di Garuda!\"])")
+    Web.get("/chat/room", "h_room")
+
+    Web.jalankan(8081)
+    Waktu.tunggu(1000)
+rampung

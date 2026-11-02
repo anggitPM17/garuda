@@ -1,0 +1,23 @@
+modul Calculator
+impor "std/matematika.grd"
+
+fungsi bagi(A, B) nalika B != 0 ->
+    A / B
+rampung
+
+fungsi hitung(Op, A, B) ->
+    tinjau Op ing
+        "tambah" -> A + B
+        "kurang" -> A - B
+        "kali" -> A * B
+        "bagi" -> bagi(A, B)
+        "pangkat" -> Matematika.pangkat(A, B)
+        _ -> nil
+    rampung
+rampung
+
+fungsi utama() ->
+    Hasil1 = hitung("tambah", 10, 20)
+    Hasil2 = hitung("pangkat", 2, 3)
+    Hasil1 + Hasil2
+rampung

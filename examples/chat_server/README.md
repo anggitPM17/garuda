@@ -1,36 +1,15 @@
-# 🦅 Chat Server Garuda — Production Case Study
+# Examples: Chat Server dengan Actor Concurrency (`examples/chat_server`)
 
-Server Obrolan Terdistribusi Production-Grade berbasis *Concurrent Actor Model* Garuda.
+Contoh aplikasi Chat Server yang menggabungkan Actor Model Concurrency GVM (`cakra`, `kirim`, `tampa`) dan REST API `std/web.grd`.
 
----
+## Cara Menjalankan
 
-## ⚡ Arsitektur Sistem
-
-```text
-┌─────────────────┐
-│  Chat Server    │ <── Broadcast Pesan
-└────────┬────────┘
-         │
-    ┌────┴────┐
-    │         │
-┌───▼───┐ ┌───▼───┐
-│ Budi  │ │  Ani  │
-└───────┘ └───────┘
+```powershell
+.\build\Release\grd.exe run examples/chat_server/utama.grd
 ```
 
----
+## Pengujian HTTP Request
 
-## 🚀 Fitur Utama
-
-- **Multi-Actor Concurrency**: Server pusat & tiap pengguna berjalan sebagai proses aktor terisolasi.
-- **Supervisor Fault Tolerance**: Pengawasan aktor dengan pemulihan/restart otomatis.
-- **Broadcasting**: Penyebaran pesan *real-time* ke seluruh pengguna aktif.
-
----
-
-## 🛠️ Cara Menjalankan
-
-```bash
-cd examples/chat_server
-grdmix run
+```powershell
+Invoke-WebRequest -Uri "http://127.0.0.1:8081/chat/room" -UseBasicParsing
 ```
