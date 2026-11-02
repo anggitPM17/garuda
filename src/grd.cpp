@@ -104,6 +104,7 @@ int cmd_test() {
         {"Error Handling (coba/tangkap)", "garuda_error_tests.exe", false, ""},
         {"Type Annotation Parser", "garuda_type_annotation_tests.exe", false, ""},
         {"Type Checking Minimal", "garuda_type_check_tests.exe", false, ""},
+        {"Sum Types & Pattern Matching", "garuda_sum_type_tests.exe", false, ""},
         {"Isolate Binop (KB-001)", "garuda_isolate_binop_tests.exe", false, ""}
     };
 

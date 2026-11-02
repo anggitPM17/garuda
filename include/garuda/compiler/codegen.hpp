@@ -287,15 +287,20 @@ private:
                 current_func_->var_map[pvar->name()] = reg;
             }
         } else if (pattern->type() == AstNodeType::PatternTuple || pattern->type() == AstNodeType::TupleExpr) {
-            auto* ptup = static_cast<PatternTupleNode*>(pattern.get());
-            for (std::size_t i = 0; i < ptup->items().size(); ++i) {
+            std::vector<std::shared_ptr<AstNode>> tuple_items;
+            if (pattern->type() == AstNodeType::PatternTuple) {
+                tuple_items = static_cast<PatternTupleNode*>(pattern.get())->items();
+            } else if (pattern->type() == AstNodeType::TupleExpr) {
+                tuple_items = static_cast<TupleExprNode*>(pattern.get())->items();
+            }
+            for (std::size_t i = 0; i < tuple_items.size(); ++i) {
                 std::uint16_t elem_reg = alloc_reg();
                 emit(Opcode::OpGetTupleElem, {
                     Operand{RegType::X, src_reg, Term()},
                     Operand{RegType::Literal, 0, Term(static_cast<std::int64_t>(i))},
                     Operand{RegType::X, elem_reg, Term()}
                 });
-                gen_pattern_bind(ptup->items()[i], elem_reg);
+                gen_pattern_bind(tuple_items[i], elem_reg);
             }
         } else if (pattern->type() == AstNodeType::PatternListHeadTail) {
             auto* pht = static_cast<PatternListHeadTailNode*>(pattern.get());
@@ -623,15 +628,21 @@ private:
                         emit(Opcode::OpGt, {Operand{RegType::X, len_reg, Term()}, Operand{RegType::X, zero_reg, Term()}, Operand{RegType::X, match_reg, Term()}});
                     } else if (clause.pattern->type() == AstNodeType::PatternTuple ||
                                clause.pattern->type() == AstNodeType::TupleExpr) {
-                        auto* ptup = static_cast<PatternTupleNode*>(clause.pattern.get());
-                        if (!ptup->items().empty() && (ptup->items()[0]->type() == AstNodeType::AtomExpr || ptup->items()[0]->type() == AstNodeType::PatternLiteral)) {
+                        std::vector<std::shared_ptr<AstNode>> tuple_items;
+                        if (clause.pattern->type() == AstNodeType::PatternTuple) {
+                            tuple_items = static_cast<PatternTupleNode*>(clause.pattern.get())->items();
+                        } else if (clause.pattern->type() == AstNodeType::TupleExpr) {
+                            tuple_items = static_cast<TupleExprNode*>(clause.pattern.get())->items();
+                        }
+
+                        if (!tuple_items.empty()) {
                             std::uint16_t elem0_reg = alloc_reg();
                             emit(Opcode::OpGetTupleElem, {
                                 Operand{RegType::X, subj_reg, Term()},
                                 Operand{RegType::Literal, 0, Term(0LL)},
                                 Operand{RegType::X, elem0_reg, Term()}
                             });
-                            std::uint16_t tag_reg = gen_expr(ptup->items()[0], false);
+                            std::uint16_t tag_reg = gen_expr(tuple_items[0], false);
                             emit(Opcode::OpEq, {Operand{RegType::X, elem0_reg, Term()}, Operand{RegType::X, tag_reg, Term()}, Operand{RegType::X, match_reg, Term()}});
                         } else {
                             emit(Opcode::OpMove, {Operand{RegType::Literal, 0, Term(1LL)}, Operand{RegType::X, match_reg, Term()}});
@@ -661,12 +672,13 @@ private:
                     end_jumps.push_back(current_func_->instructions.size());
                     emit(Opcode::OpJump, {Operand{RegType::Literal, 0, Term(0LL)}});
 
-                    std::size_t next_clause_ip = current_global_ip();
+                    std::size_t next_clause_ip = current_func_->instructions.size();
                     current_func_->instructions[jump_if_false_ip].args[1] =
                         Operand{RegType::Literal, 0, Term(static_cast<std::int64_t>(next_clause_ip))};
                 }
 
-                std::size_t end_ip = current_global_ip();
+                emit(Opcode::OpMove, {Operand{RegType::X, result_reg, Term()}, Operand{RegType::X, 0, Term()}});
+                std::size_t end_ip = current_func_->instructions.size();
                 for (auto jump_ip : end_jumps) {
                     current_func_->instructions[jump_ip].args[0] =
                         Operand{RegType::Literal, 0, Term(static_cast<std::int64_t>(end_ip))};

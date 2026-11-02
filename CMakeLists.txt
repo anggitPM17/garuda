@@ -143,6 +143,9 @@ target_link_libraries(garuda_type_annotation_tests PRIVATE garuda)
 add_executable(garuda_type_check_tests tests/test_type_check.cpp)
 target_link_libraries(garuda_type_check_tests PRIVATE garuda)
 
+add_executable(garuda_sum_type_tests tests/test_sum_type.cpp)
+target_link_libraries(garuda_sum_type_tests PRIVATE garuda)
+
 add_executable(grd src/grd.cpp)
 target_link_libraries(grd PRIVATE garuda)
 
