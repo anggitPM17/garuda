@@ -113,6 +113,7 @@ int cmd_test() {
         {"Compiler Driver (grdc.grd)", "garuda_grdc_grd_tests.exe", false, ""},
         {"VM Memory & Register State", "garuda_vm_memory_grd_tests.exe", false, ""},
         {"VM Bytecode Evaluator", "garuda_vm_eval_grd_tests.exe", false, ""},
+        {"VM BIF Bridge", "garuda_vm_bif_grd_tests.exe", false, ""},
         {"Isolate Binop (KB-001)", "garuda_isolate_binop_tests.exe", false, ""}
     };
 

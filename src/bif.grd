@@ -1,0 +1,30 @@
+modul Bif
+impor "src/memory.grd"
+impor "std/string.grd"
+impor "std/matematika.grd"
+
+# BIF Bridge Murni Bahasa Garuda (src/bif.grd)
+
+fungsi bif_terdaftar(Nama) ->
+    yen Nama == "cetak" -> benar
+    lain -> yen Nama == "String.panjang" -> benar
+    lain -> yen Nama == "Matematika.pangkat" -> benar
+    lain -> salah
+    rampung rampung rampung
+rampung
+
+fungsi panggil_bif(Nama, Args) ->
+    yen Nama == "String.panjang" ->
+        StrVal = Memory.reg_baca(Args, 0)
+        Teks = Tuple.elemen(StrVal, 1)
+        Memory.nilai_int(String.panjang(Teks))
+    lain -> yen Nama == "Matematika.pangkat" ->
+        BaseVal = Memory.reg_baca(Args, 0)
+        ExpVal = Memory.reg_baca(Args, 1)
+        B = Tuple.elemen(BaseVal, 1)
+        E = Tuple.elemen(ExpVal, 1)
+        Memory.nilai_int(Matematika.pangkat(B, E))
+    lain ->
+        Memory.nilai_nil()
+    rampung rampung
+rampung
