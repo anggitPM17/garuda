@@ -1,0 +1,23 @@
+modul Grdc
+impor "src/lexer.grd"
+impor "src/parser.grd"
+impor "src/codegen.grd"
+impor "std/system.grd"
+
+# Compiler Driver Garuda Murni Bahasa Garuda (src/grdc.grd)
+
+fungsi kompilasi(Teks) ->
+    Tokens = Lexer.tokenize(Teks)
+    Ast = Parser.parse_number(List.elemen(Tokens, 0))
+    Codegen.gen_number(Tuple.elemen(Ast, 1), 0)
+rampung
+
+fungsi utama() ->
+    Args = Os.args()
+    yen List.panjang(Args) < 1 ->
+        "Usage: grdc <file.grd>"
+    lain ->
+        Sumber = File.baca(List.elemen(Args, 0))
+        kompilasi(Sumber)
+    rampung
+rampung
