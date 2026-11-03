@@ -1,0 +1,21 @@
+modul Process
+impor "std/list.grd"
+impor "std/tuple.grd"
+
+# Process Registry & Actor State Murni Bahasa Garuda (src/process.grd)
+
+fungsi registry_baru() ->
+    []
+rampung
+
+fungsi buat_cakra(Reg, Nama) ->
+    {1, [Nama]}
+rampung
+
+fungsi kirim(Reg, TargetPID, Pesan) ->
+    List.tambah(Reg, Pesan)
+rampung
+
+fungsi process_mailbox_len(Reg, PID) ->
+    List.panjang(Reg)
+rampung
