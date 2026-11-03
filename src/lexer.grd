@@ -1,0 +1,47 @@
+modul Lexer
+impor "std/string.grd"
+impor "std/list.grd"
+
+# Lexer Garuda Murni Bahasa Garuda (src/lexer.grd)
+
+fungsi tokenize_kata(Kata) ->
+    yen Kata == "fungsi" -> {:TKeyword, Kata}
+    lain -> yen Kata == "rampung" -> {:TKeyword, Kata}
+    lain -> yen Kata == "modul" -> {:TKeyword, Kata}
+    lain -> yen Kata == "impor" -> {:TKeyword, Kata}
+    lain -> yen Kata == "yen" -> {:TKeyword, Kata}
+    lain -> yen Kata == "lain" -> {:TKeyword, Kata}
+    lain -> yen Kata == "tinjau" -> {:TKeyword, Kata}
+    lain -> yen Kata == "ing" -> {:TKeyword, Kata}
+    lain -> yen Kata == "coba" -> {:TKeyword, Kata}
+    lain -> yen Kata == "tangkap" -> {:TKeyword, Kata}
+    lain -> yen Kata == "cakra" -> {:TKeyword, Kata}
+    lain -> {:TIdent, Kata}
+    rampung rampung rampung rampung rampung rampung rampung rampung rampung rampung rampung
+rampung
+
+fungsi tokenize_simbol(Simbol) ->
+    yen Simbol == "+" -> {:TOp, Simbol}
+    lain -> yen Simbol == "-" -> {:TOp, Simbol}
+    lain -> yen Simbol == "*" -> {:TOp, Simbol}
+    lain -> yen Simbol == "/" -> {:TOp, Simbol}
+    lain -> yen Simbol == "->" -> {:TOp, Simbol}
+    lain -> yen Simbol == "=" -> {:TOp, Simbol}
+    lain -> {:TOp, Simbol}
+    rampung rampung rampung rampung rampung rampung
+rampung
+
+fungsi tokenize_item(Item) ->
+    yen String.mengandung("0123456789", String.potong(Item, 0, 1)) ->
+        {:TNumber, Item}
+    lain -> yen String.mengandung("+-*/->=", String.potong(Item, 0, 1)) ->
+        tokenize_simbol(Item)
+    lain ->
+        tokenize_kata(Item)
+    rampung rampung
+rampung
+
+fungsi tokenize(Teks) ->
+    Bagian = String.pisah(Teks, " ")
+    List.peta(Bagian, fungsi(Item) -> tokenize_item(Item) rampung)
+rampung
