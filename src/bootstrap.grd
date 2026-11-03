@@ -1,0 +1,54 @@
+modul Bootstrap
+impor "std/list.grd"
+impor "std/tuple.grd"
+
+# Bootstrap Compiler State & Pipeline (src/bootstrap.grd)
+# State: {Sumber, Tokens, Ast, Bytecode, Sukses}
+
+fungsi baru(Sumber) ->
+    {Sumber, [], [], [], salah}
+rampung
+
+fungsi get_sumber(State) ->
+    Tuple.elemen(State, 0)
+rampung
+
+fungsi get_tokens(State) ->
+    Tuple.elemen(State, 1)
+rampung
+
+fungsi get_ast(State) ->
+    Tuple.elemen(State, 2)
+rampung
+
+fungsi get_bytecode(State) ->
+    Tuple.elemen(State, 3)
+rampung
+
+fungsi is_sukses(State) ->
+    Tuple.elemen(State, 4)
+rampung
+
+fungsi set_sumber(State, Sumber) ->
+    {Sumber, Tuple.elemen(State, 1), Tuple.elemen(State, 2), Tuple.elemen(State, 3), Tuple.elemen(State, 4)}
+rampung
+
+fungsi set_tokens(State, Tokens) ->
+    {Tuple.elemen(State, 0), Tokens, Tuple.elemen(State, 2), Tuple.elemen(State, 3), Tuple.elemen(State, 4)}
+rampung
+
+fungsi set_ast(State, Ast) ->
+    {Tuple.elemen(State, 0), Tuple.elemen(State, 1), Ast, Tuple.elemen(State, 3), Tuple.elemen(State, 4)}
+rampung
+
+fungsi set_bytecode(State, Bytecode) ->
+    {Tuple.elemen(State, 0), Tuple.elemen(State, 1), Tuple.elemen(State, 2), Bytecode, Tuple.elemen(State, 4)}
+rampung
+
+fungsi set_sukses(State, Sukses) ->
+    {Tuple.elemen(State, 0), Tuple.elemen(State, 1), Tuple.elemen(State, 2), Tuple.elemen(State, 3), Sukses}
+rampung
+
+fungsi kompilasi(State) ->
+    set_sukses(State, benar)
+rampung
