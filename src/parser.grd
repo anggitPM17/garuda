@@ -1,0 +1,21 @@
+modul Parser
+impor "std/list.grd"
+impor "std/tuple.grd"
+
+# Parser Garuda Murni Bahasa Garuda (src/parser.grd)
+
+fungsi parse_number(Tok) ->
+    yen Tuple.elemen(Tok, 0) == :TNumber ->
+        {:ANumber, Tuple.elemen(Tok, 1)}
+    lain ->
+        {:ANumber, 0}
+    rampung
+rampung
+
+fungsi parse_binary(Op, Left, Right) ->
+    {:ABinary, Op, Left, Right}
+rampung
+
+fungsi parse_function(Name, Body) ->
+    {:AFunction, Name, Body}
+rampung

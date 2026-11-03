@@ -108,6 +108,7 @@ int cmd_test() {
         {"Generic Types Parser", "garuda_generic_tests.exe", false, ""},
         {"System Modules (File/Os)", "garuda_system_tests.exe", false, ""},
         {"Lexer dalam Garuda", "garuda_lexer_grd_tests.exe", false, ""},
+        {"Parser dalam Garuda", "garuda_parser_grd_tests.exe", false, ""},
         {"Isolate Binop (KB-001)", "garuda_isolate_binop_tests.exe", false, ""}
     };
 

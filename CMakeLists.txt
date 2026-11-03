@@ -155,6 +155,9 @@ target_link_libraries(garuda_system_tests PRIVATE garuda)
 add_executable(garuda_lexer_grd_tests tests/test_lexer_grd.cpp)
 target_link_libraries(garuda_lexer_grd_tests PRIVATE garuda)
 
+add_executable(garuda_parser_grd_tests tests/test_parser_grd.cpp)
+target_link_libraries(garuda_parser_grd_tests PRIVATE garuda)
+
 add_executable(grd src/grd.cpp)
 target_link_libraries(grd PRIVATE garuda)
 
