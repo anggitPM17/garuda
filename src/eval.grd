@@ -1,0 +1,45 @@
+modul Eval
+impor "src/memory.grd"
+impor "std/tuple.grd"
+
+# Bytecode Evaluator / Interpreter Murni Bahasa Garuda (src/eval.grd)
+
+fungsi exec_move(RF, SrcVal, DstReg) ->
+    Memory.reg_tulis(RF, DstReg, SrcVal)
+rampung
+
+fungsi exec_add(RF, RegA, RegB, DstReg) ->
+    ValA = Memory.reg_baca(RF, RegA)
+    ValB = Memory.reg_baca(RF, RegB)
+    NumA = Tuple.elemen(ValA, 1)
+    NumB = Tuple.elemen(ValB, 1)
+    Memory.reg_tulis(RF, DstReg, Memory.nilai_int(NumA + NumB))
+rampung
+
+fungsi exec_sub(RF, RegA, RegB, DstReg) ->
+    ValA = Memory.reg_baca(RF, RegA)
+    ValB = Memory.reg_baca(RF, RegB)
+    NumA = Tuple.elemen(ValA, 1)
+    NumB = Tuple.elemen(ValB, 1)
+    Memory.reg_tulis(RF, DstReg, Memory.nilai_int(NumA - NumB))
+rampung
+
+fungsi exec_mul(RF, RegA, RegB, DstReg) ->
+    ValA = Memory.reg_baca(RF, RegA)
+    ValB = Memory.reg_baca(RF, RegB)
+    NumA = Tuple.elemen(ValA, 1)
+    NumB = Tuple.elemen(ValB, 1)
+    Memory.reg_tulis(RF, DstReg, Memory.nilai_int(NumA * NumB))
+rampung
+
+fungsi exec_div(RF, RegA, RegB, DstReg) ->
+    ValA = Memory.reg_baca(RF, RegA)
+    ValB = Memory.reg_baca(RF, RegB)
+    NumA = Tuple.elemen(ValA, 1)
+    NumB = Tuple.elemen(ValB, 1)
+    yen NumB == 0 ->
+        Memory.reg_tulis(RF, DstReg, Memory.nilai_atom("error_div"))
+    lain ->
+        Memory.reg_tulis(RF, DstReg, Memory.nilai_int(NumA / NumB))
+    rampung
+rampung
