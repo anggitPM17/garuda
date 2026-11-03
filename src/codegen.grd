@@ -1,0 +1,16 @@
+modul Codegen
+impor "std/tuple.grd"
+
+# Codegen Garuda Murni Bahasa Garuda (src/codegen.grd)
+
+fungsi gen_number(Val, Reg) ->
+    {:OpMove, Val, Reg}
+rampung
+
+fungsi gen_add(RegA, RegB, RegDst) ->
+    {:OpAdd, RegA, RegB, RegDst}
+rampung
+
+fungsi gen_return(Reg) ->
+    {:OpReturn, Reg}
+rampung
