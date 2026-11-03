@@ -1346,20 +1346,11 @@ private:
                             return std::nullopt;
                         }
 
-                        if (val_a.get_if<std::int64_t>() && val_b.get_if<std::int64_t>()) {
-                            Term res(*val_a.get_if<std::int64_t>() + *val_b.get_if<std::int64_t>());
-                            x_regs[dst.index % 256] = res;
-                            last_result = res;
-                        } else if (val_a.get_if<double>() || val_b.get_if<double>()) {
-                            double da = val_a.get_if<double>() ? *val_a.get_if<double>() : static_cast<double>(*val_a.get_if<std::int64_t>());
-                            double db = val_b.get_if<double>() ? *val_b.get_if<double>() : static_cast<double>(*val_b.get_if<std::int64_t>());
-                            Term res(da + db);
-                            x_regs[dst.index % 256] = res;
-                            last_result = res;
-                        } else {
-                            if (raise_error(Term(Atom{"error_type"}), "Type mismatch in OpAdd")) continue;
-                            return std::nullopt;
-                        }
+                        int64_t ia = get_int_val(val_a);
+                        int64_t ib = get_int_val(val_b);
+                        Term res(ia + ib);
+                        x_regs[dst.index % 256] = res;
+                        last_result = res;
                     }
                     break;
                 }

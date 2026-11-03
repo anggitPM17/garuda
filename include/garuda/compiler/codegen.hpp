@@ -159,9 +159,19 @@ public:
                 if (!inst.args.empty()) {
                     if (auto* atom_val = inst.args[0].literal.get_if<Atom>()) {
                         if (!is_bif_name(atom_val->name)) {
-                            auto it = output.function_table.find(atom_val->name);
-                            if (it != output.function_table.end()) {
-                                inst.args[0] = Operand{RegType::Literal, 0, Term(static_cast<std::int64_t>(it->second))};
+                            std::string target_name = atom_val->name;
+                            std::optional<std::size_t> target_ip;
+                            for (const auto& [k, v] : output.function_table) {
+                                std::string k_base = k;
+                                auto slash_pos = k.find('/');
+                                if (slash_pos != std::string::npos) k_base = k.substr(0, slash_pos);
+                                if (k_base == target_name) {
+                                    target_ip = v;
+                                    break;
+                                }
+                            }
+                            if (target_ip.has_value()) {
+                                inst.args[0] = Operand{RegType::Literal, 0, Term(static_cast<std::int64_t>(*target_ip))};
                             }
                         }
                     }
@@ -178,7 +188,7 @@ private:
         std::string name;
         std::vector<std::string> param_names;
         std::size_t base_global_ip = 0;
-        std::uint16_t next_reg = 0;
+        std::uint16_t next_reg = 16;
         std::vector<Instruction> instructions;
         std::unordered_map<std::string, std::uint16_t> var_map;
     };
@@ -201,8 +211,9 @@ private:
     void gen_function(std::shared_ptr<FunctionDeclNode> fn, std::shared_ptr<FuncState> state) {
         state->param_names = fn->params();
         for (std::size_t i = 0; i < fn->params().size(); ++i) {
-            std::uint16_t reg = alloc_reg(); // Param i -> X[i]
-            state->var_map[fn->params()[i]] = reg;
+            std::uint16_t local_reg = alloc_reg();
+            emit(Opcode::OpMove, {Operand{RegType::X, static_cast<std::uint16_t>(i), Term()}, Operand{RegType::X, local_reg, Term()}});
+            state->var_map[fn->params()[i]] = local_reg;
         }
 
         const auto& stmts = fn->body();

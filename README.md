@@ -242,10 +242,10 @@ Lihat panduan lengkap pada [docs/lsp-vscode.md](docs/lsp-vscode.md) untuk:
 
 ## 🧪 Suite Pengujian (`grd test`)
 
-Seluruh 21 test suite lulus 100% tanpa error:
+Seluruh 25 test suite lulus 100% tanpa error:
 ```text
 ======================================================
-RINGKASAN HASIL TEST: 21 PASS | 0 FAIL | 0 SKIP
+RINGKASAN HASIL TEST: 25 PASS | 0 FAIL | 0 SKIP
 ======================================================
 ```
 
@@ -269,7 +269,11 @@ RINGKASAN HASIL TEST: 21 PASS | 0 FAIL | 0 SKIP
 18. **Sum Types & Pattern Matching** (`{:Tag, Val}`)
 19. **Generic Types Parser** (`List<Int>`)
 20. **System Modules** (`std/system.grd` File/OS)
-21. **Isolate Binop (KB-001)** — `List.peta` / `List.saring` + lambda **PASS**
+21. **Lexer dalam Garuda** (`src/lexer.grd`)
+22. **Parser dalam Garuda** (`src/parser.grd`)
+23. **Codegen dalam Garuda** (`src/codegen.grd`)
+24. **Compiler Driver** (`src/grdc.grd`)
+25. **Isolate Binop (KB-001)** — `List.peta` / `List.saring` + lambda **PASS**
 
 ---
 
