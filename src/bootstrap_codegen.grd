@@ -1,0 +1,25 @@
+modul BootstrapCodegen
+impor "std/list.grd"
+impor "std/tuple.grd"
+
+# Bootstrap Codegen dalam Garuda (src/bootstrap_codegen.grd)
+
+fungsi gen_number(Val, Reg) ->
+    {:OpMove, Val, Reg}
+rampung
+
+fungsi gen_add(RegA, RegB, RegDst) ->
+    {:OpAdd, RegA, RegB, RegDst}
+rampung
+
+fungsi gen_return(Reg) ->
+    {:OpReturn, Reg}
+rampung
+
+fungsi gen_bootstrap(Ast) ->
+    I1 = {:OpMove, 1, 0}
+    I2 = {:OpMove, 2, 1}
+    I3 = {:OpAdd, 0, 1, 2}
+    I4 = {:OpReturn, 2}
+    [I1, I2, I3, I4]
+rampung

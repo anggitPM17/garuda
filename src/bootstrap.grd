@@ -3,6 +3,7 @@ impor "std/list.grd"
 impor "std/tuple.grd"
 impor "src/bootstrap_lexer.grd"
 impor "src/bootstrap_parser.grd"
+impor "src/bootstrap_codegen.grd"
 
 # Bootstrap Compiler State & Pipeline (src/bootstrap.grd)
 # State: {Sumber, Tokens, Ast, Bytecode, Sukses}
@@ -55,7 +56,9 @@ fungsi kompilasi(State) ->
     Src = get_sumber(State)
     Toks = BootstrapLexer.tokenize_bootstrap(Src)
     Ast = BootstrapParser.parse_bootstrap(Toks)
+    Bc = BootstrapCodegen.gen_bootstrap(Ast)
     St1 = set_tokens(State, Toks)
     St2 = set_ast(St1, Ast)
-    set_sukses(St2, benar)
+    St3 = set_bytecode(St2, Bc)
+    set_sukses(St3, benar)
 rampung

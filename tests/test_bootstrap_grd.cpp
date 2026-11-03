@@ -14,7 +14,7 @@
 
 int main() {
     std::cout << "=======================================================\n";
-    std::cout << "GARUDA COMPILER — BOOTSTRAP LEXER & PARSER TEST SUITE\n";
+    std::cout << "GARUDA COMPILER — BOOTSTRAP CODEGEN TEST SUITE\n";
     std::cout << "=======================================================\n\n";
 
     // Test BS1: Bootstrap.baru("1 + 2")
@@ -117,6 +117,55 @@ int main() {
     bool is_ok6 = res6 && garuda::beam::to_string(*res6) == "3";
     CHECK(is_ok6, "Test BS6: Bootstrap.kompilasi populates Tokens length == 3");
 
-    std::cout << "\n🎉 ALL BOOTSTRAP LEXER & PARSER TESTS PASSED PERFECTLY!\n";
+    // Test BS7: BootstrapCodegen.gen_number
+    garuda::beam::ScriptEngine engine7;
+    std::string code7 = R"(
+        modul TestBS7
+        impor "src/bootstrap_codegen.grd"
+        impor "std/tuple.grd"
+
+        fungsi utama() ->
+            Inst = BootstrapCodegen.gen_number(10, 0)
+            Tuple.elemen(Inst, 0)
+        rampung
+    )";
+    auto res7 = engine7.eval(code7);
+    bool is_ok7 = res7 && (garuda::beam::to_string(*res7) == "OpMove" || garuda::beam::to_string(*res7) == ":OpMove");
+    CHECK(is_ok7, "Test BS7: BootstrapCodegen.gen_number returns :OpMove instruction");
+
+    // Test BS8: BootstrapCodegen.gen_add
+    garuda::beam::ScriptEngine engine8;
+    std::string code8 = R"(
+        modul TestBS8
+        impor "src/bootstrap_codegen.grd"
+        impor "std/tuple.grd"
+
+        fungsi utama() ->
+            Inst = BootstrapCodegen.gen_add(0, 1, 2)
+            Tuple.elemen(Inst, 0)
+        rampung
+    )";
+    auto res8 = engine8.eval(code8);
+    bool is_ok8 = res8 && (garuda::beam::to_string(*res8) == "OpAdd" || garuda::beam::to_string(*res8) == ":OpAdd");
+    CHECK(is_ok8, "Test BS8: BootstrapCodegen.gen_add returns :OpAdd instruction");
+
+    // Test BS9: Bootstrap.kompilasi populates Bytecode
+    garuda::beam::ScriptEngine engine9;
+    std::string code9 = R"(
+        modul TestBS9
+        impor "src/bootstrap.grd"
+
+        fungsi utama() ->
+            St = Bootstrap.baru("1 + 2")
+            StKomp = Bootstrap.kompilasi(St)
+            Bc = Bootstrap.get_bytecode(StKomp)
+            List.panjang(Bc)
+        rampung
+    )";
+    auto res9 = engine9.eval(code9);
+    bool is_ok9 = res9 && garuda::beam::to_string(*res9) == "4";
+    CHECK(is_ok9, "Test BS9: Bootstrap.kompilasi populates Bytecode length == 4");
+
+    std::cout << "\n🎉 ALL BOOTSTRAP CODEGEN TESTS PASSED PERFECTLY!\n";
     return 0;
 }
