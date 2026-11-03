@@ -6,7 +6,7 @@ modul String
 fungsi panjang(Teks) -> String.panjang(Teks) rampung
 fungsi besar(Teks) -> String.besar(Teks) rampung
 fungsi kecil(Teks) -> String.kecil(Teks) rampung
-fungsi potong(Teks, Mula, Panjang) -> String.potong(Teks, Mula, Panjang) rampung
+fungsi potong(Teks, Mula, Panjang) -> potong(Teks, Mula, Panjang) rampung
 fungsi gabung(Teks1, Teks2) -> Teks1 ++ Teks2 rampung
 fungsi pisah(Teks, Pembatas) -> String.pisah(Teks, Pembatas) rampung
 fungsi mengandung(Teks, Sub) -> String.mengandung(Teks, Sub) rampung

@@ -1,0 +1,50 @@
+modul BootstrapLexer
+impor "std/string.grd"
+
+# Bootstrap Lexer dalam Garuda (src/bootstrap_lexer.grd)
+
+fungsi kata_ke_token(K) ->
+    yen K == "fungsi" -> {:TKwFungsi, K}
+    lain -> yen K == "rampung" -> {:TKwRampung, K}
+    lain -> yen K == "yen" -> {:TKwYen, K}
+    lain -> yen K == "lain" -> {:TKwLain, K}
+    lain -> yen K == "modul" -> {:TKwModul, K}
+    lain -> yen K == "impor" -> {:TKwImpor, K}
+    lain -> {:TIdent, K}
+    rampung rampung rampung rampung rampung rampung
+rampung
+
+fungsi is_digit(K) ->
+    yen K == "0" -> benar lain -> yen K == "1" -> benar lain -> yen K == "2" -> benar lain -> yen K == "3" -> benar lain -> yen K == "4" -> benar lain -> yen K == "5" -> benar lain -> yen K == "6" -> benar lain -> yen K == "7" -> benar lain -> yen K == "8" -> benar lain -> yen K == "9" -> benar lain -> salah rampung rampung rampung rampung rampung rampung rampung rampung rampung rampung
+rampung
+
+fungsi is_op(K) ->
+    yen K == "+" -> benar lain -> yen K == "-" -> benar lain -> yen K == "*" -> benar lain -> yen K == "/" -> benar lain -> yen K == "=" -> benar lain -> yen K == "->" -> benar lain -> salah rampung rampung rampung rampung rampung rampung
+rampung
+
+fungsi item_ke_token(Item) ->
+    Awal = String.potong(Item, 0, 1)
+    yen BootstrapLexer.is_digit(Awal) ->
+        {:TNumber, Item}
+    lain -> yen BootstrapLexer.is_op(Awal) ->
+        {:TOp, Item}
+    lain ->
+        BootstrapLexer.kata_ke_token(Item)
+    rampung rampung
+rampung
+
+fungsi loop_tokenize(Daftar, Idx, Len, Acc) ->
+    yen Idx >= Len -> Acc
+    lain ->
+        Elem = List.elemen(Daftar, Idx)
+        Tok = BootstrapLexer.item_ke_token(Elem)
+        Acc2 = List.tambah(Acc, Tok)
+        BootstrapLexer.loop_tokenize(Daftar, Idx + 1, Len, Acc2)
+    rampung
+rampung
+
+fungsi tokenize_bootstrap(Sumber) ->
+    Bagian = String.pisah(Sumber, " ")
+    Len = List.panjang(Bagian)
+    BootstrapLexer.loop_tokenize(Bagian, 0, Len, [])
+rampung

@@ -847,7 +847,7 @@ private:
                 last_result = res;
                 return true;
             }
-            if (is_fn(fn_name, "potong")) {
+            if (is_fn(fn_name, "potong") || is_mod_fn(fn_name, "String", "potong")) {
                 std::string s = clean_str(x_regs[0]);
                 int64_t start = x_regs[1].get_if<std::int64_t>() ? *x_regs[1].get_if<std::int64_t>() : 0;
                 int64_t len = x_regs[2].get_if<std::int64_t>() ? *x_regs[2].get_if<std::int64_t>() : static_cast<int64_t>(s.length());

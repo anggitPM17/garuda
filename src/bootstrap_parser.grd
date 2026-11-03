@@ -1,0 +1,29 @@
+modul BootstrapParser
+impor "std/list.grd"
+impor "std/tuple.grd"
+
+# Bootstrap Parser dalam Garuda (src/bootstrap_parser.grd)
+
+fungsi parse_number(Tok) ->
+    yen Tuple.elemen(Tok, 0) == :TNumber ->
+        {:ANumber, Tuple.elemen(Tok, 1)}
+    lain ->
+        {:ANumber, "0"}
+    rampung
+rampung
+
+fungsi parse_binary(Op, Left, Right) ->
+    {:ABinary, Op, Left, Right}
+rampung
+
+fungsi parse_function(Name, Body) ->
+    {:AFunction, Name, Body}
+rampung
+
+fungsi parse_program(Tokens) ->
+    {:AProgram, Tokens}
+rampung
+
+fungsi parse_bootstrap(Tokens) ->
+    {:AProgram, Tokens}
+rampung

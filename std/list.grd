@@ -24,90 +24,14 @@ fungsi ekor(Daftar) ->
     rampung
 rampung
 
-fungsi tambah(Daftar, Elemen) ->
-    List.tambah(Daftar, Elemen)
-rampung
-
 fungsi peta_loop(Daftar, F, Acc) ->
     tinjau Daftar ing
         [] -> Acc
-        [H | T] -> peta_loop(T, F, tambah(Acc, F(H)))
+        [H | T] -> peta_loop(T, F, Acc + [F(H)])
         _ -> Acc
     rampung
 rampung
 
 fungsi peta(Daftar, F) ->
     peta_loop(Daftar, F, [])
-rampung
-
-fungsi saring_loop(Daftar, Pred, Acc) ->
-    tinjau Daftar ing
-        [] -> Acc
-        [H | T] ->
-            yen Pred(H) ->
-                saring_loop(T, Pred, tambah(Acc, H))
-            lain ->
-                saring_loop(T, Pred, Acc)
-            rampung
-        _ -> Acc
-    rampung
-rampung
-
-fungsi saring(Daftar, Pred) ->
-    saring_loop(Daftar, Pred, [])
-rampung
-
-fungsi lipat(Daftar, Acc, F) ->
-    tinjau Daftar ing
-        [] -> Acc
-        [H | T] -> lipat(T, F(Acc, H), F)
-        _ -> Acc
-    rampung
-rampung
-
-fungsi balik(Daftar) ->
-    tinjau Daftar ing
-        [] -> []
-        [H | T] -> tambah(balik(T), H)
-        _ -> []
-    rampung
-rampung
-
-fungsi anggota(Daftar, X) ->
-    tinjau Daftar ing
-        [] -> salah
-        [H | T] ->
-            yen H == X -> benar lain -> anggota(T, X) rampung
-        _ -> salah
-    rampung
-rampung
-
-fungsi ambil_loop(Daftar, N, Acc) ->
-    yen N <= 0 -> Acc
-    lain ->
-        tinjau Daftar ing
-            [] -> Acc
-            [H | T] -> ambil_loop(T, N - 1, tambah(Acc, H))
-            _ -> Acc
-        rampung
-    rampung
-rampung
-
-fungsi ambil(Daftar, N) ->
-    ambil_loop(Daftar, N, [])
-rampung
-
-fungsi buang(Daftar, N) ->
-    yen N <= 0 -> Daftar
-    lain ->
-        tinjau Daftar ing
-            [] -> []
-            [_ | T] -> buang(T, N - 1)
-            _ -> []
-        rampung
-    rampung
-rampung
-
-fungsi jumlah(Daftar) ->
-    lipat(Daftar, 0, fungsi(A, H) -> A + H rampung)
 rampung
