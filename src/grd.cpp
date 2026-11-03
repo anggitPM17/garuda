@@ -115,6 +115,7 @@ int cmd_test() {
         {"VM Bytecode Evaluator", "garuda_vm_eval_grd_tests.exe", false, ""},
         {"VM BIF Bridge", "garuda_vm_bif_grd_tests.exe", false, ""},
         {"VM Actor State", "garuda_vm_actor_grd_tests.exe", false, ""},
+        {"VM Driver & Runner Executable", "garuda_grdrun_grd_tests.exe", false, ""},
         {"Isolate Binop (KB-001)", "garuda_isolate_binop_tests.exe", false, ""}
     };
 

@@ -1,0 +1,24 @@
+modul Grdrun
+impor "src/grdc.grd"
+impor "src/vm.grd"
+impor "std/system.grd"
+impor "std/list.grd"
+impor "std/tuple.grd"
+
+# Runner Executable Garuda Murni Bahasa Garuda (src/grdrun.grd)
+
+fungsi jalankan(Teks) ->
+    Op = Grdc.kompilasi(Teks)
+    ValStr = Tuple.elemen(Op, 1)
+    ValStr
+rampung
+
+fungsi utama() ->
+    Args = Os.args()
+    yen List.panjang(Args) < 1 ->
+        "Usage: grdrun <file.grd>"
+    lain ->
+        Sumber = File.baca(List.elemen(Args, 0))
+        jalankan(Sumber)
+    rampung
+rampung

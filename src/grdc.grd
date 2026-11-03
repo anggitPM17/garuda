@@ -3,12 +3,14 @@ impor "src/lexer.grd"
 impor "src/parser.grd"
 impor "src/codegen.grd"
 impor "std/system.grd"
+impor "std/list.grd"
+impor "std/tuple.grd"
 
 # Compiler Driver Garuda Murni Bahasa Garuda (src/grdc.grd)
 
 fungsi kompilasi(Teks) ->
-    Tokens = Lexer.tokenize(Teks)
-    Ast = Parser.parse_number(List.elemen(Tokens, 0))
+    Tok = Lexer.tokenize_item(Teks)
+    Ast = Parser.parse_number(Tok)
     Codegen.gen_number(Tuple.elemen(Ast, 1), 0)
 rampung
 

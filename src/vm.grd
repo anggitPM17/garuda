@@ -1,0 +1,15 @@
+modul Vm
+impor "src/memory.grd"
+impor "src/eval.grd"
+impor "src/bif.grd"
+
+# Virtual Machine Driver Murni Bahasa Garuda (src/vm.grd)
+
+fungsi eksekusi_sederhana(A, B) ->
+    RF = Memory.reg_baru()
+    RF1 = Memory.reg_tulis(RF, 0, Memory.nilai_int(A))
+    RF2 = Memory.reg_tulis(RF1, 1, Memory.nilai_int(B))
+    RF3 = Eval.exec_add(RF2, 0, 1, 2)
+    Val = Memory.reg_baca(RF3, 2)
+    Tuple.elemen(Val, 1)
+rampung
