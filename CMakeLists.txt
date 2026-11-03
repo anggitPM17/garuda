@@ -164,6 +164,9 @@ target_link_libraries(garuda_codegen_grd_tests PRIVATE garuda)
 add_executable(garuda_grdc_grd_tests tests/test_grdc_grd.cpp)
 target_link_libraries(garuda_grdc_grd_tests PRIVATE garuda)
 
+add_executable(garuda_vm_memory_grd_tests tests/test_vm_memory_grd.cpp)
+target_link_libraries(garuda_vm_memory_grd_tests PRIVATE garuda)
+
 add_executable(grd src/grd.cpp)
 target_link_libraries(grd PRIVATE garuda)
 

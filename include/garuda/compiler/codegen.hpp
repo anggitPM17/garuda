@@ -150,7 +150,8 @@ public:
                    name == "Error.message" || name == "Error.jenis" || name == "Error.kind" ||
                    name == "File.baca" || name == "File.read" || name == "File.tulis" ||
                    name == "File.write" || name == "File.ada" || name == "File.exists" ||
-                   name == "Os.args" || name == "Os.env" || name == "Os.exit";
+                   name == "Os.args" || name == "Os.env" || name == "Os.exit" ||
+                   name == "List.elemen" || name == "List.at";
         };
 
         for (std::size_t idx : global_call_patches_) {

@@ -1,0 +1,82 @@
+modul Memory
+impor "std/list.grd"
+impor "std/tuple.grd"
+
+# Memory State & Register File Murni Bahasa Garuda (src/memory.grd)
+
+fungsi opcode_ke_string(Op) ->
+    yen Op == :OpMove -> "OpMove"
+    lain -> yen Op == :OpAdd -> "OpAdd"
+    lain -> yen Op == :OpSub -> "OpSub"
+    lain -> yen Op == :OpMul -> "OpMul"
+    lain -> yen Op == :OpDiv -> "OpDiv"
+    lain -> yen Op == :OpJump -> "OpJump"
+    lain -> yen Op == :OpJumpIfFalse -> "OpJumpIfFalse"
+    lain -> yen Op == :OpCall -> "OpCall"
+    lain -> yen Op == :OpReturn -> "OpReturn"
+    lain -> yen Op == :OpHalt -> "OpHalt"
+    lain -> "OpUnknown"
+    rampung rampung rampung rampung rampung rampung rampung rampung rampung rampung
+rampung
+
+fungsi string_ke_opcode(S) ->
+    yen S == "OpMove" -> :OpMove
+    lain -> yen S == "OpAdd" -> :OpAdd
+    lain -> yen S == "OpSub" -> :OpSub
+    lain -> yen S == "OpMul" -> :OpMul
+    lain -> yen S == "OpDiv" -> :OpDiv
+    lain -> yen S == "OpJump" -> :OpJump
+    lain -> yen S == "OpJumpIfFalse" -> :OpJumpIfFalse
+    lain -> yen S == "OpCall" -> :OpCall
+    lain -> yen S == "OpReturn" -> :OpReturn
+    lain -> yen S == "OpHalt" -> :OpHalt
+    lain -> :OpUnknown
+    rampung rampung rampung rampung rampung rampung rampung rampung rampung rampung
+rampung
+
+# Value Constructors
+fungsi nilai_int(N) -> {:VInt, N} rampung
+fungsi nilai_str(S) -> {:VStr, S} rampung
+fungsi nilai_bool(B) -> {:VBool, B} rampung
+fungsi nilai_atom(A) -> {:VAtom, A} rampung
+fungsi nilai_nil() -> :VNil rampung
+
+fungsi nilai_jenis(V) ->
+    yen V == :VNil -> :VNil
+    lain -> Tuple.elemen(V, 0)
+    rampung
+rampung
+
+# Register File
+fungsi reg_baru() ->
+    [:VNil, :VNil, :VNil, :VNil, :VNil, :VNil, :VNil, :VNil, :VNil, :VNil, :VNil, :VNil, :VNil, :VNil, :VNil, :VNil]
+rampung
+
+fungsi reg_baca(RF, I) ->
+    yen I == 0 -> List.elemen(RF, 0)
+    lain -> yen I == 1 -> List.elemen(RF, 1)
+    lain -> yen I == 2 -> List.elemen(RF, 2)
+    lain -> yen I == 3 -> List.elemen(RF, 3)
+    lain -> :VNil
+    rampung rampung rampung rampung
+rampung
+
+fungsi reg_tulis(RF, I, V) ->
+    yen I == 0 -> [V, List.elemen(RF, 1), List.elemen(RF, 2), List.elemen(RF, 3)]
+    lain -> yen I == 1 -> [List.elemen(RF, 0), V, List.elemen(RF, 2), List.elemen(RF, 3)]
+    lain -> yen I == 2 -> [List.elemen(RF, 0), List.elemen(RF, 1), V, List.elemen(RF, 3)]
+    lain -> yen I == 3 -> [List.elemen(RF, 0), List.elemen(RF, 1), List.elemen(RF, 2), V]
+    lain -> RF
+    rampung rampung rampung rampung
+rampung
+
+# VM State: {Regs, IP, CallStack, Halted, LastResult}
+fungsi vmstate_baru(Regs) ->
+    {Regs, 0, [], salah, :VNil}
+rampung
+
+fungsi vmstate_regs(VMS) -> Tuple.elemen(VMS, 0) rampung
+fungsi vmstate_ip(VMS) -> Tuple.elemen(VMS, 1) rampung
+fungsi vmstate_call_stack(VMS) -> Tuple.elemen(VMS, 2) rampung
+fungsi vmstate_halted(VMS) -> Tuple.elemen(VMS, 3) rampung
+fungsi vmstate_last_result(VMS) -> Tuple.elemen(VMS, 4) rampung

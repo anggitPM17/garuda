@@ -351,6 +351,21 @@ private:
                 return true;
             }
 
+            if (is_mod_fn(fn_name, "List", "elemen") || is_mod_fn(fn_name, "List", "at")) {
+                std::size_t idx = static_cast<std::size_t>(x_regs[1].get_if<int64_t>() ? *x_regs[1].get_if<int64_t>() : 0);
+                int64_t sz = get_seq_size(x_regs[0]);
+                if (idx < static_cast<std::size_t>(sz)) {
+                    Term elem = get_seq_elem(x_regs[0], idx);
+                    x_regs[0] = elem;
+                    last_result = elem;
+                    return true;
+                }
+                Term res(Atom{"nil"});
+                x_regs[0] = res;
+                last_result = res;
+                return true;
+            }
+
             // Http Built-ins
             if (is_mod_fn(fn_name, "Http", "ambil") || is_mod_fn(fn_name, "Http", "get")) {
                 std::string url = clean_str(x_regs[0]);

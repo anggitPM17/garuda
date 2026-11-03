@@ -111,6 +111,7 @@ int cmd_test() {
         {"Parser dalam Garuda", "garuda_parser_grd_tests.exe", false, ""},
         {"Codegen dalam Garuda", "garuda_codegen_grd_tests.exe", false, ""},
         {"Compiler Driver (grdc.grd)", "garuda_grdc_grd_tests.exe", false, ""},
+        {"VM Memory & Register State", "garuda_vm_memory_grd_tests.exe", false, ""},
         {"Isolate Binop (KB-001)", "garuda_isolate_binop_tests.exe", false, ""}
     };
 
