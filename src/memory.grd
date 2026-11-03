@@ -58,7 +58,7 @@ fungsi reg_baca(RF, I) ->
     lain -> yen I == 2 -> List.elemen(RF, 2)
     lain -> yen I == 3 -> List.elemen(RF, 3)
     lain -> :VNil
-    rampung rampung rampung rampung
+    rampung rampung rampung rampung rampung
 rampung
 
 fungsi reg_tulis(RF, I, V) ->
@@ -67,7 +67,7 @@ fungsi reg_tulis(RF, I, V) ->
     lain -> yen I == 2 -> [List.elemen(RF, 0), List.elemen(RF, 1), V, List.elemen(RF, 3)]
     lain -> yen I == 3 -> [List.elemen(RF, 0), List.elemen(RF, 1), List.elemen(RF, 2), V]
     lain -> RF
-    rampung rampung rampung rampung
+    rampung rampung rampung rampung rampung
 rampung
 
 # VM State: {Regs, IP, CallStack, Halted, LastResult}

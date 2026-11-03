@@ -222,7 +222,7 @@ private:
             bool is_tail = (i == stmts.size() - 1);
             std::uint16_t last_reg = gen_expr(stmts[i], is_tail);
 
-            if (is_tail && stmts[i]->type() != AstNodeType::CallExpr) {
+            if (is_tail) {
                 emit(Opcode::OpMove, {Operand{RegType::X, last_reg, Term()}, Operand{RegType::X, 0, Term()}});
                 emit(Opcode::OpReturn, {});
             }
@@ -237,7 +237,7 @@ private:
     }
 
     void protect_param_regs(std::size_t arity) {
-        std::size_t num_regs_to_protect = std::max(arity, static_cast<std::size_t>(1));
+        std::size_t num_regs_to_protect = (std::max)(arity, static_cast<std::size_t>(1));
         std::vector<std::pair<std::string, std::uint16_t>> to_move;
         for (const auto& [vname, vreg] : current_func_->var_map) {
             if (vreg < num_regs_to_protect) {

@@ -55,12 +55,18 @@ public:
             } else if (Fs::exists("../" + path)) {
                 resolved_path = "../" + path;
                 src = Fs::read_file("../" + path);
+            } else if (Fs::exists("../../" + path)) {
+                resolved_path = "../../" + path;
+                src = Fs::read_file("../../" + path);
             } else if (path.rfind("std/", 0) != 0 && Fs::exists("std/" + path)) {
                 resolved_path = "std/" + path;
                 src = Fs::read_file("std/" + path);
             } else if (path.rfind("std/", 0) != 0 && Fs::exists("../std/" + path)) {
                 resolved_path = "../std/" + path;
                 src = Fs::read_file("../std/" + path);
+            } else if (path.rfind("std/", 0) != 0 && Fs::exists("../../std/" + path)) {
+                resolved_path = "../../std/" + path;
+                src = Fs::read_file("../../std/" + path);
             } else {
                 return std::nullopt;
             }
@@ -159,22 +165,23 @@ public:
             }
 
             std::size_t start_ip = 0;
-            auto it = combined_out.function_table.find("utama");
-            if (it == combined_out.function_table.end()) {
-                for (const auto& [k, v] : combined_out.function_table) {
-                    if (k == "utama" || k.find("utama") != std::string::npos) {
-                        it = combined_out.function_table.find(k);
-                        break;
-                    }
-                }
+            auto main_it = main_out.function_table.find("utama/0");
+            if (main_it == main_out.function_table.end()) {
+                main_it = main_out.function_table.find("utama");
             }
+            std::size_t main_offset = combined_out.all_instructions.size();
+            merge_output(combined_out, main_out);
 
-            if (it != combined_out.function_table.end()) {
-                start_ip = it->second;
+            if (main_it != main_out.function_table.end()) {
+                start_ip = main_offset + main_it->second;
             }
 
             return execute_instructions(combined_out, start_ip);
+        } catch (const std::exception& e) {
+            std::cout << "[EVAL EXC: " << e.what() << "]\n";
+            return std::nullopt;
         } catch (...) {
+            std::cout << "[EVAL UNKNOWN EXC]\n";
             return std::nullopt;
         }
     }
