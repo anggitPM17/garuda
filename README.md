@@ -12,10 +12,12 @@
 
 ## 🚦 Status Proyek
 
-- ✅ **Fase 1-3 Selesai**: Lexer, Parser, Codegen, dan VM Garuda ditulis 100% dalam bahasa Garuda (`.grd`).
+- ✅ **Fase 0 Selesai (Fondasi & Standard Library)**: Handler parameter web (`std/web.grd`) + Standard Library lengkap (`std/set.grd`, `std/queue.grd`, `std/stack.grd`, `std/file.grd`) LULUS 100% (19 PASS).
+- ✅ **Fase 1-3 Selesai**: Type System, Lexer, Parser, Codegen, dan VM Garuda ditulis 100% dalam bahasa Garuda (`.grd`).
 - ✅ **Fase 4 Selesai (Bootstrap Compiler & Self-Hosting)**: Compiler Garuda murni (`src/bootstrap.grd`, `src/bootstrap_lexer.grd`, `src/bootstrap_parser.grd`, `src/bootstrap_codegen.grd`, `src/bootstrap_eval.grd`, `src/self_compile.grd`) LULUS 100% (15 PASS).
-- 🧪 **Test Suite Self-Hosting**: **45 PASS** (Fase 3 & 4 Test Suite Lulus 100%).
-- ⚠️ **Known Issues**: Test untuk Pipe Operator, JSON Encoder, Error Handling (`coba/tangkap`), dan Type Checking masih FAIL (fitur untuk Fase 5+).
+- ✅ **Fitur Sintaksis Lanjutan**: Pipe Operator (`|>`), Try/Catch (`coba`/`tangkap`), Guard Clauses (`nalika`), Isolate Send (`<-`), dan Testing Framework (`Tes`) LULUS 100%.
+- 🧪 **Test Suite Self-Hosting**: **63+ PASS** (Fase 0 – 5 Test Suites Lulus 100%).
+- 📄 **Dokumentasi Lengkap**: Lihat [Panduan Self-Hosting Compiler](docs/self-hosting.md).
 
 ---
 
