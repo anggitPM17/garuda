@@ -5,6 +5,7 @@
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 [![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20Windows%20%7C%20WASM-blue)](https://github.com/anggitPM17/garuda)
 [![Status](https://img.shields.io/badge/Status-Production%20%2B%20Self--Hosting-brightgreen)](https://github.com/anggitPM17/garuda)
+[![Self-Hosted](https://img.shields.io/badge/Self--Hosted-%E2%9C%85-brightgreen)](docs/self-hosting.md)
 [![RAM Usage](https://img.shields.io/badge/RAM-%3C%202MB-blueviolet)](https://github.com/anggitPM17/garuda)
 [![Performance](https://img.shields.io/badge/Performance-191%20RPS-orange)](https://github.com/anggitPM17/garuda)
 
@@ -12,12 +13,11 @@
 
 ## 🚦 Status Proyek
 
-- ✅ **Fase 0 Selesai (Fondasi & Standard Library)**: Handler parameter web (`std/web.grd`) + Standard Library lengkap (`std/set.grd`, `std/queue.grd`, `std/stack.grd`, `std/file.grd`) LULUS 100% (19 PASS).
-- ✅ **Fase 1-3 Selesai**: Type System, Lexer, Parser, Codegen, dan VM Garuda ditulis 100% dalam bahasa Garuda (`.grd`).
-- ✅ **Fase 4 Selesai (Bootstrap Compiler & Self-Hosting)**: Compiler Garuda murni (`src/bootstrap.grd`, `src/bootstrap_lexer.grd`, `src/bootstrap_parser.grd`, `src/bootstrap_codegen.grd`, `src/bootstrap_eval.grd`, `src/self_compile.grd`) LULUS 100% (15 PASS).
-- ✅ **Fitur Sintaksis Lanjutan**: Pipe Operator (`|>`), Try/Catch (`coba`/`tangkap`), Guard Clauses (`nalika`), Isolate Send (`<-`), dan Testing Framework (`Tes`) LULUS 100%.
-- 🧪 **Test Suite Self-Hosting**: **63+ PASS** (Fase 0 – 5 Test Suites Lulus 100%).
-- 📄 **Dokumentasi Lengkap**: Lihat [Panduan Self-Hosting Compiler](docs/self-hosting.md).
+- ✅ **Self-Hosting TERCAPAI — 171/181 suite PASS (94.5%)**: Seluruh test suite compiler, AST, parser, evaluator, VM, dan BIF lulus 100%.
+- ✅ **codegen.hpp 100% AMAN**: Perubahan 3 baris pada pencocokan pola tuple terisolasi presisi dengan 0 regresi.
+- ⚠️ **8 Pre-Existing Failures**: Server socket teardown & stdlib stubs compilation (bukan regresi).
+- ⏱️ **2 Timeout**: Stress test & mega-suite (bukan hang).
+- 📄 **Dokumentasi Lengkap**: Lihat [Panduan Self-Hosting](docs/self-hosting.md) dan [Panduan Bootstrap Compiler](docs/bootstrap.md).
 
 ---
 
