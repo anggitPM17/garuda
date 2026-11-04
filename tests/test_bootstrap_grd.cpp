@@ -14,7 +14,7 @@
 
 int main() {
     std::cout << "=======================================================\n";
-    std::cout << "GARUDA COMPILER — BOOTSTRAP CODEGEN TEST SUITE\n";
+    std::cout << "GARUDA COMPILER — BOOTSTRAP INTEGRATION TEST SUITE\n";
     std::cout << "=======================================================\n\n";
 
     // Test BS1: Bootstrap.baru("1 + 2")
@@ -166,6 +166,66 @@ int main() {
     bool is_ok9 = res9 && garuda::beam::to_string(*res9) == "4";
     CHECK(is_ok9, "Test BS9: Bootstrap.kompilasi populates Bytecode length == 4");
 
-    std::cout << "\n🎉 ALL BOOTSTRAP CODEGEN TESTS PASSED PERFECTLY!\n";
+    // Test BS10: BootstrapEval.eval_inst OpMove
+    garuda::beam::ScriptEngine engine10;
+    std::string code10 = R"(
+        modul TestBS10
+        impor "src/bootstrap_eval.grd"
+        impor "src/memory.grd"
+        impor "std/tuple.grd"
+
+        fungsi utama() ->
+            RF = Memory.reg_baru()
+            Inst = {:OpMove, 10, 0}
+            RF2 = BootstrapEval.eval_inst(RF, Inst)
+            Val = Memory.reg_baca(RF2, 0)
+            Tuple.elemen(Val, 1)
+        rampung
+    )";
+    auto res10 = engine10.eval(code10);
+    bool is_ok10 = res10 && garuda::beam::to_string(*res10) == "10";
+    CHECK(is_ok10, "Test BS10: BootstrapEval.eval_inst OpMove sets reg 0 == 10");
+
+    // Test BS11: BootstrapEval.eval_inst OpAdd
+    garuda::beam::ScriptEngine engine11;
+    std::string code11 = R"(
+        modul TestBS11
+        impor "src/bootstrap_eval.grd"
+        impor "src/memory.grd"
+        impor "std/tuple.grd"
+
+        fungsi utama() ->
+            RF = Memory.reg_baru()
+            RF1 = Memory.reg_tulis(RF, 0, Memory.nilai_int(10))
+            RF2 = Memory.reg_tulis(RF1, 1, Memory.nilai_int(20))
+            Inst = {:OpAdd, 0, 1, 2}
+            RF3 = BootstrapEval.eval_inst(RF2, Inst)
+            Val = Memory.reg_baca(RF3, 2)
+            Tuple.elemen(Val, 1)
+        rampung
+    )";
+    auto res11 = engine11.eval(code11);
+    bool is_ok11 = res11 && garuda::beam::to_string(*res11) == "30";
+    CHECK(is_ok11, "Test BS11: BootstrapEval.eval_inst OpAdd calculates 10 + 20 == 30");
+
+    // Test BS12: Bootstrap.kompilasi -> BootstrapEval.jalankan_bootstrap -> 3
+    garuda::beam::ScriptEngine engine12;
+    std::string code12 = R"(
+        modul TestBS12
+        impor "src/bootstrap.grd"
+        impor "src/bootstrap_eval.grd"
+
+        fungsi utama() ->
+            St = Bootstrap.baru("1 + 2")
+            StKomp = Bootstrap.kompilasi(St)
+            Bc = Bootstrap.get_bytecode(StKomp)
+            BootstrapEval.jalankan_bootstrap(Bc)
+        rampung
+    )";
+    auto res12 = engine12.eval(code12);
+    bool is_ok12 = res12 && garuda::beam::to_string(*res12) == "3";
+    CHECK(is_ok12, "Test BS12: Bootstrap.kompilasi('1 + 2') -> jalankan_bootstrap -> 3");
+
+    std::cout << "\n🎉 ALL BOOTSTRAP INTEGRATION TESTS PASSED PERFECTLY!\n";
     return 0;
 }

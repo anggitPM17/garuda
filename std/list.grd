@@ -1,37 +1,5 @@
 modul List
 
 # Modul Manipulasi List/Daftar Murni Bahasa Garuda (std/list.grd)
-
-fungsi panjang(Daftar) ->
-    tinjau Daftar ing
-        [] -> 0
-        [_ | T] -> 1 + panjang(T)
-        _ -> 0
-    rampung
-rampung
-
-fungsi kepala(Daftar) ->
-    tinjau Daftar ing
-        [H | _] -> H
-        _ -> nil
-    rampung
-rampung
-
-fungsi ekor(Daftar) ->
-    tinjau Daftar ing
-        [_ | T] -> T
-        _ -> []
-    rampung
-rampung
-
-fungsi peta_loop(Daftar, F, Acc) ->
-    tinjau Daftar ing
-        [] -> Acc
-        [H | T] -> peta_loop(T, F, Acc + [F(H)])
-        _ -> Acc
-    rampung
-rampung
-
-fungsi peta(Daftar, F) ->
-    peta_loop(Daftar, F, [])
-rampung
+# Fungsi-fungsi utama List (panjang, kepala, ekor, elemen, tambah)
+# ditangani secara native (BIF) oleh VM Garuda untuk performa tinggi.

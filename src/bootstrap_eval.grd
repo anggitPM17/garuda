@@ -1,0 +1,48 @@
+modul BootstrapEval
+impor "src/memory.grd"
+impor "src/eval.grd"
+impor "std/tuple.grd"
+impor "std/list.grd"
+
+# Bootstrap Evaluator dalam Garuda (src/bootstrap_eval.grd)
+
+fungsi exec_op(RF, Op, A, B, C) ->
+    yen Op == :OpMove ->
+        Memory.reg_tulis(RF, B, Memory.nilai_int(A))
+    lain ->
+        yen Op == :OpAdd ->
+            Eval.exec_add(RF, A, B, C)
+        lain ->
+            yen Op == :OpSub ->
+                Eval.exec_sub(RF, A, B, C)
+            lain ->
+                RF
+            rampung
+        rampung
+    rampung
+rampung
+
+fungsi eval_inst(RF, Inst) ->
+    Op = Tuple.elemen(Inst, 0)
+    A = Tuple.elemen(Inst, 1)
+    B = Tuple.elemen(Inst, 2)
+    C = Tuple.elemen(Inst, 3)
+    BootstrapEval.exec_op(RF, Op, A, B, C)
+rampung
+
+fungsi eval_loop(RF, Bytecode, Idx, Len) ->
+    yen Idx >= Len ->
+        ResVal = Memory.reg_baca(RF, 2)
+        Tuple.elemen(ResVal, 1)
+    lain ->
+        Inst = List.elemen(Bytecode, Idx)
+        RF2 = BootstrapEval.eval_inst(RF, Inst)
+        BootstrapEval.eval_loop(RF2, Bytecode, Idx + 1, Len)
+    rampung
+rampung
+
+fungsi jalankan_bootstrap(Bytecode) ->
+    RF = Memory.reg_baru()
+    Len = List.panjang(Bytecode)
+    BootstrapEval.eval_loop(RF, Bytecode, 0, Len)
+rampung
