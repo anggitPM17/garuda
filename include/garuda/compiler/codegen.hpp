@@ -564,9 +564,7 @@ private:
                 }
 
                 emit(Opcode::OpTryEnd, {});
-                if (try_res_reg != 0) {
-                    emit(Opcode::OpMove, {Operand{RegType::X, try_res_reg, Term()}, Operand{RegType::X, out_reg, Term()}});
-                }
+                emit(Opcode::OpMove, {Operand{RegType::X, try_res_reg, Term()}, Operand{RegType::X, out_reg, Term()}});
 
                 std::size_t local_jump_end = current_func_->instructions.size();
                 emit(Opcode::OpJump, {Operand{RegType::Literal, 0, Term(0LL)}});
@@ -581,9 +579,7 @@ private:
                 for (const auto& stmt : tc->catch_body()) {
                     catch_res_reg = gen_expr(stmt, false);
                 }
-                if (catch_res_reg != 0) {
-                    emit(Opcode::OpMove, {Operand{RegType::X, catch_res_reg, Term()}, Operand{RegType::X, out_reg, Term()}});
-                }
+                emit(Opcode::OpMove, {Operand{RegType::X, catch_res_reg, Term()}, Operand{RegType::X, out_reg, Term()}});
 
                 std::size_t end_ip = current_global_ip();
                 current_func_->instructions[local_jump_end].args[0] =

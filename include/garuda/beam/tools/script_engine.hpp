@@ -261,10 +261,13 @@ private:
                 auto tf = try_stack.back();
                 try_stack.pop_back();
                 while (call_stack.size() > tf.call_stack_depth) call_stack.pop_back();
-                while (frame_stack.size() > tf.frame_stack_depth) frame_stack.pop_back();
+                while (!frame_stack.empty() && frame_stack.size() > tf.frame_stack_depth) {
+                    x_regs = frame_stack.back();
+                    frame_stack.pop_back();
+                }
                 x_regs[0] = err_val;
                 last_result = err_val;
-                ip = tf.catch_ip > 0 ? tf.catch_ip - 1 : 0;
+                ip = tf.catch_ip;
                 exception_raised = true;
                 return true;
             } else {
@@ -1476,7 +1479,7 @@ private:
                         if (!fn_name.empty() && handle_builtin(fn_name)) {
                             if (exception_raised) {
                                 exception_raised = false;
-                                break;
+                                continue;
                             }
                             break;
                         }
@@ -1510,7 +1513,7 @@ private:
                         if (!fn_name.empty() && handle_builtin(fn_name)) {
                             if (exception_raised) {
                                 exception_raised = false;
-                                break;
+                                continue;
                             }
                             Term ret_val = !last_result.is<std::monostate>() ? last_result : x_regs[0];
                             if (!call_stack.empty()) {
@@ -1556,6 +1559,7 @@ private:
                         x_regs[0] = ret_val;
                         last_result = ret_val;
                     } else {
+                        x_regs[0] = ret_val;
                         return ret_val;
                     }
                     break;
