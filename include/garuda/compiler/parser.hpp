@@ -501,9 +501,14 @@ private:
             std::vector<CaseClause> clauses;
             while (!check(TokenType::End) && !is_at_end()) {
                 auto pattern = parse_pattern();
+                std::shared_ptr<AstNode> guard = nullptr;
+                if (check(TokenType::When) || (check(TokenType::Identifier) && (peek().text == "nalika" || peek().text == "when"))) {
+                    advance();
+                    guard = parse_expr();
+                }
                 expect(TokenType::Arrow, "Expected '->' after pattern");
                 std::vector<std::shared_ptr<AstNode>> body = {parse_expr()};
-                clauses.push_back({pattern, nullptr, body});
+                clauses.push_back({pattern, guard, body});
             }
 
             expect(TokenType::End, "Expected 'rampung'/'end' to close case");
@@ -619,7 +624,8 @@ private:
                 return std::make_shared<ListExprNode>(std::vector<std::shared_ptr<AstNode>>{});
             }
             auto head = parse_pattern();
-            if (match(TokenType::Pipe)) {
+            if (check(TokenType::Pipe) && peek().text == "|") {
+                advance();
                 auto tail = parse_pattern();
                 expect(TokenType::RBracket, "Expected ']' in list pattern [H | T]");
                 return std::make_shared<PatternListHeadTailNode>(head, tail);
@@ -629,7 +635,7 @@ private:
                 items.push_back(parse_pattern());
             }
             expect(TokenType::RBracket, "Expected ']' in list pattern");
-            return std::make_shared<PatternTupleNode>(items);
+            return std::make_shared<ListExprNode>(items);
         }
         return parse_expr();
     }

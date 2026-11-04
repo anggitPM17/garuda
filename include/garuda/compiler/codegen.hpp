@@ -676,6 +676,14 @@ private:
 
                     gen_pattern_bind(clause.pattern, subj_reg);
 
+                    std::size_t jump_guard_false_ip = 0;
+                    bool has_guard = (clause.guard != nullptr);
+                    if (has_guard) {
+                        std::uint16_t guard_reg = gen_expr(clause.guard, false);
+                        jump_guard_false_ip = current_func_->instructions.size();
+                        emit(Opcode::OpJumpIfFalse, {Operand{RegType::X, guard_reg, Term()}, Operand{RegType::Literal, 0, Term(0LL)}});
+                    }
+
                     std::uint16_t clause_res = 0;
                     for (std::size_t j = 0; j < clause.body.size(); ++j) {
                         bool stmt_is_tail = is_tail && (j == clause.body.size() - 1);
@@ -690,6 +698,10 @@ private:
                     std::size_t next_clause_ip = current_global_ip();
                     current_func_->instructions[jump_if_false_ip].args[1] =
                         Operand{RegType::Literal, 0, Term(static_cast<std::int64_t>(next_clause_ip))};
+                    if (has_guard) {
+                        current_func_->instructions[jump_guard_false_ip].args[1] =
+                            Operand{RegType::Literal, 0, Term(static_cast<std::int64_t>(next_clause_ip))};
+                    }
                 }
 
                 emit(Opcode::OpMove, {Operand{RegType::X, result_reg, Term()}, Operand{RegType::X, 0, Term()}});
