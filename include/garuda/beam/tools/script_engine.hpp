@@ -314,6 +314,16 @@ private:
                        name.rfind(mod + "." + base + "/", 0) == 0;
             };
 
+            auto get_int_val = [](const Term& t) -> int64_t {
+                if (auto* i = t.get_if<std::int64_t>()) return *i;
+                if (auto* d = t.get_if<double>()) return static_cast<int64_t>(*d);
+                if (auto* a = t.get_if<Atom>()) {
+                    if (a->name == "true" || a->name == "benar") return 1LL;
+                    if (a->name == "false" || a->name == "salah") return 0LL;
+                }
+                return 0LL;
+            };
+
             // I/O Built-ins
             if (is_fn(fn_name, "cetak") || is_fn(fn_name, "print") || is_mod_fn(fn_name, "IO", "cetak")) {
                 std::string s = clean_str(x_regs[0]);
@@ -321,6 +331,63 @@ private:
                 Term res(s);
                 x_regs[0] = res;
                 last_result = res;
+                return true;
+            }
+
+            // String.format(val, fmt)
+            if (is_mod_fn(fn_name, "String", "format")) {
+                Term val = x_regs[0];
+                std::string fmt = clean_str(x_regs[1]);
+                std::string res;
+
+                if (fmt == "x" || fmt == "X") {
+                    std::int64_t v = get_int_val(val);
+                    std::ostringstream ss;
+                    ss << std::hex << v;
+                    res = ss.str();
+                } else if (!fmt.empty() && fmt.front() == '.' && fmt.back() == 'f') {
+                    double v = 0.0;
+                    if (auto* d = val.get_if<double>()) v = *d;
+                    else if (auto* i = val.get_if<std::int64_t>()) v = static_cast<double>(*i);
+                    int prec = 2;
+                    try { prec = std::stoi(fmt.substr(1, fmt.length() - 2)); } catch (...) {}
+                    std::ostringstream ss;
+                    ss << std::fixed << std::setprecision(prec) << v;
+                    res = ss.str();
+                } else if (!fmt.empty() && fmt.back() == 'd') {
+                    std::int64_t v = get_int_val(val);
+                    std::string spec = fmt.substr(0, fmt.length() - 1);
+                    bool pad_zero = (!spec.empty() && spec.front() == '0');
+                    int width = 0;
+                    try { width = spec.empty() ? 0 : std::stoi(spec); } catch (...) {}
+                    std::ostringstream ss;
+                    if (pad_zero) ss << std::setfill('0');
+                    if (width > 0) ss << std::setw(width);
+                    ss << v;
+                    res = ss.str();
+                } else if (!fmt.empty() && (fmt.front() == '>' || fmt.front() == '<' || fmt.front() == '^')) {
+                    char align = fmt.front();
+                    int width = 0;
+                    try { width = std::stoi(fmt.substr(1)); } catch (...) {}
+                    std::string str_v = clean_str(val);
+                    if (static_cast<int>(str_v.length()) < width) {
+                        int pad = width - static_cast<int>(str_v.length());
+                        if (align == '>') res = std::string(pad, ' ') + str_v;
+                        else if (align == '<') res = str_v + std::string(pad, ' ');
+                        else if (align == '^') {
+                            int left_pad = pad / 2;
+                            int right_pad = pad - left_pad;
+                            res = std::string(left_pad, ' ') + str_v + std::string(right_pad, ' ');
+                        }
+                    } else {
+                        res = str_v;
+                    }
+                } else {
+                    res = clean_str(val);
+                }
+
+                x_regs[0] = Term(res);
+                last_result = x_regs[0];
                 return true;
             }
 

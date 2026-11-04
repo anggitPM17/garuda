@@ -388,12 +388,24 @@ private:
             }
 
             std::string expr_str = str.substr(start + 2, end - (start + 2));
+            std::string fmt_spec = "";
+            std::size_t colon_pos = expr_str.find(':');
+            if (colon_pos != std::string::npos) {
+                fmt_spec = expr_str.substr(colon_pos + 1);
+                expr_str = expr_str.substr(0, colon_pos);
+            }
+
             Lexer expr_lexer(expr_str);
             auto expr_tokens = expr_lexer.tokenize();
             if (!expr_tokens.empty()) {
                 Parser expr_parser(expr_tokens);
                 auto expr_ast = expr_parser.parse_expr();
                 if (expr_ast) {
+                    if (!fmt_spec.empty()) {
+                        expr_ast = std::make_shared<CallExprNode>("String.format", std::vector<std::shared_ptr<AstNode>>{
+                            expr_ast, std::make_shared<LiteralNode>(Term(fmt_spec))
+                        });
+                    }
                     result = result ? std::make_shared<BinaryExprNode>("++", result, expr_ast) : expr_ast;
                 }
             }
