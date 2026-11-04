@@ -233,7 +233,7 @@ private:
 
     std::shared_ptr<AstNode> parse_assign() {
         auto left = parse_pipe();
-        if (check(TokenType::Assign)) {
+        if (check(TokenType::Assign) && peek(1).type != TokenType::Gt) {
             advance();
             auto right = parse_assign();
             return std::make_shared<AssignmentExprNode>(left, right);
@@ -527,6 +527,71 @@ private:
             }
             expect(TokenType::End, "Expected 'rampung'/'end' to close receive");
             return std::make_shared<ReceiveExprNode>(clauses);
+        }
+
+        // Map %{...} or Map Comprehension %{k => v untuk pattern ing source}
+        if (check(TokenType::Percent) || (check(TokenType::Unknown) && peek().text == "%")) {
+            advance();
+            expect(TokenType::LBrace, "Expected '{' after '%' in map expression");
+            if (check(TokenType::RBrace)) {
+                advance();
+                return std::make_shared<MapExprNode>(std::vector<MapEntry>{});
+            }
+
+            auto first_key = parse_expr();
+            if (check(TokenType::Arrow)) {
+                advance();
+            } else if (check(TokenType::Assign)) {
+                advance();
+                if (check(TokenType::Gt)) advance();
+            } else if (check(TokenType::Colon)) {
+                advance();
+            }
+            auto first_val = parse_expr();
+
+            if (check(TokenType::Identifier) && (peek().text == "untuk" || peek().text == "for")) {
+                advance();
+
+                std::shared_ptr<AstNode> pattern = nullptr;
+                if (check(TokenType::Identifier) && peek(1).type == TokenType::Comma) {
+                    auto k_name = advance().text;
+                    advance();
+                    auto v_name = expect(TokenType::Identifier, "Expected second pattern variable").text;
+                    pattern = std::make_shared<PatternTupleNode>(std::vector<std::shared_ptr<AstNode>>{
+                        std::make_shared<VariableNode>(k_name),
+                        std::make_shared<VariableNode>(v_name)
+                    });
+                } else {
+                    pattern = parse_pattern();
+                }
+
+                expect(TokenType::In, "Expected 'ing'/'in' after pattern in map comprehension");
+                auto source_expr = parse_expr();
+                std::shared_ptr<AstNode> filter_cond = nullptr;
+                if (check(TokenType::If) || (check(TokenType::Identifier) && (peek().text == "yen" || peek().text == "if"))) {
+                    advance();
+                    filter_cond = parse_expr();
+                }
+                expect(TokenType::RBrace, "Expected '}' at end of map comprehension");
+                return std::make_shared<MapComprehensionNode>(first_key, first_val, pattern, source_expr, filter_cond);
+            }
+
+            std::vector<MapEntry> entries = {{first_key, first_val}};
+            while (match(TokenType::Comma)) {
+                auto key = parse_expr();
+                if (check(TokenType::Arrow)) {
+                    advance();
+                } else if (check(TokenType::Assign)) {
+                    advance();
+                    if (check(TokenType::Gt)) advance();
+                } else if (check(TokenType::Colon)) {
+                    advance();
+                }
+                auto val = parse_expr();
+                entries.push_back({key, val});
+            }
+            expect(TokenType::RBrace, "Expected '}' at end of map expression");
+            return std::make_shared<MapExprNode>(entries);
         }
 
         // Tuple {...}

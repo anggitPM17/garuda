@@ -586,6 +586,75 @@ private:
 
                 return res_list_reg;
             }
+            case AstNodeType::MapExpr: {
+                auto* map_node = static_cast<MapExprNode*>(node.get());
+                std::shared_ptr<AstNode> current_map = std::make_shared<CallExprNode>("Map.baru", std::vector<std::shared_ptr<AstNode>>{});
+                for (const auto& entry : map_node->entries()) {
+                    current_map = std::make_shared<CallExprNode>("Map.taruh", std::vector<std::shared_ptr<AstNode>>{current_map, entry.key, entry.value});
+                }
+                return gen_expr(current_map, false);
+            }
+            case AstNodeType::MapComprehension: {
+                auto* comp = static_cast<MapComprehensionNode*>(node.get());
+                std::uint16_t src_reg = gen_expr(comp->source_expr_ptr(), false);
+                std::uint16_t res_map_reg = gen_expr(std::make_shared<CallExprNode>("Map.baru", std::vector<std::shared_ptr<AstNode>>{}), false);
+
+                std::uint16_t len_reg = alloc_reg();
+                emit(Opcode::OpGetListLen, {Operand{RegType::X, src_reg, Term()}, Operand{RegType::X, len_reg, Term()}});
+
+                std::uint16_t idx_reg = alloc_reg();
+                emit(Opcode::OpMove, {Operand{RegType::Literal, 0, Term(0LL)}, Operand{RegType::X, idx_reg, Term()}});
+
+                std::size_t loop_start_ip = current_global_ip();
+                std::uint16_t cond_reg = alloc_reg();
+                emit(Opcode::OpLt, {Operand{RegType::X, idx_reg, Term()}, Operand{RegType::X, len_reg, Term()}, Operand{RegType::X, cond_reg, Term()}});
+
+                std::size_t jump_end_ip = current_func_->instructions.size();
+                emit(Opcode::OpJumpIfFalse, {Operand{RegType::X, cond_reg, Term()}, Operand{RegType::Literal, 0, Term(0LL)}});
+
+                std::uint16_t elem_reg = alloc_reg();
+                emit(Opcode::OpGetListElem, {Operand{RegType::X, src_reg, Term()}, Operand{RegType::X, idx_reg, Term()}, Operand{RegType::X, elem_reg, Term()}});
+
+                gen_pattern_bind(comp->pattern_ptr(), elem_reg);
+
+                std::size_t jump_skip_ip = 0;
+                bool has_filter = (comp->filter_cond_ptr() != nullptr);
+                if (has_filter) {
+                    std::uint16_t filter_reg = gen_expr(comp->filter_cond_ptr(), false);
+                    jump_skip_ip = current_func_->instructions.size();
+                    emit(Opcode::OpJumpIfFalse, {Operand{RegType::X, filter_reg, Term()}, Operand{RegType::Literal, 0, Term(0LL)}});
+                }
+
+                auto call_taruh = std::make_shared<CallExprNode>("Map.taruh", std::vector<std::shared_ptr<AstNode>>{
+                    std::make_shared<VariableNode>("__map_res"),
+                    comp->key_expr_ptr(),
+                    comp->val_expr_ptr()
+                });
+                current_func_->var_map["__map_res"] = res_map_reg;
+
+                std::uint16_t next_map_reg = gen_expr(call_taruh, false);
+                emit(Opcode::OpMove, {Operand{RegType::X, next_map_reg, Term()}, Operand{RegType::X, res_map_reg, Term()}});
+
+                std::size_t continue_ip = current_global_ip();
+                if (has_filter) {
+                    current_func_->instructions[jump_skip_ip].args[1] =
+                        Operand{RegType::Literal, 0, Term(static_cast<std::int64_t>(continue_ip))};
+                }
+
+                std::uint16_t one_reg = alloc_reg();
+                emit(Opcode::OpMove, {Operand{RegType::Literal, 0, Term(1LL)}, Operand{RegType::X, one_reg, Term()}});
+                std::uint16_t next_idx_reg = alloc_reg();
+                emit(Opcode::OpAdd, {Operand{RegType::X, idx_reg, Term()}, Operand{RegType::X, one_reg, Term()}, Operand{RegType::X, next_idx_reg, Term()}});
+                emit(Opcode::OpMove, {Operand{RegType::X, next_idx_reg, Term()}, Operand{RegType::X, idx_reg, Term()}});
+
+                emit(Opcode::OpJump, {Operand{RegType::Literal, 0, Term(static_cast<std::int64_t>(loop_start_ip))}});
+
+                std::size_t end_ip = current_global_ip();
+                current_func_->instructions[jump_end_ip].args[1] =
+                    Operand{RegType::Literal, 0, Term(static_cast<std::int64_t>(end_ip))};
+
+                return res_map_reg;
+            }
             case AstNodeType::CallExpr: {
                 auto* call = static_cast<CallExprNode*>(node.get());
                 if (is_tail) {

@@ -14,7 +14,7 @@ using namespace garuda::beam;
 
 enum class AstNodeType {
     ModuleDecl, FunctionDecl, BinaryExpr, LiteralExpr, VariableExpr,
-    UnaryExpr, CallExpr, TupleExpr, ListExpr, ListConsExpr, ListComprehension, AtomExpr, BoolExpr, NilExpr,
+    UnaryExpr, CallExpr, TupleExpr, ListExpr, ListConsExpr, ListComprehension, MapExpr, MapComprehension, AtomExpr, BoolExpr, NilExpr,
     SelfExpr, CetakExpr, SpawnExpr, AnonFunExpr, SendExpr, ReceiveExpr,
     IfExpr, CaseExpr, AssignmentExpr,
     PatternWildcard, PatternVar, PatternLiteral, PatternTuple, PatternListHeadTail, PatternGuard,
@@ -531,6 +531,55 @@ private:
     std::shared_ptr<AstNode> expr_;
     std::shared_ptr<AstNode> pattern_;
     std::shared_ptr<AstNode> list_expr_;
+    std::shared_ptr<AstNode> filter_cond_;
+};
+
+struct MapEntry {
+    std::shared_ptr<AstNode> key;
+    std::shared_ptr<AstNode> value;
+};
+
+class MapExprNode : public AstNode {
+public:
+    explicit MapExprNode(std::vector<MapEntry> entries) : entries_(std::move(entries)) {}
+    AstNodeType type() const override { return AstNodeType::MapExpr; }
+    const std::vector<MapEntry>& entries() const { return entries_; }
+    std::string to_string() const override {
+        std::string res = "%{";
+        for (std::size_t i = 0; i < entries_.size(); ++i) {
+            if (i > 0) res += ", ";
+            res += entries_[i].key->to_string() + " => " + entries_[i].value->to_string();
+        }
+        return res + "}";
+    }
+private:
+    std::vector<MapEntry> entries_;
+};
+
+class MapComprehensionNode : public AstNode {
+public:
+    MapComprehensionNode(std::shared_ptr<AstNode> key_expr,
+                         std::shared_ptr<AstNode> val_expr,
+                         std::shared_ptr<AstNode> pattern,
+                         std::shared_ptr<AstNode> source_expr,
+                         std::shared_ptr<AstNode> filter_cond = nullptr)
+        : key_expr_(std::move(key_expr)), val_expr_(std::move(val_expr)),
+          pattern_(std::move(pattern)), source_expr_(std::move(source_expr)),
+          filter_cond_(std::move(filter_cond)) {}
+    AstNodeType type() const override { return AstNodeType::MapComprehension; }
+    const std::shared_ptr<AstNode>& key_expr_ptr() const { return key_expr_; }
+    const std::shared_ptr<AstNode>& val_expr_ptr() const { return val_expr_; }
+    const std::shared_ptr<AstNode>& pattern_ptr() const { return pattern_; }
+    const std::shared_ptr<AstNode>& source_expr_ptr() const { return source_expr_; }
+    const std::shared_ptr<AstNode>& filter_cond_ptr() const { return filter_cond_; }
+    std::string to_string() const override {
+        return "%{" + key_expr_->to_string() + " => " + val_expr_->to_string() + " untuk " + pattern_->to_string() + " ing " + source_expr_->to_string() + "}";
+    }
+private:
+    std::shared_ptr<AstNode> key_expr_;
+    std::shared_ptr<AstNode> val_expr_;
+    std::shared_ptr<AstNode> pattern_;
+    std::shared_ptr<AstNode> source_expr_;
     std::shared_ptr<AstNode> filter_cond_;
 };
 

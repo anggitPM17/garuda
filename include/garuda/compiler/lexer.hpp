@@ -23,7 +23,7 @@ enum class TokenType {
 
     // Literals & Symbols
     Atom, Number, Float, String, Boolean, Nil, Identifier,
-    LParen, RParen, LBrace, RBrace, LBracket, RBracket, Comma, Colon,
+    LParen, RParen, LBrace, RBrace, LBracket, RBracket, Comma, Colon, Percent,
 
     // File boundary
     EOF_Token, Unknown
@@ -244,6 +244,7 @@ public:
             if (c == '}') { tokens.push_back({TokenType::RBrace, "}", line_, start_col}); pos_++; col_++; continue; }
             if (c == '[') { tokens.push_back({TokenType::LBracket, "[", line_, start_col}); pos_++; col_++; continue; }
             if (c == ']') { tokens.push_back({TokenType::RBracket, "]", line_, start_col}); pos_++; col_++; continue; }
+            if (c == '%') { tokens.push_back({TokenType::Percent, "%", line_, start_col}); pos_++; col_++; continue; }
             if (c == ',') { tokens.push_back({TokenType::Comma, ",", line_, start_col}); pos_++; col_++; continue; }
 
             pos_++; col_++;

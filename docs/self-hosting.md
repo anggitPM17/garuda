@@ -30,6 +30,7 @@ Dalam ekosistem Garuda:
 | **Fase 6.2** | Destructuring (Tuple, List, Nested, Wildcard) | ✅ **TUNTAS** | 100% PASS (5/5 Test) |
 | **Fase 6.3** | String Interpolation Polish | ✅ **TUNTAS** | 100% PASS (5/5 Test) |
 | **Fase 6.4** | List Comprehension (`[expr untuk pattern ing list yen cond]`) | ✅ **TUNTAS** | 100% PASS (5/5 Test) |
+| **Fase 7.1** | Map Comprehension (`%{k => v untuk pattern ing map yen cond}`) | ✅ **TUNTAS** | 100% PASS (5/5 Test) |
 
 ---
 
