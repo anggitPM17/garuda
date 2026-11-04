@@ -233,6 +233,23 @@ private:
 
     std::shared_ptr<AstNode> parse_assign() {
         auto left = parse_pipe();
+        if (check(TokenType::Comma)) {
+            std::size_t save_pos = pos_;
+            std::vector<std::shared_ptr<AstNode>> targets = {left};
+            while (match(TokenType::Comma)) {
+                targets.push_back(parse_pipe());
+            }
+            if (check(TokenType::Assign) && peek(1).type != TokenType::Gt) {
+                advance();
+                std::vector<std::shared_ptr<AstNode>> values;
+                values.push_back(parse_pipe());
+                while (match(TokenType::Comma)) {
+                    values.push_back(parse_pipe());
+                }
+                return std::make_shared<MultiAssignNode>(targets, values);
+            }
+            pos_ = save_pos;
+        }
         if (check(TokenType::Assign) && peek(1).type != TokenType::Gt) {
             advance();
             auto right = parse_assign();

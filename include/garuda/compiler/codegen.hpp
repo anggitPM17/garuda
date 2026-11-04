@@ -494,6 +494,28 @@ private:
                 gen_pattern_bind(assign->target_ptr(), val_reg);
                 return val_reg;
             }
+            case AstNodeType::MultiAssignExpr: {
+                auto* multi = static_cast<MultiAssignNode*>(node.get());
+                std::vector<std::uint16_t> val_regs;
+                val_regs.reserve(multi->values().size());
+
+                for (const auto& val : multi->values()) {
+                    std::uint16_t raw_reg = gen_expr(val, false);
+                    std::uint16_t snap_reg = alloc_reg();
+                    emit(Opcode::OpMove, {Operand{RegType::X, raw_reg, Term()}, Operand{RegType::X, snap_reg, Term()}});
+                    val_regs.push_back(snap_reg);
+                }
+
+                if (multi->targets().size() == multi->values().size()) {
+                    for (std::size_t i = 0; i < multi->targets().size(); ++i) {
+                        gen_pattern_bind(multi->targets()[i], val_regs[i]);
+                    }
+                } else if (multi->targets().size() > 1 && multi->values().size() == 1) {
+                    auto tup_target = std::make_shared<TupleExprNode>(multi->targets());
+                    gen_pattern_bind(tup_target, val_regs[0]);
+                }
+                return val_regs.empty() ? alloc_reg() : val_regs.back();
+            }
             case AstNodeType::TupleExpr: {
                 auto* tup = static_cast<TupleExprNode*>(node.get());
                 std::vector<Operand> args;

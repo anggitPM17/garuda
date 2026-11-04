@@ -16,7 +16,7 @@ enum class AstNodeType {
     ModuleDecl, FunctionDecl, BinaryExpr, LiteralExpr, VariableExpr,
     UnaryExpr, CallExpr, TupleExpr, ListExpr, ListConsExpr, ListComprehension, MapExpr, MapComprehension, AtomExpr, BoolExpr, NilExpr,
     SelfExpr, CetakExpr, SpawnExpr, AnonFunExpr, SendExpr, ReceiveExpr,
-    IfExpr, CaseExpr, AssignmentExpr,
+    IfExpr, CaseExpr, AssignmentExpr, MultiAssignExpr,
     PatternWildcard, PatternVar, PatternLiteral, PatternTuple, PatternListHeadTail, PatternGuard,
     MacroDef, MacroCall,
     TryCatchExpr, TryOperatorExpr, ImportDecl
@@ -581,6 +581,32 @@ private:
     std::shared_ptr<AstNode> pattern_;
     std::shared_ptr<AstNode> source_expr_;
     std::shared_ptr<AstNode> filter_cond_;
+};
+
+class MultiAssignNode : public AstNode {
+public:
+    MultiAssignNode(std::vector<std::shared_ptr<AstNode>> targets,
+                    std::vector<std::shared_ptr<AstNode>> values)
+        : targets_(std::move(targets)), values_(std::move(values)) {}
+    AstNodeType type() const override { return AstNodeType::MultiAssignExpr; }
+    const std::vector<std::shared_ptr<AstNode>>& targets() const { return targets_; }
+    const std::vector<std::shared_ptr<AstNode>>& values() const { return values_; }
+    std::string to_string() const override {
+        std::string res;
+        for (std::size_t i = 0; i < targets_.size(); ++i) {
+            if (i > 0) res += ", ";
+            res += targets_[i]->to_string();
+        }
+        res += " = ";
+        for (std::size_t i = 0; i < values_.size(); ++i) {
+            if (i > 0) res += ", ";
+            res += values_[i]->to_string();
+        }
+        return res;
+    }
+private:
+    std::vector<std::shared_ptr<AstNode>> targets_;
+    std::vector<std::shared_ptr<AstNode>> values_;
 };
 
 class ImportNode : public AstNode {

@@ -155,6 +155,9 @@ target_link_libraries(garuda_map_comprehension_tests PRIVATE garuda)
 add_executable(garuda_pipeline_operator_tests tests/test_pipeline_operator.cpp)
 target_link_libraries(garuda_pipeline_operator_tests PRIVATE garuda)
 
+add_executable(garuda_multi_assign_tests tests/test_multi_assign.cpp)
+target_link_libraries(garuda_multi_assign_tests PRIVATE garuda)
+
 add_executable(garuda_benchmark_runner benchmarks/benchmark_runner.cpp)
 target_link_libraries(garuda_benchmark_runner PRIVATE garuda)
 
