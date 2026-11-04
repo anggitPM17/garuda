@@ -419,6 +419,9 @@ private:
         }
         if (check(TokenType::Self)) {
             advance();
+            if (match(TokenType::LParen)) {
+                expect(TokenType::RParen, "Expected ')' after 'diri'");
+            }
             return std::make_shared<SelfExprNode>();
         }
 

@@ -1,14 +1,15 @@
 // =====================================================================
-// BINARY OP + FUNCTION CALL REGISTER ISOLATION TEST (TESTS A THROUGH J2)
+// BINARY OP + FUNCTION CALL REGISTER ISOLATION TEST (TESTS A THROUGH O1)
 // =====================================================================
 
-#include "../include/garuda/beam/tools/script_engine.hpp"
+#include "garuda/beam/tools/script_engine.hpp"
 #include <iostream>
 #include <string>
 
 #define CHECK(cond, msg) do { \
     if (!(cond)) { \
         std::cerr << "[FAIL] " << msg << std::endl; \
+        return 1; \
     } else { \
         std::cout << "[PASS] " << msg << std::endl; \
     } \
@@ -17,7 +18,10 @@
 int main() {
     garuda::beam::ScriptEngine engine;
 
-    /*
+    std::cout << "=======================================================\n";
+    std::cout << "GARUDA COMPILER — REGISTER ISOLATION TEST SUITE\n";
+    std::cout << "=======================================================\n\n";
+
     // Test A: 1 + 2
     std::string codeA = "modul TestA\nfungsi utama() -> 1 + 2\nrampung";
     auto resA = engine.eval(codeA);
@@ -312,7 +316,6 @@ int main() {
     )";
     auto resN1 = engine.eval(codeN1);
     auto* sN1 = resN1 ? resN1->get_if<std::string>() : nullptr;
-    std::cout << "[N1 val='" << (sN1 ? *sN1 : "null") << "']\n";
     CHECK(sN1 != nullptr && *sN1 == "v,v,v,", "Test N1: lp([1,2,3], \"\") == \"v,v,v,\"");
 
     // Test N2: lp([1, 2, 3], "") == ",,,"
@@ -331,7 +334,6 @@ int main() {
     )";
     auto resN2 = engine.eval(codeN2);
     auto* sN2 = resN2 ? resN2->get_if<std::string>() : nullptr;
-    std::cout << "[N2 val=',,,']\n";
     CHECK(sN2 != nullptr && *sN2 == ",,,", "Test N2: lp([1,2,3], \"\") == \",,,\"");
 
     // Test N3: cnt(3, "") == "vvv"
@@ -347,9 +349,7 @@ int main() {
     )";
     auto resN3 = engine.eval(codeN3);
     auto* sN3 = resN3 ? resN3->get_if<std::string>() : nullptr;
-    std::cout << "[N3 val='vvv']\n";
     CHECK(sN3 != nullptr && *sN3 == "vvv", "Test N3: cnt(3, \"\") == \"vvv\"");
-    */
 
     // W9: lambda anonim via peta
     std::string codeW9 = R"(
@@ -361,44 +361,20 @@ int main() {
     )";
     auto resW9 = engine.eval(codeW9);
     auto* iW9 = resW9 ? resW9->get_if<std::int64_t>() : nullptr;
-    std::cout << "[W9 peta-lambda] " << (iW9 && *iW9 == 3 ? "PASS" : "FAIL") << "\n";
     CHECK(iW9 && *iW9 == 3, "Test W9: List.peta([1,2,3], lambda) len == 3");
 
-    /*
-    // W10: lambda anonim via lipat
-    std::string codeW10 = R"(
-        modul TestW10
-        impor "std/json.grd"
+    // Test O1: Send operator <-
+    std::string codeO1 = R"(
+        modul TestO1
         fungsi utama() ->
-            List.lipat([1, 2, 3], 0, fungsi(A, H) -> A + H rampung)
+            P = diri()
+            P <- :halo
         rampung
     )";
-    auto resW10 = engine.eval(codeW10);
-    auto* iW10 = resW10 ? resW10->get_if<std::int64_t>() : nullptr;
-    std::cout << "[W10 lipat-lambda] " << (iW10 && *iW10 == 6 ? "PASS" : "FAIL") << "\n";
-    CHECK(iW10 && *iW10 == 6, "Test W10: List.lipat([1,2,3], 0, lambda) == 6");
+    auto resO1 = engine.eval(codeO1);
+    bool is_okO1 = resO1 && garuda::beam::to_string(*resO1) == "halo";
+    CHECK(is_okO1, "Test O1: P <- :halo == :halo");
 
-    // W11: [H | T] sebagai ekspresi list
-    std::string codeW11 = R"(
-        modul TestW11
-        impor "std/json.grd"
-        fungsi peta2(Daftar, F) ->
-            tinjau Daftar ing
-                [] -> []
-                [H | T] -> [F(H) | peta2(T, F)]
-                _ -> []
-            rampung
-        rampung
-        fungsi dbl(X) -> X * 2 rampung
-        fungsi utama() ->
-            List.panjang(peta2([1, 2, 3], dbl))
-        rampung
-    )";
-    auto resW11 = engine.eval(codeW11);
-    auto* iW11 = resW11 ? resW11->get_if<std::int64_t>() : nullptr;
-    std::cout << "[W11 listcons] " << (iW11 && *iW11 == 3 ? "PASS" : "FAIL") << "\n";
-    CHECK(iW11 && *iW11 == 3, "Test W11: peta2 dengan [F(H) | T] len == 3");
-    */
-
+    std::cout << "\n🎉 ALL ISOLATE BINOP TESTS PASSED PERFECTLY!\n";
     return 0;
 }
