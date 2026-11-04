@@ -302,6 +302,31 @@ private:
                 emit(Opcode::OpMove, {Operand{RegType::X, src_reg, Term()}, Operand{RegType::X, reg, Term()}});
                 current_func_->var_map[pvar->name()] = reg;
             }
+        } else if (pattern->type() == AstNodeType::AtomExpr) {
+            auto* atom_node = static_cast<AtomExprNode*>(pattern.get());
+            if (atom_node->name() != "_") {
+                std::uint16_t reg = alloc_reg();
+                emit(Opcode::OpMove, {Operand{RegType::X, src_reg, Term()}, Operand{RegType::X, reg, Term()}});
+                current_func_->var_map[atom_node->name()] = reg;
+            }
+        } else if (pattern->type() == AstNodeType::LiteralExpr) {
+            auto* lit_node = static_cast<LiteralNode*>(pattern.get());
+            if (auto* a = lit_node->value().get_if<Atom>()) {
+                if (a->name != "_") {
+                    std::uint16_t reg = alloc_reg();
+                    emit(Opcode::OpMove, {Operand{RegType::X, src_reg, Term()}, Operand{RegType::X, reg, Term()}});
+                    current_func_->var_map[a->name] = reg;
+                }
+            }
+        } else if (pattern->type() == AstNodeType::PatternLiteral) {
+            auto* pat_lit = static_cast<PatternLiteralNode*>(pattern.get());
+            if (auto* a = pat_lit->value().get_if<Atom>()) {
+                if (a->name != "_") {
+                    std::uint16_t reg = alloc_reg();
+                    emit(Opcode::OpMove, {Operand{RegType::X, src_reg, Term()}, Operand{RegType::X, reg, Term()}});
+                    current_func_->var_map[a->name] = reg;
+                }
+            }
         } else if (pattern->type() == AstNodeType::PatternTuple || pattern->type() == AstNodeType::TupleExpr) {
             std::vector<std::shared_ptr<AstNode>> tuple_items;
             if (pattern->type() == AstNodeType::PatternTuple) {
@@ -335,6 +360,23 @@ private:
 
             gen_pattern_bind(pht->head_ptr(), head_reg);
             gen_pattern_bind(pht->tail_ptr(), tail_reg);
+        } else if (pattern->type() == AstNodeType::ListConsExpr) {
+            auto* cons = static_cast<const ListConsExprNode*>(pattern.get());
+            for (std::size_t i = 0; i < cons->head_items().size(); ++i) {
+                std::uint16_t elem_reg = alloc_reg();
+                emit(Opcode::OpGetListElem, {
+                    Operand{RegType::X, src_reg, Term()},
+                    Operand{RegType::Literal, 0, Term(static_cast<std::int64_t>(i))},
+                    Operand{RegType::X, elem_reg, Term()}
+                });
+                gen_pattern_bind(cons->head_items()[i], elem_reg);
+            }
+            std::uint16_t tail_reg = alloc_reg();
+            emit(Opcode::OpGetListTail, {
+                Operand{RegType::X, src_reg, Term()},
+                Operand{RegType::X, tail_reg, Term()}
+            });
+            gen_pattern_bind(cons->tail(), tail_reg);
         } else if (pattern->type() == AstNodeType::PatternGuard) {
             auto* pg = static_cast<PatternGuardNode*>(pattern.get());
             gen_pattern_bind(pg->pattern_ptr(), src_reg);
