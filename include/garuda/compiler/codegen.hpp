@@ -624,14 +624,15 @@ private:
                         emit(Opcode::OpMove, {Operand{RegType::Literal, 0, pat_lit->value()}, Operand{RegType::X, pat_reg, Term()}});
                         emit(Opcode::OpEq, {Operand{RegType::X, subj_reg, Term()}, Operand{RegType::X, pat_reg, Term()}, Operand{RegType::X, match_reg, Term()}});
                     } else if (clause.pattern->type() == AstNodeType::ListExpr) {
+                        auto* lst_pat = static_cast<ListExprNode*>(clause.pattern.get());
                         std::uint16_t len_reg = alloc_reg();
                         emit(Opcode::OpGetListLen, {
                             Operand{RegType::X, subj_reg, Term()},
                             Operand{RegType::X, len_reg, Term()}
                         });
-                        std::uint16_t zero_reg = alloc_reg();
-                        emit(Opcode::OpMove, {Operand{RegType::Literal, 0, Term(0LL)}, Operand{RegType::X, zero_reg, Term()}});
-                        emit(Opcode::OpEq, {Operand{RegType::X, len_reg, Term()}, Operand{RegType::X, zero_reg, Term()}, Operand{RegType::X, match_reg, Term()}});
+                        std::uint16_t target_len_reg = alloc_reg();
+                        emit(Opcode::OpMove, {Operand{RegType::Literal, 0, Term(static_cast<std::int64_t>(lst_pat->items().size()))}, Operand{RegType::X, target_len_reg, Term()}});
+                        emit(Opcode::OpEq, {Operand{RegType::X, len_reg, Term()}, Operand{RegType::X, target_len_reg, Term()}, Operand{RegType::X, match_reg, Term()}});
                     } else if (clause.pattern->type() == AstNodeType::PatternListHeadTail) {
                         std::uint16_t len_reg = alloc_reg();
                         emit(Opcode::OpGetListLen, {
@@ -687,13 +688,13 @@ private:
                     end_jumps.push_back(current_func_->instructions.size());
                     emit(Opcode::OpJump, {Operand{RegType::Literal, 0, Term(0LL)}});
 
-                    std::size_t next_clause_ip = current_func_->instructions.size();
+                    std::size_t next_clause_ip = current_global_ip();
                     current_func_->instructions[jump_if_false_ip].args[1] =
                         Operand{RegType::Literal, 0, Term(static_cast<std::int64_t>(next_clause_ip))};
                 }
 
                 emit(Opcode::OpMove, {Operand{RegType::X, result_reg, Term()}, Operand{RegType::X, 0, Term()}});
-                std::size_t end_ip = current_func_->instructions.size();
+                std::size_t end_ip = current_global_ip();
                 for (auto jump_ip : end_jumps) {
                     current_func_->instructions[jump_ip].args[0] =
                         Operand{RegType::Literal, 0, Term(static_cast<std::int64_t>(end_ip))};

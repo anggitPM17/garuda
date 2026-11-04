@@ -169,6 +169,16 @@ public:
             if (main_it == main_out.function_table.end()) {
                 main_it = main_out.function_table.find("utama");
             }
+            if (main_it == main_out.function_table.end()) {
+                for (const auto& [k, v] : main_out.function_table) {
+                    auto dot_pos = k.rfind(".utama");
+                    if (dot_pos != std::string::npos && (dot_pos + 6 == k.length() || k.substr(dot_pos + 6) == "/0")) {
+                        start_ip = v;
+                        main_it = main_out.function_table.find(k);
+                        break;
+                    }
+                }
+            }
             std::size_t main_offset = combined_out.all_instructions.size();
             merge_output(combined_out, main_out);
 
