@@ -14,7 +14,7 @@ using namespace garuda::beam;
 
 enum class AstNodeType {
     ModuleDecl, FunctionDecl, BinaryExpr, LiteralExpr, VariableExpr,
-    UnaryExpr, CallExpr, TupleExpr, ListExpr, ListConsExpr, AtomExpr, BoolExpr, NilExpr,
+    UnaryExpr, CallExpr, TupleExpr, ListExpr, ListConsExpr, ListComprehension, AtomExpr, BoolExpr, NilExpr,
     SelfExpr, CetakExpr, SpawnExpr, AnonFunExpr, SendExpr, ReceiveExpr,
     IfExpr, CaseExpr, AssignmentExpr,
     PatternWildcard, PatternVar, PatternLiteral, PatternTuple, PatternListHeadTail, PatternGuard,
@@ -509,6 +509,29 @@ public:
     }
 private:
     std::shared_ptr<AstNode> expr_;
+};
+
+class ListComprehensionNode : public AstNode {
+public:
+    ListComprehensionNode(std::shared_ptr<AstNode> expr,
+                          std::shared_ptr<AstNode> pattern,
+                          std::shared_ptr<AstNode> list_expr,
+                          std::shared_ptr<AstNode> filter_cond = nullptr)
+        : expr_(std::move(expr)), pattern_(std::move(pattern)),
+          list_expr_(std::move(list_expr)), filter_cond_(std::move(filter_cond)) {}
+    AstNodeType type() const override { return AstNodeType::ListComprehension; }
+    const std::shared_ptr<AstNode>& expr_ptr() const { return expr_; }
+    const std::shared_ptr<AstNode>& pattern_ptr() const { return pattern_; }
+    const std::shared_ptr<AstNode>& list_expr_ptr() const { return list_expr_; }
+    const std::shared_ptr<AstNode>& filter_cond_ptr() const { return filter_cond_; }
+    std::string to_string() const override {
+        return "[" + expr_->to_string() + " untuk " + pattern_->to_string() + " ing " + list_expr_->to_string() + "]";
+    }
+private:
+    std::shared_ptr<AstNode> expr_;
+    std::shared_ptr<AstNode> pattern_;
+    std::shared_ptr<AstNode> list_expr_;
+    std::shared_ptr<AstNode> filter_cond_;
 };
 
 class ImportNode : public AstNode {

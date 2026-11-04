@@ -28,6 +28,8 @@ Dalam ekosistem Garuda:
 | **Fase 5** | Fitur Lanjutan, Optimasi Register, Benchmark & Documentation Final | ✅ **TUNTAS** | 171/181 Suite PASS (94.5%) |
 | **Fase 6.1** | Pengayaan Sintaks (Pattern Matching Lanjutan + Guard `nalika`) | ✅ **TUNTAS** | 100% PASS (8/8 Test) |
 | **Fase 6.2** | Destructuring (Tuple, List, Nested, Wildcard) | ✅ **TUNTAS** | 100% PASS (5/5 Test) |
+| **Fase 6.3** | String Interpolation Polish | ✅ **TUNTAS** | 100% PASS (5/5 Test) |
+| **Fase 6.4** | List Comprehension (`[expr untuk pattern ing list yen cond]`) | ✅ **TUNTAS** | 100% PASS (5/5 Test) |
 
 ---
 

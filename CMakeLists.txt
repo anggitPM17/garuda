@@ -146,6 +146,9 @@ target_link_libraries(garuda_file_grd_tests PRIVATE garuda)
 add_executable(garuda_destructuring_tests tests/test_destructuring.cpp)
 target_link_libraries(garuda_destructuring_tests PRIVATE garuda)
 
+add_executable(garuda_comprehension_tests tests/test_comprehension.cpp)
+target_link_libraries(garuda_comprehension_tests PRIVATE garuda)
+
 add_executable(garuda_benchmark_runner benchmarks/benchmark_runner.cpp)
 target_link_libraries(garuda_benchmark_runner PRIVATE garuda)
 

@@ -542,16 +542,34 @@ private:
             return std::make_shared<TupleExprNode>(items);
         }
 
-        // List [...] or List cons [H | T]
+        // List [...] or List cons [H | T] or List Comprehension [expr untuk pattern ing list]
         if (check(TokenType::LBracket)) {
             advance();
-            std::vector<std::shared_ptr<AstNode>> items;
-            if (!check(TokenType::RBracket)) {
-                do {
-                    items.push_back(parse_expr());
-                } while (match(TokenType::Comma));
+            if (check(TokenType::RBracket)) {
+                advance();
+                return std::make_shared<ListExprNode>(std::vector<std::shared_ptr<AstNode>>{});
             }
-            if (match(TokenType::Pipe)) {
+            auto first_expr = parse_expr();
+            if (check(TokenType::Identifier) && (peek().text == "untuk" || peek().text == "for")) {
+                advance();
+                auto pattern = parse_pattern();
+                expect(TokenType::In, "Expected 'ing'/'in' after pattern in comprehension");
+                auto list_expr = parse_expr();
+                std::shared_ptr<AstNode> filter_cond = nullptr;
+                if (check(TokenType::If) || (check(TokenType::Identifier) && (peek().text == "yen" || peek().text == "if"))) {
+                    advance();
+                    filter_cond = parse_expr();
+                }
+                expect(TokenType::RBracket, "Expected ']' at end of list comprehension");
+                return std::make_shared<ListComprehensionNode>(first_expr, pattern, list_expr, filter_cond);
+            }
+
+            std::vector<std::shared_ptr<AstNode>> items = {first_expr};
+            while (match(TokenType::Comma)) {
+                items.push_back(parse_expr());
+            }
+            if (check(TokenType::Pipe) && peek().text == "|") {
+                advance();
                 auto tail = parse_expr();
                 expect(TokenType::RBracket, "Expected ']'");
                 return std::make_shared<ListConsExprNode>(items, tail);
