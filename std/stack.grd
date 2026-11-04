@@ -1,0 +1,43 @@
+modul Stack
+
+# Modul Tumpukan/Stack LIFO Bahasa Garuda (std/stack.grd)
+
+impor "std/list.grd"
+
+# Membuat stack baru yang kosong
+fungsi baru() ->
+    []
+rampung
+
+# Memeriksa apakah stack kosong
+fungsi kosong(S) ->
+    List.panjang(S) == 0
+rampung
+
+# Mendorong elemen X ke atas stack
+fungsi dorong(S, X) ->
+    [X] ++ S
+rampung
+
+# Mengambil dan menghapus elemen atas stack -> {ElemenAtas, StackSisa}
+fungsi pop(S) ->
+    tinjau S ing
+        [] -> {nil, []}
+        [H | T] -> {H, T}
+        _ -> {nil, []}
+    rampung
+rampung
+
+# Mengintip elemen atas stack tanpa menghapus
+fungsi intip(S) ->
+    tinjau S ing
+        [] -> nil
+        [H | T] -> H
+        _ -> nil
+    rampung
+rampung
+
+# Panjang stack
+fungsi panjang(S) ->
+    List.panjang(S)
+rampung

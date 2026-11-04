@@ -131,6 +131,18 @@ target_link_libraries(garuda_web_handler_tests PRIVATE garuda)
 add_executable(garuda_web_param_tests tests/test_web_param.cpp)
 target_link_libraries(garuda_web_param_tests PRIVATE garuda)
 
+add_executable(garuda_set_grd_tests tests/test_set_grd.cpp)
+target_link_libraries(garuda_set_grd_tests PRIVATE garuda)
+
+add_executable(garuda_queue_grd_tests tests/test_queue_grd.cpp)
+target_link_libraries(garuda_queue_grd_tests PRIVATE garuda)
+
+add_executable(garuda_stack_grd_tests tests/test_stack_grd.cpp)
+target_link_libraries(garuda_stack_grd_tests PRIVATE garuda)
+
+add_executable(garuda_file_grd_tests tests/test_file_grd.cpp)
+target_link_libraries(garuda_file_grd_tests PRIVATE garuda)
+
 add_executable(garuda_benchmark_runner benchmarks/benchmark_runner.cpp)
 target_link_libraries(garuda_benchmark_runner PRIVATE garuda)
 

@@ -648,7 +648,9 @@ private:
                             tuple_items = static_cast<TupleExprNode*>(clause.pattern.get())->items();
                         }
 
-                        if (!tuple_items.empty()) {
+                        if (!tuple_items.empty() && (tuple_items[0]->type() == AstNodeType::AtomExpr ||
+                                                     tuple_items[0]->type() == AstNodeType::LiteralExpr ||
+                                                     tuple_items[0]->type() == AstNodeType::PatternLiteral)) {
                             std::uint16_t elem0_reg = alloc_reg();
                             emit(Opcode::OpGetTupleElem, {
                                 Operand{RegType::X, subj_reg, Term()},

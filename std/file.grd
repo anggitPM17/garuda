@@ -1,0 +1,15 @@
+modul File
+
+# Modul I/O Berkas/File Bahasa Garuda (std/file.grd)
+
+fungsi baca(Path) ->
+    File.baca(Path)
+rampung
+
+fungsi tulis(Path, Isi) ->
+    File.tulis(Path, Isi)
+rampung
+
+fungsi ada(Path) ->
+    File.ada(Path)
+rampung

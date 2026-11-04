@@ -1,0 +1,61 @@
+modul Set
+
+# Modul Himpunan/Set Murni Bahasa Garuda (std/set.grd)
+
+impor "std/list.grd"
+
+# Membuat set baru yang kosong
+fungsi baru() ->
+    []
+rampung
+
+# Memeriksa apakah elemen X ada di dalam set S (mengembalikan 1 jika ada, 0 jika tidak)
+fungsi berisi(S, X) ->
+    tinjau S ing
+        [] -> 0
+        [H | T] -> yen H == X -> 1 lain -> berisi(T, X) rampung
+        _ -> 0
+    rampung
+rampung
+
+# Menambahkan elemen X ke dalam set S jika belum ada
+fungsi tambah(S, X) ->
+    yen berisi(S, X) -> S lain -> [X] ++ S rampung
+rampung
+
+# Menghapus elemen X dari set S
+fungsi hapus(S, X) ->
+    tinjau S ing
+        [] -> []
+        [H | T] -> yen H == X -> T lain -> [H | hapus(T, X)] rampung
+        _ -> []
+    rampung
+rampung
+
+# Penggabungan dua set (Union)
+fungsi gabung(S1, S2) ->
+    tinjau S2 ing
+        [] -> S1
+        [H | T] -> gabung(tambah(S1, H), T)
+        _ -> S1
+    rampung
+rampung
+
+# Irisan dua set (Intersection)
+fungsi irisan(S1, S2) ->
+    tinjau S1 ing
+        [] -> []
+        [H | T] -> yen berisi(S2, H) -> [H] ++ irisan(T, S2) lain -> irisan(T, S2) rampung
+        _ -> []
+    rampung
+rampung
+
+# Panjang set
+fungsi panjang(S) ->
+    List.panjang(S)
+rampung
+
+# Konversi set ke list
+fungsi ke_list(S) ->
+    S
+rampung

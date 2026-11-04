@@ -1,0 +1,43 @@
+modul Queue
+
+# Modul Antrian/Queue FIFO Bahasa Garuda (std/queue.grd)
+
+impor "std/list.grd"
+
+# Membuat queue baru yang kosong
+fungsi baru() ->
+    []
+rampung
+
+# Memeriksa apakah queue kosong
+fungsi kosong(Q) ->
+    List.panjang(Q) == 0
+rampung
+
+# Menambahkan elemen X di belakang queue
+fungsi masuk(Q, X) ->
+    Q ++ [X]
+rampung
+
+# Mengambil dan menghapus elemen depan queue -> {ElemenDepan, QueueSisa}
+fungsi keluar(Q) ->
+    tinjau Q ing
+        [] -> {nil, []}
+        [H | T] -> {H, T}
+        _ -> {nil, []}
+    rampung
+rampung
+
+# Mengintip elemen depan queue tanpa menghapus
+fungsi intip(Q) ->
+    tinjau Q ing
+        [] -> nil
+        [H | T] -> H
+        _ -> nil
+    rampung
+rampung
+
+# Panjang queue
+fungsi panjang(Q) ->
+    List.panjang(Q)
+rampung
