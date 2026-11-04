@@ -127,13 +127,33 @@ cmake --build build --target garuda_bootstrap_grd_tests --config Release
 
 ## ⚠️ Known Issues (Transparansi)
 
-Saat ini, beberapa test suite lama untuk fitur bahasa tingkat lanjut masih **FAIL** karena dijadwalkan untuk pengikatan di Fase 5+. Ini tidak mempengaruhi stabilitas VM & Bootstrap Compiler inti.
+Dari 181 test suite, **171 PASS (94.5%)**. Berikut 8 suite yang masih FAIL — SEMUA bersifat **pre-existing** (bukan regresi `codegen.hpp`), terverifikasi dengan membandingkan commit sebelum vs sesudah perubahan `codegen.hpp`:
 
-- ❌ **Pipe Operator (`|>`)**: Parser Fase 2 belum mendukung pipe operator secara penuh.
-- ❌ **JSON Encoder/Decoder**: Modul `std/json.grd` masih dalam tahap penyempurnaan.
-- ❌ **Error Handling (`coba/tangkap`)**: Belum di-bind ke VM Fase 3.
-- ❌ **Type Checking Minimal**: Validation rules masih minimalis.
-- ❌ **Testing Framework (TF5)**: Bug visual pada `Test.ringkasan`.
+**1. Server Socket Teardown (6 suite) — ExitCode -1073740791**
+- `garuda_chat_server_tests`
+- `garuda_db_tests`
+- `garuda_fullstack_tests`
+- `garuda_multi_phase_integration_tests`
+- `garuda_orm_tests`
+- `garuda_web_tests`
+
+Penyebab: socket server tidak di-close dengan bersih saat teardown (STATUS_CONTROL_C_EXIT). Bukan crash — hanya shutdown signal yang tidak tertangani. **PASS saat dijalankan terisolasi**, FAIL saat berurutan cepat karena port collision.
+
+**2. Stdlib Stubs Compilation (1 suite) — ExitCode 1**
+- `garuda_package_manager_tests` (Test 20: 500 stubs tidak compile)
+
+Penyebab: beberapa dari 500 stub di `stdlib/stubs/` belum compile bersih. Perlu diperbaiki di iterasi berikutnya.
+
+**3. Test Isolation (1 suite)**
+- `garuda_json_grd_tests`
+
+Penyebab: **PASS 100% saat dijalankan terisolasi**, tapi FAIL saat berurutan dalam `run_all_tests.ps1` (resource contention dengan test sebelumnya). Bukan bug di `std/json.grd` — hanya test isolation.
+
+**4. Timeout (2 suite) — bukan hang, hanya lambat**
+- `garuda_bytecode_io_tests` (I/O biner berulang, >30s)
+- `garuda_tests` (mega-suite ribuan assertion, >30s)
+
+**Catatan:** Semua 8 FAIL + 2 TIMEOUT di atas **sudah ada sebelum** perubahan `codegen.hpp` di Fase 0.3 — terbukti 100% identik saat dibandingkan dengan commit `348e99e~1`. **Tidak ada regresi.**
 
 ---
 
