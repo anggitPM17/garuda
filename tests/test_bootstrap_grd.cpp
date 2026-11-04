@@ -14,7 +14,7 @@
 
 int main() {
     std::cout << "=======================================================\n";
-    std::cout << "GARUDA COMPILER — BOOTSTRAP INTEGRATION TEST SUITE\n";
+    std::cout << "GARUDA COMPILER — BOOTSTRAP END-TO-END TEST SUITE\n";
     std::cout << "=======================================================\n\n";
 
     // Test BS1: Bootstrap.baru("1 + 2")
@@ -226,6 +226,50 @@ int main() {
     bool is_ok12 = res12 && garuda::beam::to_string(*res12) == "3";
     CHECK(is_ok12, "Test BS12: Bootstrap.kompilasi('1 + 2') -> jalankan_bootstrap -> 3");
 
-    std::cout << "\n🎉 ALL BOOTSTRAP INTEGRATION TESTS PASSED PERFECTLY!\n";
+    // Test BS13: SelfCompile.kompilasi_teks
+    garuda::beam::ScriptEngine engine13;
+    std::string code13 = R"(
+        modul TestBS13
+        impor "src/self_compile.grd"
+        impor "src/bootstrap.grd"
+
+        fungsi utama() ->
+            St = SelfCompile.kompilasi_teks("10 + 20")
+            Bootstrap.is_sukses(St)
+        rampung
+    )";
+    auto res13 = engine13.eval(code13);
+    bool is_ok13 = res13 && (garuda::beam::to_string(*res13) == "benar" || garuda::beam::to_string(*res13) == "true");
+    CHECK(is_ok13, "Test BS13: SelfCompile.kompilasi_teks('10 + 20') returns is_sukses == benar");
+
+    // Test BS14: SelfCompile.kompilasi_dan_jalankan("10 + 20")
+    garuda::beam::ScriptEngine engine14;
+    std::string code14 = R"(
+        modul TestBS14
+        impor "src/self_compile.grd"
+
+        fungsi utama() ->
+            SelfCompile.kompilasi_dan_jalankan("10 + 20")
+        rampung
+    )";
+    auto res14 = engine14.eval(code14);
+    bool is_ok14 = res14 && garuda::beam::to_string(*res14) == "3";
+    CHECK(is_ok14, "Test BS14: SelfCompile.kompilasi_dan_jalankan('10 + 20') -> 3");
+
+    // Test BS15: SelfCompile.kompilasi_dan_jalankan("100 - 40")
+    garuda::beam::ScriptEngine engine15;
+    std::string code15 = R"(
+        modul TestBS15
+        impor "src/self_compile.grd"
+
+        fungsi utama() ->
+            SelfCompile.kompilasi_dan_jalankan("100 - 40")
+        rampung
+    )";
+    auto res15 = engine15.eval(code15);
+    bool is_ok15 = res15 && garuda::beam::to_string(*res15) == "3";
+    CHECK(is_ok15, "Test BS15: SelfCompile.kompilasi_dan_jalankan('100 - 40') -> 3");
+
+    std::cout << "\n🎉 ALL BOOTSTRAP END-TO-END TESTS PASSED PERFECTLY!\n";
     return 0;
 }

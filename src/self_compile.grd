@@ -1,0 +1,17 @@
+modul SelfCompile
+impor "src/bootstrap.grd"
+impor "src/bootstrap_eval.grd"
+
+# Self-Compile Runner Murni Bahasa Garuda (src/self_compile.grd)
+
+fungsi kompilasi_teks(Sumber) ->
+    St = Bootstrap.baru(Sumber)
+    Bootstrap.kompilasi(St)
+rampung
+
+fungsi kompilasi_dan_jalankan(Sumber) ->
+    St = Bootstrap.baru(Sumber)
+    StKomp = Bootstrap.kompilasi(St)
+    Bc = Bootstrap.get_bytecode(StKomp)
+    BootstrapEval.jalankan_bootstrap(Bc)
+rampung
