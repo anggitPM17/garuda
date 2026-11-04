@@ -2,7 +2,7 @@
 
 **Runtime Terdistribusi C++ Setara Erlang/OTP & Compiler Mandiri. 100% Karya Anak Bangsa 🇮🇩**
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 [![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20Windows%20%7C%20WASM-blue)](https://github.com/anggitPM17/garuda)
 [![Status](https://img.shields.io/badge/Status-Production%20%2B%20Self--Hosting-brightgreen)](https://github.com/anggitPM17/garuda)
 [![RAM Usage](https://img.shields.io/badge/RAM-%3C%202MB-blueviolet)](https://github.com/anggitPM17/garuda)
@@ -137,7 +137,7 @@ Saat ini, beberapa test suite lama untuk fitur bahasa tingkat lanjut masih **FAI
 
 ## 📜 Lisensi & Kontribusi
 
-Proyek ini dilesensikan di bawah **MIT License** — bebas digunakan, dimodifikasi, dan didistribusikan untuk keperluan personal maupun komersial.
+Proyek ini dilesensikan di bawah **Apache License 2.0** — bebas digunakan, dimodifikasi, dan didistribusikan, termasuk untuk keperluan komersial, dengan tetap mempertahankan atribusi dan pemberitahuan lisensi.
 
 Kontribusi sangat disambut baik! Silakan ajukan *Issue* atau *Pull Request* di repositori resmi GitHub [anggitPM17/garuda](https://github.com/anggitPM17/garuda).
 
