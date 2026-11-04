@@ -421,10 +421,18 @@ private:
                     if (bin->right_ptr()->type() == AstNodeType::CallExpr) {
                         auto* call_node = static_cast<CallExprNode*>(bin->right_ptr().get());
                         std::vector<std::shared_ptr<AstNode>> new_args;
-                        new_args.reserve(call_node->args().size() + 1);
-                        new_args.push_back(bin->left_ptr());
+                        bool placeholder_found = false;
                         for (const auto& arg : call_node->args()) {
-                            new_args.push_back(arg);
+                            if (arg->type() == AstNodeType::PatternWildcard ||
+                                (arg->type() == AstNodeType::VariableExpr && static_cast<VariableNode*>(arg.get())->name() == "_")) {
+                                new_args.push_back(bin->left_ptr());
+                                placeholder_found = true;
+                            } else {
+                                new_args.push_back(arg);
+                            }
+                        }
+                        if (!placeholder_found) {
+                            new_args.insert(new_args.begin(), bin->left_ptr());
                         }
                         auto desugared_call = std::make_shared<CallExprNode>(call_node->name(), std::move(new_args));
                         return gen_expr(desugared_call, is_tail);
