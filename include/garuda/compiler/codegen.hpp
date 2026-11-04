@@ -144,7 +144,8 @@ public:
                    name == "HttpServer.mulai" || name == "HttpServer.start" ||
                    name == "HttpServer.stop"  || name == "HttpServer.daftar_route" ||
                    name == "HttpServer.register_route" || name == "HttpServer.daftar_handler" ||
-                   name == "HttpServer.register_handler" || name == "HttpServer.jalankan" ||
+                   name == "HttpServer.register_handler" || name == "HttpServer.daftar_handler_param" ||
+                   name == "HttpServer.register_handler_param" || name == "HttpServer.jalankan" ||
                    name == "HttpServer.run" || name == "cetak" || name == "print" || name == "IO.cetak" ||
                    name == "Error.lempar" || name == "Error.throw" || name == "Error.pesan" ||
                    name == "Error.message" || name == "Error.jenis" || name == "Error.kind" ||

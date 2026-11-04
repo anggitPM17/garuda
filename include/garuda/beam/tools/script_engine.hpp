@@ -35,6 +35,7 @@ struct DynamicRoute {
 static std::vector<DynamicRoute> g_dynamic_routes;
 static std::mutex g_dynamic_routes_mutex;
 static std::map<std::string, std::string> g_handler_code;
+static std::map<std::string, bool> g_handler_is_param;
 static std::mutex g_handler_mutex;
 static std::mutex g_engine_mutex;
 static std::shared_ptr<httplib::Server> g_http_server;
@@ -105,7 +106,7 @@ public:
         }
     }
 
-    std::optional<Term> eval(const std::string& source) {
+    std::optional<Term> eval(const std::string& source, const std::vector<Term>& initial_args = {}) {
         if (source.empty()) return std::nullopt;
 
         try {
@@ -172,7 +173,16 @@ public:
             if (main_it == main_out.function_table.end()) {
                 for (const auto& [k, v] : main_out.function_table) {
                     auto dot_pos = k.rfind(".utama");
-                    if (dot_pos != std::string::npos && (dot_pos + 6 == k.length() || k.substr(dot_pos + 6) == "/0")) {
+                    if (dot_pos != std::string::npos && (dot_pos + 6 == k.length() || k.substr(dot_pos + 6) == "/0" || k[dot_pos + 6] == '/')) {
+                        start_ip = v;
+                        main_it = main_out.function_table.find(k);
+                        break;
+                    }
+                }
+            }
+            if (main_it == main_out.function_table.end()) {
+                for (const auto& [k, v] : main_out.function_table) {
+                    if (k == "utama" || k.rfind("utama/", 0) == 0) {
                         start_ip = v;
                         main_it = main_out.function_table.find(k);
                         break;
@@ -186,7 +196,7 @@ public:
                 start_ip = main_offset + main_it->second;
             }
 
-            return execute_instructions(combined_out, start_ip);
+            return execute_instructions(combined_out, start_ip, initial_args);
         } catch (const std::exception& e) {
             std::cout << "[EVAL EXC: " << e.what() << "]\n";
             return std::nullopt;
@@ -234,10 +244,13 @@ private:
     }
 
 private:
-    std::optional<Term> execute_instructions(const compiler::CodeGeneratorOutput& cg_out, std::size_t start_ip) {
+    std::optional<Term> execute_instructions(const compiler::CodeGeneratorOutput& cg_out, std::size_t start_ip, const std::vector<Term>& initial_args = {}) {
         if (cg_out.all_instructions.empty() || start_ip >= cg_out.all_instructions.size()) return std::nullopt;
 
         std::array<Term, 256> x_regs;
+        for (std::size_t i = 0; i < initial_args.size() && i < 256; ++i) {
+            x_regs[i] = initial_args[i];
+        }
         std::vector<std::size_t> call_stack;
         std::vector<std::array<Term, 256>> frame_stack;
         std::size_t ip = start_ip;
@@ -476,6 +489,21 @@ private:
                 {
                     std::lock_guard<std::mutex> lock(g_handler_mutex);
                     g_handler_code[nama] = kode;
+                    g_handler_is_param[nama] = false;
+                }
+                Term res(Atom{"ok"});
+                x_regs[0] = res;
+                last_result = res;
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "HttpServer", "daftar_handler_param") || is_mod_fn(fn_name, "HttpServer", "register_handler_param")) {
+                std::string nama = clean_str(x_regs[0]);
+                std::string kode = clean_str(x_regs[1]);
+                {
+                    std::lock_guard<std::mutex> lock(g_handler_mutex);
+                    g_handler_code[nama] = kode;
+                    g_handler_is_param[nama] = true;
                 }
                 Term res(Atom{"ok"});
                 x_regs[0] = res;
@@ -512,61 +540,73 @@ private:
                     std::lock_guard<std::mutex> lock(g_dynamic_routes_mutex);
                     for (const auto& r : g_dynamic_routes) {
                         std::string h_name = r.handler_name;
-                        if (r.method == "GET" || r.method == "get") {
-                            g_http_server->Get(r.path.c_str(), [h_name](const httplib::Request&, httplib::Response& res) {
-                                std::string code_to_run = "";
-                                {
-                                    std::lock_guard<std::mutex> lock(g_handler_mutex);
-                                    if (g_handler_code.count(h_name)) {
-                                        code_to_run = g_handler_code[h_name];
-                                    }
+                        auto execute_http_handler = [](const std::string& hname, const httplib::Request& req, httplib::Response& res) {
+                            std::string code_to_run = "";
+                            bool is_param = false;
+                            {
+                                std::lock_guard<std::mutex> lock(g_handler_mutex);
+                                if (g_handler_code.count(hname)) {
+                                    code_to_run = g_handler_code[hname];
                                 }
-                                if (!code_to_run.empty()) {
-                                    std::lock_guard<std::mutex> lock(g_engine_mutex);
-                                    ScriptEngine h_engine;
-                                    auto eval_res = h_engine.eval(code_to_run);
-                                    if (eval_res) {
-                                        std::string body;
-                                        if (auto* str = eval_res->get_if<std::string>()) {
-                                            body = *str;
-                                        } else {
-                                            body = garuda::beam::to_string(*eval_res);
-                                        }
-                                        res.set_content(body, "text/plain");
-                                    } else {
-                                        res.set_content("error", "text/plain");
+                                if (g_handler_is_param.count(hname)) {
+                                    is_param = g_handler_is_param[hname];
+                                }
+                            }
+                            if (!code_to_run.empty()) {
+                                std::lock_guard<std::mutex> lock(g_engine_mutex);
+                                ScriptEngine h_engine;
+                                std::optional<Term> eval_res;
+                                if (is_param) {
+                                    std::vector<Term> entries;
+                                    for (const auto& p : req.params) {
+                                        std::vector<Term> pair = { Term(p.first), Term(p.second) };
+                                        entries.push_back(Term(Tuple{std::make_shared<const std::vector<Term>>(std::move(pair))}));
                                     }
+                                    Term query_map(Tuple{std::make_shared<const std::vector<Term>>(std::move(entries))});
+                                    std::vector<Term> initial_args = {
+                                        query_map,
+                                        Term(req.body),
+                                        Term(req.method),
+                                        Term(req.path)
+                                    };
+                                    eval_res = h_engine.eval(code_to_run, initial_args);
                                 } else {
-                                    res.set_content("Route GET -> " + h_name, "text/plain");
+                                    eval_res = h_engine.eval(code_to_run);
                                 }
+                                if (eval_res) {
+                                    std::string body;
+                                    if (auto* str = eval_res->get_if<std::string>()) {
+                                        body = *str;
+                                    } else {
+                                        body = garuda::beam::to_string(*eval_res);
+                                    }
+                                    res.set_content(body, "text/plain");
+                                } else {
+                                    res.set_content("error", "text/plain");
+                                }
+                            } else {
+                                if (req.method == "POST" || req.method == "post") {
+                                    res.set_content("Route POST " + req.body + " -> " + hname, "text/plain");
+                                } else {
+                                    res.set_content("Route " + req.method + " -> " + hname, "text/plain");
+                                }
+                            }
+                        };
+
+                        if (r.method == "GET" || r.method == "get") {
+                            g_http_server->Get(r.path.c_str(), [h_name, execute_http_handler](const httplib::Request& req, httplib::Response& res) {
+                                execute_http_handler(h_name, req, res);
                             });
                         } else if (r.method == "POST" || r.method == "post") {
-                            g_http_server->Post(r.path.c_str(), [h_name](const httplib::Request& req, httplib::Response& res) {
-                                std::string code_to_run = "";
-                                {
-                                    std::lock_guard<std::mutex> lock(g_handler_mutex);
-                                    if (g_handler_code.count(h_name)) {
-                                        code_to_run = g_handler_code[h_name];
-                                    }
-                                }
-                                if (!code_to_run.empty()) {
-                                    std::lock_guard<std::mutex> lock(g_engine_mutex);
-                                    ScriptEngine h_engine;
-                                    auto eval_res = h_engine.eval(code_to_run);
-                                    if (eval_res) {
-                                        std::string body;
-                                        if (auto* str = eval_res->get_if<std::string>()) {
-                                            body = *str;
-                                        } else {
-                                            body = garuda::beam::to_string(*eval_res);
-                                        }
-                                        res.set_content(body, "text/plain");
-                                    } else {
-                                        res.set_content("error", "text/plain");
-                                    }
-                                } else {
-                                    res.set_content("Route POST " + req.body + " -> " + h_name, "text/plain");
-                                }
+                            g_http_server->Post(r.path.c_str(), [h_name, execute_http_handler](const httplib::Request& req, httplib::Response& res) {
+                                execute_http_handler(h_name, req, res);
+                            });
+                        } else {
+                            g_http_server->Get(r.path.c_str(), [h_name, execute_http_handler](const httplib::Request& req, httplib::Response& res) {
+                                execute_http_handler(h_name, req, res);
+                            });
+                            g_http_server->Post(r.path.c_str(), [h_name, execute_http_handler](const httplib::Request& req, httplib::Response& res) {
+                                execute_http_handler(h_name, req, res);
                             });
                         }
                     }
