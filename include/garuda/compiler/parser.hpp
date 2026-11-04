@@ -243,7 +243,7 @@ private:
 
     std::shared_ptr<AstNode> parse_pipe() {
         auto left = parse_send();
-        while (check(TokenType::Pipe)) {
+        while (check(TokenType::Pipe) && peek().text == "|>") {
             advance();
             auto right = parse_send();
             left = std::make_shared<BinaryExprNode>("|>", left, right);

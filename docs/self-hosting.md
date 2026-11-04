@@ -26,7 +26,8 @@ Dalam ekosistem Garuda:
 | **Fase 3** | Virtual Machine dalam Garuda (`vm_memory.grd`, `vm_eval.grd`, `vm_bif.grd`, `vm_actor.grd`, `grdrun.grd`) | ✅ **TUNTAS** | 100% PASS (11/11 Test) |
 | **Fase 4** | Bootstrap End-to-End (`Stage 1 == Stage 2`) | ✅ **TUNTAS** | 100% PASS (15/15 Test) |
 | **Fase 5** | Fitur Lanjutan, Optimasi Register, Benchmark & Documentation Final | ✅ **TUNTAS** | 171/181 Suite PASS (94.5%) |
-| **Fase 6** | Pengayaan Sintaks & Feature (Pattern Matching Lanjutan + Guard `nalika`) | ✅ **TUNTAS** | 100% PASS (8/8 Test) |
+| **Fase 6.1** | Pengayaan Sintaks (Pattern Matching Lanjutan + Guard `nalika`) | ✅ **TUNTAS** | 100% PASS (8/8 Test) |
+| **Fase 6.2** | Destructuring (Tuple, List, Nested, Wildcard) | ✅ **TUNTAS** | 100% PASS (5/5 Test) |
 
 ---
 
