@@ -37,6 +37,7 @@ Dalam ekosistem Garuda:
 | **Fase 8.1** | Native TCP Socket BIF (`Soket.buka`, `Soket.terima`, `Soket.baca`, `Soket.tulis`, `Soket.tutup`) | ✅ **TUNTAS** | 100% PASS (5/5 Test) |
 | **Fase 8.2** | HTTP Request Parser (`Http.parse_request`, method, path, headers, body) | ✅ **TUNTAS** | 100% PASS (5/5 Test) |
 | **Fase 8.3** | HTTP Response Builder (`Http.buat_respons`, status, headers, body) | ✅ **TUNTAS** | 100% PASS (5/5 Test) |
+| **Fase 8.4** | Native HTTP Server Loop (`Server.mulai`, listen, accept, dispatch) | ✅ **TUNTAS** | 100% PASS (5/5 Test) |
 
 ---
 

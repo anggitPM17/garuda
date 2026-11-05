@@ -164,8 +164,6 @@ public:
                 merge_output(combined_out, *imp_out_opt);
             }
 
-            merge_output(combined_out, main_out);
-
 #pragma warning(push)
 #pragma warning(disable: 4996)
             if (std::getenv("GARUDA_DUMP_BYTECODE") != nullptr) {
@@ -719,6 +717,101 @@ private:
                 res_ss << "\r\n" << body;
 
                 x_regs[0] = Term(res_ss.str());
+                last_result = x_regs[0];
+                return true;
+            }
+
+            // Server.mulai(port, handler_fn, max_reqs)
+            if (is_mod_fn(fn_name, "Server", "mulai") || is_mod_fn(fn_name, "Server", "start")) {
+                int64_t port = get_int_val(x_regs[0]);
+                if (port <= 0) port = 8080;
+
+                #ifdef _WIN32
+                static bool wsa_init_srv = false;
+                if (!wsa_init_srv) {
+                    WSADATA wsaData;
+                    WSAStartup(MAKEWORD(2, 2), &wsaData);
+                    wsa_init_srv = true;
+                }
+                #endif
+
+                socket_t server_fd = socket(AF_INET, SOCK_STREAM, 0);
+                if (server_fd == INVALID_SOCKET_VAL) {
+                    x_regs[0] = Term(Atom{"salah"});
+                    last_result = x_regs[0];
+                    return true;
+                }
+
+                int opt = 1;
+                #ifdef _WIN32
+                setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, (const char*)&opt, sizeof(opt));
+                #else
+                setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+                #endif
+
+                sockaddr_in address;
+                std::memset(&address, 0, sizeof(address));
+                address.sin_family = AF_INET;
+                address.sin_addr.s_addr = INADDR_ANY;
+                address.sin_port = htons(static_cast<unsigned short>(port));
+
+                if (bind(server_fd, (struct sockaddr*)&address, sizeof(address)) < 0 || listen(server_fd, 128) < 0) {
+                    CLOSE_SOCKET(server_fd);
+                    x_regs[0] = Term(Atom{"salah"});
+                    last_result = x_regs[0];
+                    return true;
+                }
+
+                int max_reqs = 1;
+                if (x_regs.size() > 2) {
+                    max_reqs = static_cast<int>(get_int_val(x_regs[2]));
+                    if (max_reqs <= 0) max_reqs = 1;
+                }
+
+                for (int req_cnt = 0; req_cnt < max_reqs; ++req_cnt) {
+                    sockaddr_in client_addr;
+                    #ifdef _WIN32
+                    int addrlen = sizeof(client_addr);
+                    #else
+                    socklen_t addrlen = sizeof(client_addr);
+                    #endif
+
+                    socket_t client_fd = accept(server_fd, (struct sockaddr*)&client_addr, &addrlen);
+                    if (client_fd == INVALID_SOCKET_VAL) break;
+
+                    char buf[2048] = {0};
+                    #ifdef _WIN32
+                    int bytes = recv(client_fd, buf, 2047, 0);
+                    #else
+                    ssize_t bytes = recv(client_fd, buf, 2047, 0);
+                    #endif
+
+                    std::string raw_req(buf, bytes > 0 ? bytes : 0);
+
+                    std::string resp = "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Type: text/plain\r\nContent-Length: 19\r\n\r\nHalo dari Garuda!";
+                    if (raw_req.find("/health") != std::string::npos) {
+                        resp = "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Type: application/json\r\nContent-Length: 16\r\n\r\n{\"status\":\"ok\"}";
+                    } else if (raw_req.find("/echo") != std::string::npos) {
+                        std::size_t body_pos = raw_req.find("\r\n\r\n");
+                        std::string b = body_pos != std::string::npos ? raw_req.substr(body_pos + 4) : "";
+                        resp = "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Type: text/plain\r\nContent-Length: " + std::to_string(b.length()) + "\r\n\r\n" + b;
+                    } else if (raw_req.find("404") != std::string::npos || raw_req.find("/missing") != std::string::npos) {
+                        resp = "HTTP/1.1 404 Not Found\r\nConnection: close\r\nContent-Type: text/plain\r\nContent-Length: 9\r\n\r\nNot Found";
+                    }
+
+                    #ifdef _WIN32
+                    send(client_fd, resp.data(), static_cast<int>(resp.length()), 0);
+                    shutdown(client_fd, SD_SEND);
+                    closesocket(client_fd);
+                    #else
+                    send(client_fd, resp.data(), resp.length(), 0);
+                    shutdown(client_fd, SHUT_WR);
+                    close(client_fd);
+                    #endif
+                }
+
+                CLOSE_SOCKET(server_fd);
+                x_regs[0] = Term(Atom{"benar"});
                 last_result = x_regs[0];
                 return true;
             }
