@@ -167,6 +167,9 @@ target_link_libraries(garuda_tcp_socket_tests PRIVATE garuda)
 add_executable(garuda_http_parser_tests tests/test_http_parser.cpp)
 target_link_libraries(garuda_http_parser_tests PRIVATE garuda)
 
+add_executable(garuda_http_response_tests tests/test_http_response.cpp)
+target_link_libraries(garuda_http_response_tests PRIVATE garuda)
+
 add_executable(garuda_benchmark_runner benchmarks/benchmark_runner.cpp)
 target_link_libraries(garuda_benchmark_runner PRIVATE garuda)
 

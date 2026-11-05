@@ -666,6 +666,63 @@ private:
                 return true;
             }
 
+            // Http.build_response(status, headers_map, body_str)
+            if (is_mod_fn(fn_name, "Http", "build_response") || is_mod_fn(fn_name, "Http", "buat_respons")) {
+                std::int64_t status = get_int_val(x_regs[0]);
+                if (status <= 0) status = 200;
+
+                std::string status_text = "OK";
+                if (status == 200) status_text = "OK";
+                else if (status == 201) status_text = "Created";
+                else if (status == 204) status_text = "No Content";
+                else if (status == 301) status_text = "Moved Permanently";
+                else if (status == 302) status_text = "Found";
+                else if (status == 400) status_text = "Bad Request";
+                else if (status == 401) status_text = "Unauthorized";
+                else if (status == 403) status_text = "Forbidden";
+                else if (status == 404) status_text = "Not Found";
+                else if (status == 500) status_text = "Internal Server Error";
+                else status_text = "OK";
+
+                Term headers_term = x_regs.size() > 1 ? x_regs[1] : Term();
+                std::string body = x_regs.size() > 2 ? clean_str(x_regs[2]) : "";
+
+                std::ostringstream res_ss;
+                res_ss << "HTTP/1.1 " << status << " " << status_text << "\r\n";
+
+                bool has_content_type = false;
+                bool has_content_len = false;
+
+                if (auto* tup = headers_term.get_if<Tuple>()) {
+                    if (tup->items) {
+                        for (const auto& item : *tup->items) {
+                            if (auto* entry = item.get_if<Tuple>()) {
+                                if (entry->items && entry->items->size() >= 2) {
+                                    std::string hk = clean_str((*entry->items)[0]);
+                                    std::string hv = clean_str((*entry->items)[1]);
+                                    if (hk == "Content-Type" || hk == "content-type") has_content_type = true;
+                                    if (hk == "Content-Length" || hk == "content-length") has_content_len = true;
+                                    res_ss << hk << ": " << hv << "\r\n";
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (!has_content_type) {
+                    res_ss << "Content-Type: text/plain\r\n";
+                }
+                if (!has_content_len) {
+                    res_ss << "Content-Length: " << body.length() << "\r\n";
+                }
+
+                res_ss << "\r\n" << body;
+
+                x_regs[0] = Term(res_ss.str());
+                last_result = x_regs[0];
+                return true;
+            }
+
             auto get_seq_size = [](const Term& t) -> int64_t {
                 if (auto* lst = t.get_if<List>()) {
                     return lst->items ? static_cast<int64_t>(lst->items->size()) : 0;
