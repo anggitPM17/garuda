@@ -202,6 +202,7 @@ public:
                     if (source_[pos_] == '\\' && pos_ + 1 < source_.length()) {
                         char next_c = source_[pos_ + 1];
                         if (next_c == 'n') str_val += '\n';
+                        else if (next_c == 'r') str_val += '\r';
                         else if (next_c == 't') str_val += '\t';
                         else if (next_c == '"') str_val += '"';
                         else if (next_c == '\\') str_val += '\\';

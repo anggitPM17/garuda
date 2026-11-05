@@ -591,6 +591,81 @@ private:
                 return true;
             }
 
+            // Http.parse_request(raw_http_str)
+            if (is_mod_fn(fn_name, "Http", "parse_request") || is_mod_fn(fn_name, "Http", "urai_permintaan")) {
+                std::string raw = clean_str(x_regs[0]);
+                std::string method = "GET";
+                std::string path = "/";
+                std::string version = "HTTP/1.1";
+                std::string body = "";
+
+                std::size_t header_end = raw.find("\r\n\r\n");
+                std::size_t sep_len = 4;
+                if (header_end == std::string::npos) {
+                    header_end = raw.find("\\r\\n\\r\\n");
+                    if (header_end != std::string::npos) sep_len = 8;
+                }
+                if (header_end == std::string::npos) {
+                    header_end = raw.find("\n\n");
+                    if (header_end != std::string::npos) sep_len = 2;
+                }
+                if (header_end == std::string::npos) {
+                    header_end = raw.find("\\n\\n");
+                    if (header_end != std::string::npos) sep_len = 4;
+                }
+
+                std::string headers_part = raw;
+                if (header_end != std::string::npos) {
+                    headers_part = raw.substr(0, header_end);
+                    body = raw.substr(header_end + sep_len);
+                }
+
+                std::istringstream iss(headers_part);
+                std::string request_line;
+                if (std::getline(iss, request_line)) {
+                    if (!request_line.empty() && request_line.back() == '\r') request_line.pop_back();
+                    std::istringstream line_ss(request_line);
+                    line_ss >> method >> path >> version;
+                }
+
+                std::vector<Term> header_entries;
+                std::string header_line;
+                while (std::getline(iss, header_line)) {
+                    if (!header_line.empty() && header_line.back() == '\r') header_line.pop_back();
+                    if (header_line.empty()) continue;
+                    std::size_t colon = header_line.find(':');
+                    if (colon != std::string::npos) {
+                        std::string k = header_line.substr(0, colon);
+                        std::string v = header_line.substr(colon + 1);
+                        while (!v.empty() && (v.front() == ' ' || v.front() == '\t')) v.erase(0, 1);
+                        while (!v.empty() && (v.back() == ' ' || v.back() == '\t')) v.pop_back();
+
+                        std::vector<Term> kv = {Term(k), Term(v)};
+                        header_entries.push_back(Term(Tuple{std::make_shared<const std::vector<Term>>(std::move(kv))}));
+                    }
+                }
+                Term headers_map(Tuple{std::make_shared<const std::vector<Term>>(std::move(header_entries))});
+
+                std::vector<Term> req_entries;
+                auto add_req_kv = [&](const std::string& key, const Term& val) {
+                    std::vector<Term> kv = {Term(key), val};
+                    req_entries.push_back(Term(Tuple{std::make_shared<const std::vector<Term>>(std::move(kv))}));
+                };
+
+                add_req_kv("metode", Term(method));
+                add_req_kv("method", Term(method));
+                add_req_kv("path", Term(path));
+                add_req_kv("versi", Term(version));
+                add_req_kv("version", Term(version));
+                add_req_kv("body", Term(body));
+                add_req_kv("headers", headers_map);
+
+                Term req_map(Tuple{std::make_shared<const std::vector<Term>>(std::move(req_entries))});
+                x_regs[0] = req_map;
+                last_result = req_map;
+                return true;
+            }
+
             auto get_seq_size = [](const Term& t) -> int64_t {
                 if (auto* lst = t.get_if<List>()) {
                     return lst->items ? static_cast<int64_t>(lst->items->size()) : 0;

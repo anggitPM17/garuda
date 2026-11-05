@@ -35,6 +35,7 @@ Dalam ekosistem Garuda:
 | **Fase 7.3** | Multiple Assignment & Race-Free Swap (`A, B = B, A`) | ✅ **TUNTAS** | 100% PASS (5/5 Test) |
 | **Fase 7.4** | String Format Specifiers (`"#{X:05d}"`, `"#{Y:.2f}"`, `"#{S:>5}"`, `"#{X:x}"`) | ✅ **TUNTAS** | 100% PASS (5/5 Test) |
 | **Fase 8.1** | Native TCP Socket BIF (`Soket.buka`, `Soket.terima`, `Soket.baca`, `Soket.tulis`, `Soket.tutup`) | ✅ **TUNTAS** | 100% PASS (5/5 Test) |
+| **Fase 8.2** | HTTP Request Parser (`Http.parse_request`, method, path, headers, body) | ✅ **TUNTAS** | 100% PASS (5/5 Test) |
 
 ---
 
