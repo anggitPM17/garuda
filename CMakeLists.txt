@@ -161,6 +161,9 @@ target_link_libraries(garuda_multi_assign_tests PRIVATE garuda)
 add_executable(garuda_string_format_tests tests/test_string_format.cpp)
 target_link_libraries(garuda_string_format_tests PRIVATE garuda)
 
+add_executable(garuda_tcp_socket_tests tests/test_tcp_socket.cpp)
+target_link_libraries(garuda_tcp_socket_tests PRIVATE garuda)
+
 add_executable(garuda_benchmark_runner benchmarks/benchmark_runner.cpp)
 target_link_libraries(garuda_benchmark_runner PRIVATE garuda)
 

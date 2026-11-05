@@ -13,6 +13,29 @@
 #include <atomic>
 #include <chrono>
 #include <httplib.h>
+
+#ifdef _WIN32
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#pragma comment(lib, "ws2_32.lib")
+typedef SOCKET socket_t;
+#define INVALID_SOCKET_VAL INVALID_SOCKET
+#define CLOSE_SOCKET(s) closesocket(s)
+#else
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+#include <fcntl.h>
+typedef int socket_t;
+#define INVALID_SOCKET_VAL -1
+#define CLOSE_SOCKET(s) close(s)
+#endif
+
+static std::map<std::int64_t, socket_t> g_socket_map;
+static std::atomic<std::int64_t> g_next_socket_id{100};
+static std::mutex g_socket_mutex;
+
 #include <iostream>
 #include <map>
 #include <memory>
@@ -387,6 +410,183 @@ private:
                 }
 
                 x_regs[0] = Term(res);
+                last_result = x_regs[0];
+                return true;
+            }
+
+            // Soket / Socket BIFs
+            if (is_mod_fn(fn_name, "Soket", "buka") || is_mod_fn(fn_name, "Soket", "open") || is_mod_fn(fn_name, "Socket", "open")) {
+                #ifdef _WIN32
+                static bool wsa_init = false;
+                if (!wsa_init) {
+                    WSADATA wsaData;
+                    WSAStartup(MAKEWORD(2, 2), &wsaData);
+                    wsa_init = true;
+                }
+                #endif
+
+                int64_t port = get_int_val(x_regs[0]);
+                socket_t server_fd = socket(AF_INET, SOCK_STREAM, 0);
+                if (server_fd == INVALID_SOCKET_VAL) {
+                    x_regs[0] = Term(static_cast<int64_t>(-1));
+                    last_result = x_regs[0];
+                    return true;
+                }
+
+                int opt = 1;
+                #ifdef _WIN32
+                setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, (const char*)&opt, sizeof(opt));
+                #else
+                setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+                #endif
+
+                sockaddr_in address;
+                std::memset(&address, 0, sizeof(address));
+                address.sin_family = AF_INET;
+                address.sin_addr.s_addr = INADDR_ANY;
+                address.sin_port = htons(static_cast<unsigned short>(port));
+
+                if (bind(server_fd, (struct sockaddr*)&address, sizeof(address)) < 0) {
+                    CLOSE_SOCKET(server_fd);
+                    x_regs[0] = Term(static_cast<int64_t>(-1));
+                    last_result = x_regs[0];
+                    return true;
+                }
+
+                if (listen(server_fd, 128) < 0) {
+                    CLOSE_SOCKET(server_fd);
+                    x_regs[0] = Term(static_cast<int64_t>(-1));
+                    last_result = x_regs[0];
+                    return true;
+                }
+
+                std::lock_guard<std::mutex> lock(g_socket_mutex);
+                std::int64_t sid = g_next_socket_id++;
+                g_socket_map[sid] = server_fd;
+                x_regs[0] = Term(sid);
+                last_result = x_regs[0];
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "Soket", "terima") || is_mod_fn(fn_name, "Soket", "accept") || is_mod_fn(fn_name, "Socket", "accept")) {
+                std::int64_t sid = get_int_val(x_regs[0]);
+                socket_t server_fd = INVALID_SOCKET_VAL;
+                {
+                    std::lock_guard<std::mutex> lock(g_socket_mutex);
+                    auto it = g_socket_map.find(sid);
+                    if (it != g_socket_map.end()) server_fd = it->second;
+                }
+
+                if (server_fd == INVALID_SOCKET_VAL) {
+                    x_regs[0] = Term(static_cast<int64_t>(-1));
+                    last_result = x_regs[0];
+                    return true;
+                }
+
+                sockaddr_in client_addr;
+                #ifdef _WIN32
+                int addrlen = sizeof(client_addr);
+                #else
+                socklen_t addrlen = sizeof(client_addr);
+                #endif
+
+                socket_t client_fd = accept(server_fd, (struct sockaddr*)&client_addr, &addrlen);
+                if (client_fd == INVALID_SOCKET_VAL) {
+                    x_regs[0] = Term(static_cast<int64_t>(-1));
+                    last_result = x_regs[0];
+                    return true;
+                }
+
+                std::lock_guard<std::mutex> lock(g_socket_mutex);
+                std::int64_t cid = g_next_socket_id++;
+                g_socket_map[cid] = client_fd;
+                x_regs[0] = Term(cid);
+                last_result = x_regs[0];
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "Soket", "baca") || is_mod_fn(fn_name, "Soket", "read") || is_mod_fn(fn_name, "Socket", "read")) {
+                std::int64_t cid = get_int_val(x_regs[0]);
+                std::int64_t max_len = x_regs.size() > 1 ? get_int_val(x_regs[1]) : 1024;
+                if (max_len <= 0) max_len = 1024;
+
+                socket_t client_fd = INVALID_SOCKET_VAL;
+                {
+                    std::lock_guard<std::mutex> lock(g_socket_mutex);
+                    auto it = g_socket_map.find(cid);
+                    if (it != g_socket_map.end()) client_fd = it->second;
+                }
+
+                if (client_fd == INVALID_SOCKET_VAL) {
+                    x_regs[0] = Term(std::string(""));
+                    last_result = x_regs[0];
+                    return true;
+                }
+
+                std::vector<char> buffer(static_cast<std::size_t>(max_len));
+                #ifdef _WIN32
+                int bytes_read = recv(client_fd, buffer.data(), static_cast<int>(max_len), 0);
+                #else
+                ssize_t bytes_read = recv(client_fd, buffer.data(), static_cast<size_t>(max_len), 0);
+                #endif
+
+                if (bytes_read > 0) {
+                    x_regs[0] = Term(std::string(buffer.data(), static_cast<std::size_t>(bytes_read)));
+                } else {
+                    x_regs[0] = Term(std::string(""));
+                }
+                last_result = x_regs[0];
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "Soket", "tulis") || is_mod_fn(fn_name, "Soket", "write") || is_mod_fn(fn_name, "Socket", "write")) {
+                std::int64_t cid = get_int_val(x_regs[0]);
+                std::string data = clean_str(x_regs[1]);
+
+                socket_t client_fd = INVALID_SOCKET_VAL;
+                {
+                    std::lock_guard<std::mutex> lock(g_socket_mutex);
+                    auto it = g_socket_map.find(cid);
+                    if (it != g_socket_map.end()) client_fd = it->second;
+                }
+
+                if (client_fd == INVALID_SOCKET_VAL) {
+                    x_regs[0] = Term(Atom{"salah"});
+                    last_result = x_regs[0];
+                    return true;
+                }
+
+                #ifdef _WIN32
+                int sent = send(client_fd, data.data(), static_cast<int>(data.length()), 0);
+                #else
+                ssize_t sent = send(client_fd, data.data(), data.length(), 0);
+                #endif
+
+                if (sent >= 0) {
+                    x_regs[0] = Term(Atom{"benar"});
+                } else {
+                    x_regs[0] = Term(Atom{"salah"});
+                }
+                last_result = x_regs[0];
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "Soket", "tutup") || is_mod_fn(fn_name, "Soket", "close") || is_mod_fn(fn_name, "Socket", "close")) {
+                std::int64_t cid = get_int_val(x_regs[0]);
+                socket_t fd = INVALID_SOCKET_VAL;
+                {
+                    std::lock_guard<std::mutex> lock(g_socket_mutex);
+                    auto it = g_socket_map.find(cid);
+                    if (it != g_socket_map.end()) {
+                        fd = it->second;
+                        g_socket_map.erase(it);
+                    }
+                }
+
+                if (fd != INVALID_SOCKET_VAL) {
+                    CLOSE_SOCKET(fd);
+                }
+                x_regs[0] = Term(Atom{"benar"});
                 last_result = x_regs[0];
                 return true;
             }
