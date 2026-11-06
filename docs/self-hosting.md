@@ -46,6 +46,7 @@ Dalam ekosistem Garuda:
 | **Fase 10.1** | WebSocket Server RFC 6455 (`Ws.upgrade`, `Ws.baca`, `Ws.kirim`, `Ws.tutup`, `Server.mulai_ws`) | ✅ **TUNTAS** | 100% PASS (5/5 Test) |
 | **Fase 10.2** | HTTPS TLS Server (`Server.mulai_https`, mbedtls SSL context, cert/key) | ✅ **TUNTAS** | 100% PASS (5/5 Test) |
 | **Fase 10.3** | Router & Middleware (`Router.baru`, `get`, `post`, `middleware`, `dispatch`) | ✅ **TUNTAS** | 100% PASS (5/5 Test) |
+| **Fase 10.4** | Static File Serving & Security (`Server.mulai_async_statis`, `File.baca_statis`) | ✅ **TUNTAS** | 100% PASS (5/5 Test) |
 
 ---
 

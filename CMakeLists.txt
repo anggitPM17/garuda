@@ -191,6 +191,9 @@ target_link_libraries(garuda_https_tests PRIVATE garuda)
 add_executable(garuda_router_middleware_tests tests/test_router_middleware.cpp)
 target_link_libraries(garuda_router_middleware_tests PRIVATE garuda)
 
+add_executable(garuda_static_server_tests tests/test_static_server.cpp)
+target_link_libraries(garuda_static_server_tests PRIVATE garuda)
+
 add_executable(garuda_benchmark_runner benchmarks/benchmark_runner.cpp)
 target_link_libraries(garuda_benchmark_runner PRIVATE garuda)
 

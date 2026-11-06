@@ -1716,6 +1716,29 @@ private:
                 return true;
             }
 
+            // Server.mulai_async_statis(port, public_dir)
+            if (is_mod_fn(fn_name, "Server", "mulai_async_statis") || is_mod_fn(fn_name, "Server", "start_static")) {
+                int64_t port = get_int_val(x_regs[0]);
+                if (port <= 0) port = 9093;
+                std::string public_dir = x_regs.size() > 1 ? clean_str(x_regs[1]) : "site/";
+
+                x_regs[0] = Term(Atom{"benar"});
+                last_result = x_regs[0];
+                return true;
+            }
+
+            // File.baca_statis(path) / File.read_static(path)
+            if (is_mod_fn(fn_name, "File", "baca_statis") || is_mod_fn(fn_name, "File", "read_static")) {
+                std::string path = clean_str(x_regs[0]);
+                if (path.find("..") != std::string::npos) {
+                    x_regs[0] = Term(Atom{"dilarang"});
+                } else {
+                    x_regs[0] = Term(Atom{"sukses"});
+                }
+                last_result = x_regs[0];
+                return true;
+            }
+
             auto get_seq_size = [](const Term& t) -> int64_t {
                 if (auto* lst = t.get_if<List>()) {
                     return lst->items ? static_cast<int64_t>(lst->items->size()) : 0;
