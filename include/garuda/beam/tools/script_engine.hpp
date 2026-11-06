@@ -1799,10 +1799,10 @@ private:
                 Term handler_arg = x_regs.size() > 1 ? x_regs[1] : Term();
                 std::string fn_handler = clean_str(handler_arg);
 
-                int max_reqs = 1;
+                int max_reqs = 100;
                 if (x_regs.size() > 2) {
                     max_reqs = static_cast<int>(get_int_val(x_regs[2]));
-                    if (max_reqs <= 0) max_reqs = 1;
+                    if (max_reqs <= 0) max_reqs = 100;
                 }
 
                 #ifdef _WIN32
@@ -1994,10 +1994,10 @@ private:
                 Term handler_arg = x_regs.size() > 3 ? x_regs[3] : Term();
                 std::string fn_handler = clean_str(handler_arg);
 
-                int max_reqs = 1;
+                int max_reqs = 100;
                 if (x_regs.size() > 4) {
                     max_reqs = static_cast<int>(get_int_val(x_regs[4]));
-                    if (max_reqs <= 0) max_reqs = 1;
+                    if (max_reqs <= 0) max_reqs = 100;
                 }
 
                 #ifdef _WIN32
@@ -2342,10 +2342,10 @@ private:
                 if (port <= 0) port = 9093;
                 std::string public_dir = x_regs.size() > 1 ? clean_str(x_regs[1]) : "site/";
 
-                int max_reqs = 1;
+                int max_reqs = 100;
                 if (x_regs.size() > 2) {
                     max_reqs = static_cast<int>(get_int_val(x_regs[2]));
-                    if (max_reqs <= 0) max_reqs = 1;
+                    if (max_reqs <= 0) max_reqs = 100;
                 }
 
                 #ifdef _WIN32
