@@ -182,6 +182,9 @@ target_link_libraries(garuda_http_async_server_tests PRIVATE garuda)
 add_executable(garuda_distributed_actor_tests tests/test_distributed_actor.cpp)
 target_link_libraries(garuda_distributed_actor_tests PRIVATE garuda)
 
+add_executable(garuda_websocket_tests tests/test_websocket.cpp)
+target_link_libraries(garuda_websocket_tests PRIVATE garuda)
+
 add_executable(garuda_benchmark_runner benchmarks/benchmark_runner.cpp)
 target_link_libraries(garuda_benchmark_runner PRIVATE garuda)
 

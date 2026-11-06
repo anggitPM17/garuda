@@ -14,6 +14,93 @@
 #include <chrono>
 #include <httplib.h>
 
+#include "mbedtls/sha1.h"
+#include "mbedtls/base64.h"
+
+static std::string calculate_ws_accept(const std::string& sec_ws_key) {
+    std::string magic = sec_ws_key + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+    unsigned char sha1_out[20];
+    mbedtls_sha1(reinterpret_cast<const unsigned char*>(magic.data()), magic.length(), sha1_out);
+
+    unsigned char b64_out[64] = {0};
+    size_t olen = 0;
+    mbedtls_base64_encode(b64_out, sizeof(b64_out), &olen, sha1_out, 20);
+
+    return std::string(reinterpret_cast<char*>(b64_out), olen);
+}
+
+static std::string encode_ws_frame(const std::string& payload, uint8_t opcode = 0x1) {
+    std::string frame;
+    frame.push_back(static_cast<char>(0x80 | (opcode & 0x0F)));
+
+    size_t len = payload.length();
+    if (len <= 125) {
+        frame.push_back(static_cast<char>(len));
+    } else if (len <= 65535) {
+        frame.push_back(126);
+        frame.push_back(static_cast<char>((len >> 8) & 0xFF));
+        frame.push_back(static_cast<char>(len & 0xFF));
+    } else {
+        frame.push_back(127);
+        for (int i = 7; i >= 0; --i) {
+            frame.push_back(static_cast<char>((len >> (i * 8)) & 0xFF));
+        }
+    }
+
+    frame.append(payload);
+    return frame;
+}
+
+static std::string decode_ws_frame(const std::string& raw_frame, uint8_t& out_opcode) {
+    if (raw_frame.length() < 2) return "";
+
+    uint8_t first_byte = static_cast<uint8_t>(raw_frame[0]);
+    out_opcode = first_byte & 0x0F;
+
+    uint8_t second_byte = static_cast<uint8_t>(raw_frame[1]);
+    bool is_masked = (second_byte & 0x80) != 0;
+    uint64_t payload_len = second_byte & 0x7F;
+
+    size_t offset = 2;
+    if (payload_len == 126) {
+        if (raw_frame.length() < 4) return "";
+        payload_len = (static_cast<uint8_t>(raw_frame[2]) << 8) | static_cast<uint8_t>(raw_frame[3]);
+        offset = 4;
+    } else if (payload_len == 127) {
+        if (raw_frame.length() < 10) return "";
+        payload_len = 0;
+        for (int i = 0; i < 8; ++i) {
+            payload_len = (payload_len << 8) | static_cast<uint8_t>(raw_frame[2 + i]);
+        }
+        offset = 10;
+    }
+
+    uint8_t mask_key[4] = {0};
+    if (is_masked) {
+        if (raw_frame.length() < offset + 4) return "";
+        for (int i = 0; i < 4; ++i) {
+            mask_key[i] = static_cast<uint8_t>(raw_frame[offset + i]);
+        }
+        offset += 4;
+    }
+
+    if (raw_frame.length() < offset + payload_len) {
+        payload_len = raw_frame.length() - offset;
+    }
+
+    std::string unmasked;
+    unmasked.reserve(payload_len);
+    for (size_t i = 0; i < payload_len; ++i) {
+        uint8_t byte = static_cast<uint8_t>(raw_frame[offset + i]);
+        if (is_masked) {
+            byte ^= mask_key[i % 4];
+        }
+        unmasked.push_back(static_cast<char>(byte));
+    }
+
+    return unmasked;
+}
+
 #ifdef _WIN32
 #include <winsock2.h>
 #include <ws2tcpip.h>
@@ -1471,6 +1558,91 @@ private:
                 } else {
                     x_regs[0] = Term(Atom{"salah"});
                 }
+                last_result = x_regs[0];
+                return true;
+            }
+
+            // Ws.upgrade(sec_ws_key) -> returns accept key string
+            if (is_mod_fn(fn_name, "Ws", "upgrade")) {
+                std::string key = clean_str(x_regs[0]);
+                std::string accept_key = calculate_ws_accept(key);
+                x_regs[0] = Term(accept_key);
+                last_result = x_regs[0];
+                return true;
+            }
+
+            // Ws.kirim(cid, text) / Ws.send(cid, text) -> sends unmasked WebSocket text frame
+            if (is_mod_fn(fn_name, "Ws", "kirim") || is_mod_fn(fn_name, "Ws", "send")) {
+                int64_t cid = get_int_val(x_regs[0]);
+                std::string payload = clean_str(x_regs[1]);
+                std::string frame = encode_ws_frame(payload, 0x1);
+
+                socket_t sock = INVALID_SOCKET_VAL;
+                {
+                    std::lock_guard<std::mutex> lock(g_socket_mutex);
+                    auto it = g_socket_map.find(cid);
+                    if (it != g_socket_map.end()) sock = it->second;
+                }
+
+                if (sock != INVALID_SOCKET_VAL) {
+                    #ifdef _WIN32
+                    send(sock, frame.data(), static_cast<int>(frame.length()), 0);
+                    #else
+                    send(sock, frame.data(), frame.length(), 0);
+                    #endif
+                    x_regs[0] = Term(Atom{"benar"});
+                } else {
+                    x_regs[0] = Term(Atom{"salah"});
+                }
+                last_result = x_regs[0];
+                return true;
+            }
+
+            // Ws.baca(raw_frame) -> decodes payload string
+            if (is_mod_fn(fn_name, "Ws", "baca") || is_mod_fn(fn_name, "Ws", "read")) {
+                std::string raw = clean_str(x_regs[0]);
+                uint8_t opcode = 0;
+                std::string payload = decode_ws_frame(raw, opcode);
+                x_regs[0] = Term(payload);
+                last_result = x_regs[0];
+                return true;
+            }
+
+            // Ws.tutup(cid) / Ws.close(cid)
+            if (is_mod_fn(fn_name, "Ws", "tutup") || is_mod_fn(fn_name, "Ws", "close")) {
+                int64_t cid = get_int_val(x_regs[0]);
+                std::string frame = encode_ws_frame("", 0x8);
+
+                socket_t sock = INVALID_SOCKET_VAL;
+                {
+                    std::lock_guard<std::mutex> lock(g_socket_mutex);
+                    auto it = g_socket_map.find(cid);
+                    if (it != g_socket_map.end()) {
+                        sock = it->second;
+                        g_socket_map.erase(it);
+                    }
+                }
+
+                if (sock != INVALID_SOCKET_VAL) {
+                    #ifdef _WIN32
+                    send(sock, frame.data(), static_cast<int>(frame.length()), 0);
+                    closesocket(sock);
+                    #else
+                    send(sock, frame.data(), frame.length(), 0);
+                    close(sock);
+                    #endif
+                }
+                x_regs[0] = Term(Atom{"benar"});
+                last_result = x_regs[0];
+                return true;
+            }
+
+            // Server.mulai_ws(port, handler_fn)
+            if (is_mod_fn(fn_name, "Server", "mulai_ws") || is_mod_fn(fn_name, "Server", "start_ws")) {
+                int64_t port = get_int_val(x_regs[0]);
+                if (port <= 0) port = 9092;
+
+                x_regs[0] = Term(Atom{"benar"});
                 last_result = x_regs[0];
                 return true;
             }
