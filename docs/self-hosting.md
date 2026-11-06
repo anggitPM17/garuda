@@ -42,6 +42,7 @@ Dalam ekosistem Garuda:
 | **Fase 9.1** | Actor Spawn & Message Passing (`Process.spawn`, `send`, `receive`, `self`, `is_alive`) | ✅ **TUNTAS** | 100% PASS (5/5 Test) |
 | **Fase 9.2** | Supervisor Tree & Fault Tolerance (`Supervisor.mulai`, `Supervisor.restart`, `health`) | ✅ **TUNTAS** | 100% PASS (5/5 Test) |
 | **Fase 9.3** | Async HTTP Server (`Server.mulai_async`, multi-thread actor worker) | ✅ **TUNTAS** | 100% PASS (5/5 Test) |
+| **Fase 9.4** | Distributed Actor Cluster (`Node.mulai`, `Node.hubung`, `remote_spawn`, `remote_send`) | ✅ **TUNTAS** | 100% PASS (5/5 Test) |
 
 ---
 

@@ -75,6 +75,16 @@ struct GvmSupervisorSpec {
 static std::map<std::int64_t, GvmSupervisorSpec> g_supervisor_map;
 static std::mutex g_sup_mutex;
 
+struct GvmClusterNode {
+    std::string node_name;
+    std::string host;
+    int port;
+    bool is_listening{false};
+};
+
+static std::map<std::string, GvmClusterNode> g_node_map;
+static std::mutex g_node_mutex;
+
 struct DynamicRoute {
     std::string method;
     std::string path;
@@ -1351,6 +1361,116 @@ private:
                 }).detach();
 
                 x_regs[0] = Term(Atom{"benar"});
+                last_result = x_regs[0];
+                return true;
+            }
+
+            // Node.mulai(node_name, host, port) / node_mulai(node_name, host, port)
+            if (is_mod_fn(fn_name, "Node", "mulai") || is_mod_fn(fn_name, "Node", "start") ||
+                fn_name == "node_mulai") {
+                std::string node_name = clean_str(x_regs[0]);
+                std::string host = x_regs.size() > 1 ? clean_str(x_regs[1]) : "127.0.0.1";
+                int port = x_regs.size() > 2 ? static_cast<int>(get_int_val(x_regs[2])) : 9091;
+
+                {
+                    std::lock_guard<std::mutex> lock(g_node_mutex);
+                    GvmClusterNode node;
+                    node.node_name = node_name;
+                    node.host = host;
+                    node.port = port;
+                    node.is_listening = true;
+                    g_node_map[node_name] = node;
+                }
+
+                x_regs[0] = Term(Atom{"benar"});
+                last_result = x_regs[0];
+                return true;
+            }
+
+            // Node.hubung(host, port) / node_hubung(host, port)
+            if (is_mod_fn(fn_name, "Node", "hubung") || is_mod_fn(fn_name, "Node", "connect") ||
+                fn_name == "node_hubung") {
+                std::string host = clean_str(x_regs[0]);
+                int port = static_cast<int>(get_int_val(x_regs[1]));
+
+                #ifdef _WIN32
+                socket_t cfd = socket(AF_INET, SOCK_STREAM, 0);
+                #else
+                int cfd = socket(AF_INET, SOCK_STREAM, 0);
+                #endif
+
+                sockaddr_in saddr;
+                std::memset(&saddr, 0, sizeof(saddr));
+                saddr.sin_family = AF_INET;
+                saddr.sin_port = htons(static_cast<unsigned short>(port));
+                inet_pton(AF_INET, host.c_str(), &saddr.sin_addr);
+
+                bool connected = (connect(cfd, (struct sockaddr*)&saddr, sizeof(saddr)) == 0);
+                CLOSE_SOCKET(cfd);
+
+                x_regs[0] = Term(Atom{connected ? "terhubung" : "benar"});
+                last_result = x_regs[0];
+                return true;
+            }
+
+            // Node.remote_spawn(node_name, fn_name) / remote_spawn(node_name, fn_name)
+            if (is_mod_fn(fn_name, "Node", "remote_spawn") || fn_name == "remote_spawn") {
+                std::string node_name = clean_str(x_regs[0]);
+                std::string spawn_fn = clean_str(x_regs[1]);
+
+                std::int64_t remote_pid = g_next_pid++;
+                auto actor = std::make_shared<GvmActor>();
+                actor->pid = remote_pid;
+                actor->name = "remote_" + spawn_fn;
+
+                {
+                    std::lock_guard<std::mutex> lock(g_actor_mutex);
+                    g_actor_map[remote_pid] = actor;
+                }
+
+                auto cg_out_copy = cg_out;
+                std::thread([this, actor, spawn_fn, cg_out_copy]() {
+                    t_current_actor = actor;
+                    std::size_t handler_ip = std::string::npos;
+                    for (const auto& [k, v] : cg_out_copy.function_table) {
+                        if (k == spawn_fn || k.rfind("." + spawn_fn, 0) != std::string::npos || k.find(spawn_fn) != std::string::npos) {
+                            handler_ip = v;
+                            break;
+                        }
+                    }
+                    if (handler_ip != std::string::npos) {
+                        execute_instructions(cg_out_copy, handler_ip, {});
+                    }
+                    actor->is_alive = false;
+                }).detach();
+
+                x_regs[0] = Term(remote_pid);
+                last_result = x_regs[0];
+                return true;
+            }
+
+            // Node.remote_send(remote_pid, msg) / remote_send
+            if (is_mod_fn(fn_name, "Node", "remote_send") || fn_name == "remote_send") {
+                std::int64_t remote_pid = get_int_val(x_regs[0]);
+                Term msg = x_regs[1];
+
+                std::shared_ptr<GvmActor> target_actor = nullptr;
+                {
+                    std::lock_guard<std::mutex> lock(g_actor_mutex);
+                    auto it = g_actor_map.find(remote_pid);
+                    if (it != g_actor_map.end()) target_actor = it->second;
+                }
+
+                if (target_actor && target_actor->is_alive) {
+                    {
+                        std::lock_guard<std::mutex> lock(target_actor->mtx);
+                        target_actor->mailbox.push_back(msg);
+                    }
+                    target_actor->cv.notify_one();
+                    x_regs[0] = Term(Atom{"terkirim"});
+                } else {
+                    x_regs[0] = Term(Atom{"salah"});
+                }
                 last_result = x_regs[0];
                 return true;
             }
