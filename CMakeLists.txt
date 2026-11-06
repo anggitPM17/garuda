@@ -191,6 +191,9 @@ target_link_libraries(garuda_websocket_real_handler_tests PRIVATE garuda)
 add_executable(garuda_websocket_large_frame_tests tests/test_websocket_large_frame.cpp)
 target_link_libraries(garuda_websocket_large_frame_tests PRIVATE garuda)
 
+add_executable(garuda_websocket_fragmentation_tests tests/test_websocket_fragmentation.cpp)
+target_link_libraries(garuda_websocket_fragmentation_tests PRIVATE garuda)
+
 add_executable(garuda_default_max_reqs_tests tests/test_default_max_reqs.cpp)
 target_link_libraries(garuda_default_max_reqs_tests PRIVATE garuda)
 
