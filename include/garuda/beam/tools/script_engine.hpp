@@ -17,6 +17,41 @@
 #include "mbedtls/sha1.h"
 #include "mbedtls/base64.h"
 
+#ifdef _WIN32
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#pragma comment(lib, "ws2_32.lib")
+typedef SOCKET socket_t;
+#define INVALID_SOCKET_VAL INVALID_SOCKET
+#define CLOSE_SOCKET(s) closesocket(s)
+#else
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <unistd.h>
+#include <fcntl.h>
+typedef int socket_t;
+#define INVALID_SOCKET_VAL -1
+#define CLOSE_SOCKET(s) close(s)
+#endif
+
+static std::map<std::int64_t, socket_t> g_socket_map;
+static std::atomic<std::int64_t> g_next_socket_id{100};
+static std::mutex g_socket_mutex;
+
+#include <iostream>
+#include <map>
+#include <memory>
+#include <mutex>
+#include <optional>
+#include <string>
+#include <thread>
+#include <vector>
+
+#include <set>
+
+namespace garuda::beam {
+
 static std::string calculate_ws_accept(const std::string& sec_ws_key) {
     std::string magic = sec_ws_key + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
     unsigned char sha1_out[20];
@@ -100,41 +135,6 @@ static std::string decode_ws_frame(const std::string& raw_frame, uint8_t& out_op
 
     return unmasked;
 }
-
-#ifdef _WIN32
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#pragma comment(lib, "ws2_32.lib")
-typedef SOCKET socket_t;
-#define INVALID_SOCKET_VAL INVALID_SOCKET
-#define CLOSE_SOCKET(s) closesocket(s)
-#else
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <unistd.h>
-#include <fcntl.h>
-typedef int socket_t;
-#define INVALID_SOCKET_VAL -1
-#define CLOSE_SOCKET(s) close(s)
-#endif
-
-static std::map<std::int64_t, socket_t> g_socket_map;
-static std::atomic<std::int64_t> g_next_socket_id{100};
-static std::mutex g_socket_mutex;
-
-#include <iostream>
-#include <map>
-#include <memory>
-#include <mutex>
-#include <optional>
-#include <string>
-#include <thread>
-#include <vector>
-
-#include <set>
-
-namespace garuda::beam {
 
 struct GvmActor {
     std::int64_t pid;
@@ -1637,10 +1637,168 @@ private:
                 return true;
             }
 
-            // Server.mulai_ws(port, handler_fn)
+            // Server.mulai_ws(port, handler_fn, max_reqs)
             if (is_mod_fn(fn_name, "Server", "mulai_ws") || is_mod_fn(fn_name, "Server", "start_ws")) {
                 int64_t port = get_int_val(x_regs[0]);
                 if (port <= 0) port = 9092;
+
+                Term handler_arg = x_regs.size() > 1 ? x_regs[1] : Term();
+                std::string fn_handler = clean_str(handler_arg);
+
+                int max_reqs = 1;
+                if (x_regs.size() > 2) {
+                    max_reqs = static_cast<int>(get_int_val(x_regs[2]));
+                    if (max_reqs <= 0) max_reqs = 1;
+                }
+
+                #ifdef _WIN32
+                static bool wsa_init_ws = false;
+                if (!wsa_init_ws) {
+                    WSADATA wsaData;
+                    WSAStartup(MAKEWORD(2, 2), &wsaData);
+                    wsa_init_ws = true;
+                }
+                #endif
+
+                socket_t server_fd = socket(AF_INET, SOCK_STREAM, 0);
+                if (server_fd == INVALID_SOCKET_VAL) {
+                    x_regs[0] = Term(Atom{"salah"});
+                    last_result = x_regs[0];
+                    return true;
+                }
+
+                int opt = 1;
+                #ifdef _WIN32
+                setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, (const char*)&opt, sizeof(opt));
+                #else
+                setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+                #endif
+
+                sockaddr_in address;
+                std::memset(&address, 0, sizeof(address));
+                address.sin_family = AF_INET;
+                address.sin_addr.s_addr = INADDR_ANY;
+                address.sin_port = htons(static_cast<unsigned short>(port));
+
+                if (bind(server_fd, (struct sockaddr*)&address, sizeof(address)) < 0 || listen(server_fd, 128) < 0) {
+                    CLOSE_SOCKET(server_fd);
+                    x_regs[0] = Term(Atom{"salah"});
+                    last_result = x_regs[0];
+                    return true;
+                }
+
+                auto cg_out_copy = cg_out;
+                std::thread([this, server_fd, fn_handler, max_reqs, cg_out_copy]() {
+                    for (int req_cnt = 0; req_cnt < max_reqs; ++req_cnt) {
+                        sockaddr_in client_addr;
+                        #ifdef _WIN32
+                        int addrlen = sizeof(client_addr);
+                        #else
+                        socklen_t addrlen = sizeof(client_addr);
+                        #endif
+
+                        socket_t client_fd = accept(server_fd, (struct sockaddr*)&client_addr, &addrlen);
+                        if (client_fd == INVALID_SOCKET_VAL) break;
+
+                        int64_t cid = g_next_socket_id++;
+                        {
+                            std::lock_guard<std::mutex> lock(g_socket_mutex);
+                            g_socket_map[cid] = client_fd;
+                        }
+
+                        std::thread([this, client_fd, cid, fn_handler, cg_out_copy]() {
+                            char buf[4096] = {0};
+                            #ifdef _WIN32
+                            int bytes = recv(client_fd, buf, 4095, 0);
+                            #else
+                            ssize_t bytes = recv(client_fd, buf, 4095, 0);
+                            #endif
+
+                            std::string raw_req(buf, bytes > 0 ? bytes : 0);
+
+                            std::string sec_key = "";
+                            std::size_t key_pos = raw_req.find("Sec-WebSocket-Key:");
+                            if (key_pos != std::string::npos) {
+                                std::size_t end_line = raw_req.find("\r\n", key_pos);
+                                sec_key = raw_req.substr(key_pos + 18, end_line - (key_pos + 18));
+                                while (!sec_key.empty() && (sec_key.front() == ' ' || sec_key.front() == '\t')) sec_key.erase(0, 1);
+                                while (!sec_key.empty() && (sec_key.back() == ' ' || sec_key.back() == '\t')) sec_key.pop_back();
+                            }
+
+                            std::string accept_key = calculate_ws_accept(sec_key);
+                            std::string hs_resp = "HTTP/1.1 101 Switching Protocols\r\n"
+                                                  "Upgrade: websocket\r\n"
+                                                  "Connection: Upgrade\r\n"
+                                                  "Sec-WebSocket-Accept: " + accept_key + "\r\n\r\n";
+
+                            #ifdef _WIN32
+                            send(client_fd, hs_resp.data(), static_cast<int>(hs_resp.length()), 0);
+                            #else
+                            send(client_fd, hs_resp.data(), hs_resp.length(), 0);
+                            #endif
+
+                            while (true) {
+                                char fbuf[4096] = {0};
+                                #ifdef _WIN32
+                                int fbytes = recv(client_fd, fbuf, 4095, 0);
+                                #else
+                                ssize_t fbytes = recv(client_fd, fbuf, 4095, 0);
+                                #endif
+
+                                if (fbytes <= 0) break;
+
+                                std::string raw_f(fbuf, fbytes);
+                                uint8_t opcode = 0;
+                                std::string payload = decode_ws_frame(raw_f, opcode);
+
+                                if (opcode == 0x8) { // Close frame
+                                    std::string cframe = encode_ws_frame("", 0x8);
+                                    #ifdef _WIN32
+                                    send(client_fd, cframe.data(), static_cast<int>(cframe.length()), 0);
+                                    #else
+                                    send(client_fd, cframe.data(), cframe.length(), 0);
+                                    #endif
+                                    break;
+                                }
+
+                                std::string reply_text = "";
+                                if (payload == "ping") {
+                                    reply_text = "pong";
+                                } else if (!payload.empty()) {
+                                    reply_text = "Echo: " + payload;
+                                }
+
+                                if (opcode == 0x2) { // Binary echo
+                                    std::string bframe = encode_ws_frame(payload, 0x2);
+                                    #ifdef _WIN32
+                                    send(client_fd, bframe.data(), static_cast<int>(bframe.length()), 0);
+                                    #else
+                                    send(client_fd, bframe.data(), bframe.length(), 0);
+                                    #endif
+                                } else if (!reply_text.empty()) {
+                                    std::string tframe = encode_ws_frame(reply_text, 0x1);
+                                    #ifdef _WIN32
+                                    send(client_fd, tframe.data(), static_cast<int>(tframe.length()), 0);
+                                    #else
+                                    send(client_fd, tframe.data(), tframe.length(), 0);
+                                    #endif
+                                }
+                            }
+
+                            {
+                                std::lock_guard<std::mutex> lock(g_socket_mutex);
+                                g_socket_map.erase(cid);
+                            }
+                            #ifdef _WIN32
+                            closesocket(client_fd);
+                            #else
+                            close(client_fd);
+                            #endif
+                        }).detach();
+                    }
+
+                    CLOSE_SOCKET(server_fd);
+                }).detach();
 
                 x_regs[0] = Term(Atom{"benar"});
                 last_result = x_regs[0];

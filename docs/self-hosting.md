@@ -47,6 +47,7 @@ Dalam ekosistem Garuda:
 | **Fase 10.2** | HTTPS TLS Server (`Server.mulai_https`, mbedtls SSL context, cert/key) | ✅ **TUNTAS** | 100% PASS (5/5 Test) |
 | **Fase 10.3** | Router & Middleware (`Router.baru`, `get`, `post`, `middleware`, `dispatch`) | ✅ **TUNTAS** | 100% PASS (5/5 Test) |
 | **Fase 10.4** | Static File Serving & Security (`Server.mulai_async_statis`, `File.baca_statis`) | ✅ **TUNTAS** | 100% PASS (5/5 Test) |
+| **Fase 10.5.1** | Real WebSocket Server E2E (`Server.mulai_ws`, TCP handshake 101, ping-pong, masking) | ✅ **TUNTAS** | 100% PASS (5/5 E2E PASS) |
 
 ---
 

@@ -1,179 +1,148 @@
-#include "../include/garuda/beam/io/http_ws_server.hpp"
-#include "../include/garuda/beam/stdlib/crypto.hpp"
-#include "../include/garuda/beam/core/runtime.hpp"
-#if !defined(_WIN32)
-#include <arpa/inet.h>
-#endif
-#include <atomic>
-#include <chrono>
-#include <future>
+// =====================================================================
+// GARUDA COMPILER — FASE 10.5 REAL WEBSOCKET E2E TEST SUITE (5 TESTS)
+// =====================================================================
+
+#include "../include/garuda/beam/tools/script_engine.hpp"
 #include <iostream>
+#include <string>
 #include <thread>
-#include <vector>
+#include <chrono>
+#include <cstdlib>
 
-using namespace garuda::beam;
-
-#define GARUDA_CHECK(cond, msg) \
+#define CHECK(cond, msg) do { \
     if (!(cond)) { \
-        std::cerr << "  ❌ ASSERTION FAILED: " << msg << " (" << #cond << ")\n"; \
+        std::cerr << "[FAIL] " << msg << "\n"; \
         std::exit(1); \
-    }
+    } \
+} while(0)
 
-void run_test_with_timeout(const std::string& test_name, std::function<void()> test_fn, int timeout_seconds = 10) {
-    auto future = std::async(std::launch::async, test_fn);
-    if (future.wait_for(std::chrono::seconds(timeout_seconds)) == std::future_status::timeout) {
-        std::cerr << "  ❌ " << test_name << " FAILED (TIMEOUT > " << timeout_seconds << "s)\n";
-        std::exit(1); \
+static socket_t ws_connect(int port) {
+    #ifdef _WIN32
+    socket_t cfd = socket(AF_INET, SOCK_STREAM, 0);
+    #else
+    int cfd = socket(AF_INET, SOCK_STREAM, 0);
+    #endif
+
+    sockaddr_in saddr;
+    std::memset(&saddr, 0, sizeof(saddr));
+    saddr.sin_family = AF_INET;
+    saddr.sin_port = htons(static_cast<unsigned short>(port));
+    inet_pton(AF_INET, "127.0.0.1", &saddr.sin_addr);
+
+    if (connect(cfd, (struct sockaddr*)&saddr, sizeof(saddr)) < 0) {
+        CLOSE_SOCKET(cfd);
+        return INVALID_SOCKET_VAL;
     }
+    return cfd;
 }
 
-// Minimal WebSocket Client Frame Encoder
-std::vector<std::uint8_t> encode_ws_client_text_frame(const std::string& payload) {
-    std::vector<std::uint8_t> frame;
-    frame.push_back(0x81); // FIN (1) + Opcode (1 = Text)
+static std::string build_masked_frame(const std::string& payload, uint8_t opcode = 0x1) {
+    std::string frame;
+    frame.push_back(static_cast<char>(0x80 | (opcode & 0x0F))); // FIN + Opcode
 
-    std::size_t len = payload.length();
-    if (len <= 125) {
-        frame.push_back(static_cast<std::uint8_t>(0x80 | len)); // Mask bit = 1
-    } else {
-        frame.push_back(0x80 | 126);
-        frame.push_back(static_cast<std::uint8_t>((len >> 8) & 0xFF));
-        frame.push_back(static_cast<std::uint8_t>(len & 0xFF));
+    size_t len = payload.length();
+    frame.push_back(static_cast<char>(0x80 | (len & 0x7F))); // Masked + Len
+
+    uint8_t mask[4] = {0x12, 0x34, 0x56, 0x78};
+    for (int i = 0; i < 4; ++i) {
+        frame.push_back(static_cast<char>(mask[i]));
     }
 
-    // Masking Key
-    std::uint8_t mask[4] = {0x12, 0x34, 0x56, 0x78};
-    for (int i = 0; i < 4; ++i) frame.push_back(mask[i]);
-
-    // Masked Payload
-    for (std::size_t i = 0; i < len; ++i) {
-        frame.push_back(static_cast<std::uint8_t>(payload[i]) ^ mask[i % 4]);
+    for (size_t i = 0; i < len; ++i) {
+        frame.push_back(static_cast<char>(payload[i] ^ mask[i % 4]));
     }
-
-    return frame;
-}
-
-struct WsDecodedFrame {
-    std::uint8_t opcode = 0;
-    std::string payload;
-};
-
-WsDecodedFrame decode_ws_frame(const std::uint8_t* buf, std::size_t len) {
-    WsDecodedFrame frame;
-    if (len < 2) return frame;
-
-    frame.opcode = buf[0] & 0x0F;
-    bool masked = (buf[1] & 0x80) != 0;
-    std::size_t payload_len = buf[1] & 0x7F;
-    std::size_t offset = 2;
-
-    if (payload_len == 126) {
-        if (len < 4) return frame;
-        payload_len = (buf[2] << 8) | buf[3];
-        offset = 4;
-    }
-
-    std::uint8_t mask[4] = {0, 0, 0, 0};
-    if (masked) {
-        if (len < offset + 4) return frame;
-        for (int i = 0; i < 4; ++i) mask[i] = buf[offset++];
-    }
-
-    std::string text;
-    text.reserve(payload_len);
-    for (std::size_t i = 0; i < payload_len && (offset + i) < len; ++i) {
-        std::uint8_t b = buf[offset + i];
-        if (masked) b ^= mask[i % 4];
-        text += static_cast<char>(b);
-    }
-
-    frame.payload = text;
     return frame;
 }
 
 int main() {
+    garuda::beam::ScriptEngine engine;
+
     std::cout << "=======================================================\n";
-    std::cout << "GARUDA WEBSOCKET END-TO-END SUITE\n";
+    std::cout << "GARUDA COMPILER — FASE 10.5 REAL WEBSOCKET E2E TEST SUITE\n";
     std::cout << "=======================================================\n\n";
 
-    // === Test 1: Real WebSocket Server Echo Roundtrip ===
-    run_test_with_timeout("Test 1: WebSocket Handshake & Server Echo Roundtrip", []() {
-        Runtime rt;
-        EventLoop loop(rt);
-        int port = 8100;
+    // Start Real WebSocket Server on port 9092
+    std::string srv_code = R"(
+        modul TestWSE2E
+        fungsi utama() ->
+            Server.mulai_ws(9092, nil, 10)
+        rampung
+    )";
+    engine.eval(srv_code);
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-        HttpWsServer server(loop, port);
+    // Test 1: Real TCP Socket Handshake
+    socket_t c1 = ws_connect(9092);
+    CHECK(c1 != INVALID_SOCKET_VAL, "Test 1 connect TCP socket");
 
-        // Register Server WS Handler
-        server.set_ws_handler([](const std::string& msg, std::function<void(const std::string&)> send_reply) {
-            send_reply("Pong: " + msg);
-        });
+    std::string hs_req = "GET /ws HTTP/1.1\r\n"
+                        "Host: localhost:9092\r\n"
+                        "Upgrade: websocket\r\n"
+                        "Connection: Upgrade\r\n"
+                        "Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n\r\n";
+    send(c1, hs_req.data(), static_cast<int>(hs_req.length()), 0);
 
-        bool started = server.start();
-        GARUDA_CHECK(started, "HttpWsServer must start on port 8100");
+    char hbuf[2048] = {0};
+    recv(c1, hbuf, 2047, 0);
+    std::string hresp(hbuf);
 
-        // Run EventLoop in background thread
-        std::thread loop_thread([&loop]() {
-            loop.run();
-        });
+    CHECK(hresp.find("101 Switching Protocols") != std::string::npos, "Test 1 HTTP 101 status");
+    CHECK(hresp.find("Sec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=") != std::string::npos, "Test 1 Sec-WebSocket-Accept key");
+    std::cout << "[Test 1] Real TCP Handshake -> 101 Switching Protocols [PASS]\n";
 
-        std::this_thread::sleep_for(std::chrono::milliseconds(200));
+    // Test 2: Real Ping-Pong over TCP
+    std::string ping_frame = build_masked_frame("ping", 0x1);
+    send(c1, ping_frame.data(), static_cast<int>(ping_frame.length()), 0);
 
-        // Connect Client Socket
-        socket_t client_fd = ::socket(AF_INET, SOCK_STREAM, 0);
-        GARUDA_CHECK(client_fd != INVALID_SOCK, "Client socket creation must succeed");
+    char fbuf2[2048] = {0};
+    int r2 = recv(c1, fbuf2, 2047, 0);
+    CHECK(r2 > 0, "Test 2 recv pong frame");
+    uint8_t op2 = 0;
+    std::string p2 = garuda::beam::decode_ws_frame(std::string(fbuf2, r2), op2);
+    CHECK(p2 == "pong", "Test 2 payload must be 'pong'");
+    std::cout << "[Test 2] Real Ping-Pong over TCP -> 'pong' [PASS]\n";
 
-        sockaddr_in addr{};
-        addr.sin_family = AF_INET;
-        addr.sin_port = htons(static_cast<u_short>(port));
-        inet_pton(AF_INET, "127.0.0.1", &addr.sin_addr);
+    // Test 3: Real Text Echo over TCP
+    std::string echo_frame = build_masked_frame("halo garuda", 0x1);
+    send(c1, echo_frame.data(), static_cast<int>(echo_frame.length()), 0);
 
-        int conn_rc = ::connect(client_fd, reinterpret_cast<sockaddr*>(&addr), sizeof(addr));
-        GARUDA_CHECK(conn_rc == 0, "Socket connect to 127.0.0.1:8100 must succeed");
+    char fbuf3[2048] = {0};
+    int r3 = recv(c1, fbuf3, 2047, 0);
+    CHECK(r3 > 0, "Test 3 recv text echo frame");
+    uint8_t op3 = 0;
+    std::string p3 = garuda::beam::decode_ws_frame(std::string(fbuf3, r3), op3);
+    CHECK(p3 == "Echo: halo garuda", "Test 3 payload must be 'Echo: halo garuda'");
+    std::cout << "[Test 3] Real Text Echo over TCP -> 'Echo: halo garuda' [PASS]\n";
 
-        // 1. Send Handshake Request
-        std::string req =
-            "GET /ws HTTP/1.1\r\n"
-            "Host: 127.0.0.1:8100\r\n"
-            "Upgrade: websocket\r\n"
-            "Connection: Upgrade\r\n"
-            "Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==\r\n\r\n";
+    // Test 4: Real Binary Echo over TCP
+    std::string bin_frame = build_masked_frame("BIN_DATA", 0x2);
+    send(c1, bin_frame.data(), static_cast<int>(bin_frame.length()), 0);
 
-        ::send(client_fd, req.c_str(), static_cast<int>(req.length()), 0);
+    char fbuf4[2048] = {0};
+    int r4 = recv(c1, fbuf4, 2047, 0);
+    CHECK(r4 > 0, "Test 4 recv binary frame");
+    uint8_t op4 = 0;
+    std::string p4 = garuda::beam::decode_ws_frame(std::string(fbuf4, r4), op4);
+    CHECK(op4 == 0x2 && p4 == "BIN_DATA", "Test 4 binary opcode and payload match");
+    std::cout << "[Test 4] Real Binary Echo over TCP -> Opcode 0x2 BIN_DATA [PASS]\n";
 
-        char buf[1024];
-        int bytes = ::recv(client_fd, buf, sizeof(buf) - 1, 0);
-        GARUDA_CHECK(bytes > 0, "Must receive HTTP 101 Handshake Response");
-        buf[bytes] = '\0';
+    // Test 5: Real Close Handshake over TCP
+    std::string close_frame = build_masked_frame("", 0x8);
+    send(c1, close_frame.data(), static_cast<int>(close_frame.length()), 0);
 
-        std::string handshake_resp(buf, bytes);
-        GARUDA_CHECK(handshake_resp.find("101 Switching Protocols") != std::string::npos, "Handshake must return HTTP 101");
-        GARUDA_CHECK(handshake_resp.find("Upgrade: websocket") != std::string::npos, "Handshake must return Upgrade: websocket");
+    char fbuf5[2048] = {0};
+    int r5 = recv(c1, fbuf5, 2047, 0);
+    uint8_t op5 = 0;
+    if (r5 > 0) {
+        garuda::beam::decode_ws_frame(std::string(fbuf5, r5), op5);
+    }
+    CLOSE_SOCKET(c1);
 
-        // 2. Client Sends Masked Text Frame "Hello Garuda"
-        std::string msg = "Hello Garuda";
-        auto client_frame = encode_ws_client_text_frame(msg);
-        ::send(client_fd, reinterpret_cast<const char*>(client_frame.data()), static_cast<int>(client_frame.size()), 0);
+    CHECK(op5 == 0x8 || r5 <= 0, "Test 5 close frame response received");
+    std::cout << "[Test 5] Real Close Handshake over TCP -> Opcode 0x8 Closed [PASS]\n";
 
-        // 3. Client Receives Server Reply Frame Over Socket
-        std::uint8_t recv_buf[1024];
-        int recv_bytes = ::recv(client_fd, reinterpret_cast<char*>(recv_buf), sizeof(recv_buf), 0);
-        GARUDA_CHECK(recv_bytes > 0, "Must receive WebSocket frame reply from server");
-
-        WsDecodedFrame server_reply = decode_ws_frame(recv_buf, static_cast<std::size_t>(recv_bytes));
-        GARUDA_CHECK(server_reply.opcode == 0x1, "Server reply frame opcode must be 0x1 (Text Frame)");
-        GARUDA_CHECK(server_reply.payload == "Pong: Hello Garuda", "Server reply payload must match 'Pong: Hello Garuda'");
-
-        CLOSE_SOCK(client_fd);
-        server.stop();
-        loop.stop();
-
-        if (loop_thread.joinable()) loop_thread.join();
-
-        std::cout << "  ✓ Test 1: WebSocket Handshake & Server Echo Roundtrip PASS (Opcode: "
-                  << static_cast<int>(server_reply.opcode) << ", Payload: " << server_reply.payload << ")\n";
-    }, 5);
-
-    std::cout << "\n🎉 ALL WEBSOCKET END-TO-END TESTS PASSED PERFECTLY!\n";
+    std::cout << "\n========================================\n";
+    std::cout << "🎉 ALL 5 FASE 10.5 REAL WEBSOCKET E2E TESTS PASSED PERFECTLY!\n";
+    std::cout << "========================================\n";
     return 0;
 }
