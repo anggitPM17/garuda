@@ -163,6 +163,17 @@ static bool read_ws_frame_complete(socket_t fd, std::string& out_frame) {
             }
         }
 
+        if (payload_len > 16ULL * 1024 * 1024) { // 16 MB Max Bound Security
+            std::cerr << "[WS] Payload too large: " << payload_len << " bytes (max 16MB)\n";
+            char close_frame[4];
+            close_frame[0] = static_cast<char>(0x88); // FIN + Close
+            close_frame[1] = 0x02;                    // len 2
+            close_frame[2] = 0x03;                    // 1009 high byte
+            close_frame[3] = static_cast<char>(0xF1); // 1009 low byte
+            send(fd, close_frame, 4, 0);
+            return false;
+        }
+
         uint8_t mask_key[4] = {0};
         if (is_masked) {
             if (recv(fd, reinterpret_cast<char*>(mask_key), 4, 0) < 4) return false;
@@ -1875,6 +1886,16 @@ private:
 
                         socket_t client_fd = accept(server_fd, (struct sockaddr*)&client_addr, &addrlen);
                         if (client_fd == INVALID_SOCKET_VAL) break;
+
+                        #ifdef _WIN32
+                        DWORD timeout_ms = 5000;
+                        setsockopt(client_fd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&timeout_ms, sizeof(timeout_ms));
+                        #else
+                        struct timeval tv;
+                        tv.tv_sec = 5;
+                        tv.tv_usec = 0;
+                        setsockopt(client_fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+                        #endif
 
                         int64_t cid = g_next_socket_id++;
                         {
