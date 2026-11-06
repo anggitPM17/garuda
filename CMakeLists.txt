@@ -176,6 +176,9 @@ target_link_libraries(garuda_actor_concurrency_tests PRIVATE garuda)
 add_executable(garuda_supervisor_concurrency_tests tests/test_supervisor_concurrency.cpp)
 target_link_libraries(garuda_supervisor_concurrency_tests PRIVATE garuda)
 
+add_executable(garuda_http_async_server_tests tests/test_http_async_server.cpp)
+target_link_libraries(garuda_http_async_server_tests PRIVATE garuda)
+
 add_executable(garuda_benchmark_runner benchmarks/benchmark_runner.cpp)
 target_link_libraries(garuda_benchmark_runner PRIVATE garuda)
 
