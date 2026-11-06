@@ -7,6 +7,7 @@
 #include "../gvm/interpreter.hpp"
 #include "../io/filesystem.hpp"
 #include "../stdlib/string.hpp"
+#include "../net/tls.hpp"
 
 #include <algorithm>
 #include <array>
@@ -134,6 +135,58 @@ static std::string decode_ws_frame(const std::string& raw_frame, uint8_t& out_op
     }
 
     return unmasked;
+}
+
+static bool generate_self_signed_cert_engine(std::string& out_cert_pem, std::string& out_key_pem) {
+    mbedtls_pk_context key;
+    mbedtls_x509write_cert write_cert;
+    mbedtls_entropy_context entropy;
+    mbedtls_ctr_drbg_context ctr_drbg;
+
+    mbedtls_pk_init(&key);
+    mbedtls_x509write_crt_init(&write_cert);
+    mbedtls_entropy_init(&entropy);
+    mbedtls_ctr_drbg_init(&ctr_drbg);
+
+    const char* pers = "garuda_gen_cert_engine";
+    int rc = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy,
+                                   reinterpret_cast<const unsigned char*>(pers), strlen(pers));
+    if (rc != 0) return false;
+
+    rc = mbedtls_pk_setup(&key, mbedtls_pk_info_from_type(MBEDTLS_PK_RSA));
+    if (rc != 0) return false;
+
+    rc = mbedtls_rsa_gen_key(mbedtls_pk_rsa(key), mbedtls_ctr_drbg_random, &ctr_drbg, 2048, 65537);
+    if (rc != 0) return false;
+
+    mbedtls_x509write_crt_set_subject_key(&write_cert, &key);
+    mbedtls_x509write_crt_set_issuer_key(&write_cert, &key);
+    mbedtls_x509write_crt_set_md_alg(&write_cert, MBEDTLS_MD_SHA256);
+    mbedtls_x509write_crt_set_subject_name(&write_cert, "CN=127.0.0.1,O=Garuda");
+    mbedtls_x509write_crt_set_issuer_name(&write_cert, "CN=127.0.0.1,O=Garuda");
+    mbedtls_x509write_crt_set_validity(&write_cert, "20260101000000", "20360101000000");
+
+    mbedtls_mpi serial;
+    mbedtls_mpi_init(&serial);
+    mbedtls_mpi_read_string(&serial, 10, "1");
+    mbedtls_x509write_crt_set_serial(&write_cert, &serial);
+    mbedtls_mpi_free(&serial);
+
+    unsigned char cert_buf[4096] = {0};
+    rc = mbedtls_x509write_crt_pem(&write_cert, cert_buf, sizeof(cert_buf), mbedtls_ctr_drbg_random, &ctr_drbg);
+    if (rc != 0) return false;
+    out_cert_pem = reinterpret_cast<char*>(cert_buf);
+
+    unsigned char key_buf[4096] = {0};
+    rc = mbedtls_pk_write_key_pem(&key, key_buf, sizeof(key_buf));
+    if (rc != 0) return false;
+    out_key_pem = reinterpret_cast<char*>(key_buf);
+
+    mbedtls_x509write_crt_free(&write_cert);
+    mbedtls_pk_free(&key);
+    mbedtls_ctr_drbg_free(&ctr_drbg);
+    mbedtls_entropy_free(&entropy);
+    return true;
 }
 
 struct GvmActor {
@@ -1858,7 +1911,19 @@ private:
                 }
 
                 auto cg_out_copy = cg_out;
-                std::thread([this, server_fd, fn_handler, max_reqs, cg_out_copy]() {
+                std::thread([this, server_fd, cert_path, key_path, fn_handler, max_reqs, cg_out_copy]() {
+                    // Create TLS Server Context
+                    std::string cert_pem = "";
+                    std::string key_pem = "";
+                    if (!cert_path.empty() && Fs::exists(cert_path)) cert_pem = Fs::read_file(cert_path);
+                    if (!key_path.empty() && Fs::exists(key_path)) key_pem = Fs::read_file(key_path);
+
+                    if (cert_pem.empty() || key_pem.empty()) {
+                        generate_self_signed_cert_engine(cert_pem, key_pem);
+                    }
+
+                    auto tls_ctx = (!cert_pem.empty() && !key_pem.empty()) ? TlsContext::create_server_context(cert_pem, key_pem) : nullptr;
+
                     for (int req_cnt = 0; req_cnt < max_reqs; ++req_cnt) {
                         sockaddr_in client_addr;
                         #ifdef _WIN32
@@ -1870,32 +1935,56 @@ private:
                         socket_t client_fd = accept(server_fd, (struct sockaddr*)&client_addr, &addrlen);
                         if (client_fd == INVALID_SOCKET_VAL) break;
 
-                        std::thread([this, client_fd, fn_handler, cg_out_copy]() {
-                            char buf[4096] = {0};
-                            #ifdef _WIN32
-                            int bytes = recv(client_fd, buf, 4095, 0);
-                            #else
-                            ssize_t bytes = recv(client_fd, buf, 4095, 0);
-                            #endif
+                        std::thread([this, client_fd, tls_ctx, fn_handler, cg_out_copy]() {
+                            std::string raw_req = "";
+                            bool handshake_ok = false;
 
-                            std::string raw_req(buf, bytes > 0 ? bytes : 0);
-                            std::string resp = "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Type: text/html\r\nContent-Length: 8\r\n\r\nHTTPS OK";
+                            if (tls_ctx) {
+                                TlsSocket tls_sock(tls_ctx, static_cast<int>(client_fd));
+                                if (tls_sock.handshake()) {
+                                    handshake_ok = true;
+                                    char buf[4096] = {0};
+                                    int bytes = tls_sock.read(buf, 4095);
+                                    if (bytes > 0) raw_req = std::string(buf, bytes);
 
-                            if (raw_req.find("/health") != std::string::npos) {
-                                resp = "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Type: application/json\r\nContent-Length: 14\r\n\r\n{\"https\":\"ok\"}";
-                            } else if (raw_req.find("/missing") != std::string::npos) {
-                                resp = "HTTP/1.1 404 Not Found\r\nConnection: close\r\nContent-Type: text/plain\r\nContent-Length: 13\r\n\r\n404 Not Found";
+                                    std::string resp = "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Type: text/html\r\nContent-Length: 8\r\n\r\nHTTPS OK";
+                                    if (raw_req.find("/health") != std::string::npos) {
+                                        resp = "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Type: application/json\r\nContent-Length: 14\r\n\r\n{\"https\":\"ok\"}";
+                                    } else if (raw_req.find("/missing") != std::string::npos) {
+                                        resp = "HTTP/1.1 404 Not Found\r\nConnection: close\r\nContent-Type: text/plain\r\nContent-Length: 13\r\n\r\n404 Not Found";
+                                    }
+
+                                    tls_sock.write(resp.data(), resp.length());
+                                    tls_sock.close();
+                                }
                             }
 
-                            #ifdef _WIN32
-                            send(client_fd, resp.data(), static_cast<int>(resp.length()), 0);
-                            shutdown(client_fd, SD_SEND);
-                            closesocket(client_fd);
-                            #else
-                            send(client_fd, resp.data(), resp.length(), 0);
-                            shutdown(client_fd, SHUT_WR);
-                            close(client_fd);
-                            #endif
+                            if (!handshake_ok) {
+                                char buf[4096] = {0};
+                                #ifdef _WIN32
+                                int bytes = recv(client_fd, buf, 4095, 0);
+                                #else
+                                ssize_t bytes = recv(client_fd, buf, 4095, 0);
+                                #endif
+
+                                std::string req_str(buf, bytes > 0 ? bytes : 0);
+                                std::string resp = "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Type: text/html\r\nContent-Length: 8\r\n\r\nHTTPS OK";
+                                if (req_str.find("/health") != std::string::npos) {
+                                    resp = "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Type: application/json\r\nContent-Length: 14\r\n\r\n{\"https\":\"ok\"}";
+                                } else if (req_str.find("/missing") != std::string::npos) {
+                                    resp = "HTTP/1.1 404 Not Found\r\nConnection: close\r\nContent-Type: text/plain\r\nContent-Length: 13\r\n\r\n404 Not Found";
+                                }
+
+                                #ifdef _WIN32
+                                send(client_fd, resp.data(), static_cast<int>(resp.length()), 0);
+                                shutdown(client_fd, SD_SEND);
+                                closesocket(client_fd);
+                                #else
+                                send(client_fd, resp.data(), resp.length(), 0);
+                                shutdown(client_fd, SHUT_WR);
+                                close(client_fd);
+                                #endif
+                            }
                         }).detach();
                     }
 
