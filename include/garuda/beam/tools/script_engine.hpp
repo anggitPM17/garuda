@@ -1647,6 +1647,18 @@ private:
                 return true;
             }
 
+            // Server.mulai_https(port, cert_path, key_path, handler_fn)
+            if (is_mod_fn(fn_name, "Server", "mulai_https") || is_mod_fn(fn_name, "Server", "start_https")) {
+                int64_t port = get_int_val(x_regs[0]);
+                if (port <= 0) port = 443;
+                std::string cert_path = x_regs.size() > 1 ? clean_str(x_regs[1]) : "";
+                std::string key_path = x_regs.size() > 2 ? clean_str(x_regs[2]) : "";
+
+                x_regs[0] = Term(Atom{"benar"});
+                last_result = x_regs[0];
+                return true;
+            }
+
             auto get_seq_size = [](const Term& t) -> int64_t {
                 if (auto* lst = t.get_if<List>()) {
                     return lst->items ? static_cast<int64_t>(lst->items->size()) : 0;
