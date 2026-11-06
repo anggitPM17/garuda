@@ -200,6 +200,9 @@ target_link_libraries(garuda_router_e2e_tests PRIVATE garuda)
 add_executable(garuda_static_server_tests tests/test_static_server.cpp)
 target_link_libraries(garuda_static_server_tests PRIVATE garuda)
 
+add_executable(garuda_static_e2e_tests tests/test_static_e2e.cpp)
+target_link_libraries(garuda_static_e2e_tests PRIVATE garuda)
+
 add_executable(garuda_benchmark_runner benchmarks/benchmark_runner.cpp)
 target_link_libraries(garuda_benchmark_runner PRIVATE garuda)
 
