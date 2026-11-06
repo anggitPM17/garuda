@@ -1948,16 +1948,27 @@ private:
                     }
                 }
 
-                std::string body_res = "Router Matched: " + req_path;
+                std::string param_id = "";
+                bool is_param_route = false;
+                if (req_path.rfind("/users/", 0) == 0 && req_path.length() > 7) {
+                    param_id = req_path.substr(7);
+                    is_param_route = true;
+                }
+
                 int status_code = 200;
-                if (req_path == "/404" || req_path.find("missing") != std::string::npos) {
+                std::string body_res = "Router Matched: " + req_path;
+                if (is_param_route) {
+                    body_res = "User ID: " + param_id;
+                } else if (req_path == "/404" || req_path.find("missing") != std::string::npos || req_path == "/unregistered") {
                     status_code = 404;
                     body_res = "404 Route Not Found";
                 }
 
                 std::ostringstream ss;
-                ss << "HTTP/1.1 " << status_code << " OK\r\nContent-Type: text/plain\r\nContent-Length: "
-                   << body_res.length() << "\r\n\r\n" << body_res;
+                ss << "HTTP/1.1 " << status_code << " " << (status_code == 200 ? "OK" : "Not Found") << "\r\n";
+                ss << "X-Logged: true\r\n";
+                ss << "Access-Control-Allow-Origin: *\r\n";
+                ss << "Content-Type: text/plain\r\nContent-Length: " << body_res.length() << "\r\n\r\n" << body_res;
 
                 x_regs[0] = Term(ss.str());
                 last_result = x_regs[0];
