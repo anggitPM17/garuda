@@ -137,6 +137,57 @@ static std::string decode_ws_frame(const std::string& raw_frame, uint8_t& out_op
     return unmasked;
 }
 
+static bool read_ws_frame_complete(socket_t fd, std::string& out_frame) {
+    out_frame.clear();
+    char hdr[2] = {0};
+    int r = recv(fd, hdr, 2, 0);
+    if (r < 2) return false;
+
+    out_frame.append(hdr, 2);
+
+    uint8_t second_byte = static_cast<uint8_t>(hdr[1]);
+    bool is_masked = (second_byte & 0x80) != 0;
+    uint64_t payload_len = second_byte & 0x7F;
+
+    if (payload_len == 126) {
+        char ext[2] = {0};
+        int r_ext = recv(fd, ext, 2, 0);
+        if (r_ext < 2) return false;
+        out_frame.append(ext, 2);
+        payload_len = (static_cast<uint8_t>(ext[0]) << 8) | static_cast<uint8_t>(ext[1]);
+    } else if (payload_len == 127) {
+        char ext[8] = {0};
+        int r_ext = recv(fd, ext, 8, 0);
+        if (r_ext < 8) return false;
+        out_frame.append(ext, 8);
+        payload_len = 0;
+        for (int i = 0; i < 8; ++i) {
+            payload_len = (payload_len << 8) | static_cast<uint8_t>(ext[i]);
+        }
+    }
+
+    if (is_masked) {
+        char mask_key[4] = {0};
+        int r_mask = recv(fd, mask_key, 4, 0);
+        if (r_mask < 4) return false;
+        out_frame.append(mask_key, 4);
+    }
+
+    if (payload_len > 0) {
+        size_t total_payload_read = 0;
+        std::vector<char> buf(8192);
+        while (total_payload_read < payload_len) {
+            size_t to_read = std::min(buf.size(), payload_len - total_payload_read);
+            int bytes = recv(fd, buf.data(), static_cast<int>(to_read), 0);
+            if (bytes <= 0) return false;
+            out_frame.append(buf.data(), bytes);
+            total_payload_read += bytes;
+        }
+    }
+
+    return true;
+}
+
 static std::string url_decode_path(const std::string& in) {
     std::string out;
     out.reserve(in.length());
@@ -1841,16 +1892,9 @@ private:
                             #endif
 
                             while (true) {
-                                char fbuf[4096] = {0};
-                                #ifdef _WIN32
-                                int fbytes = recv(client_fd, fbuf, 4095, 0);
-                                #else
-                                ssize_t fbytes = recv(client_fd, fbuf, 4095, 0);
-                                #endif
+                                std::string raw_f;
+                                if (!read_ws_frame_complete(client_fd, raw_f)) break;
 
-                                if (fbytes <= 0) break;
-
-                                std::string raw_f(fbuf, fbytes);
                                 uint8_t opcode = 0;
                                 std::string payload = decode_ws_frame(raw_f, opcode);
 
