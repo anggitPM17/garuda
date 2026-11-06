@@ -39,6 +39,7 @@ Dalam ekosistem Garuda:
 | **Fase 8.3** | HTTP Response Builder (`Http.buat_respons`, status, headers, body) | ✅ **TUNTAS** | 100% PASS (5/5 Test) |
 | **Fase 8.4** | Native HTTP Server Loop (`Server.mulai`, listen, accept, dispatch) | ✅ **TUNTAS** | 100% PASS (5/5 Test) |
 | **Demo 100% Garuda** | Native HTTP Web Server dalam skrip Garuda (`examples/web_server_garuda.grd`) | ✅ **TUNTAS** | 100% PASS (5/5 Curl) |
+| **Fase 9.1** | Actor Spawn & Message Passing (`Process.spawn`, `send`, `receive`, `self`, `is_alive`) | ✅ **TUNTAS** | 100% PASS (5/5 Test) |
 
 ---
 

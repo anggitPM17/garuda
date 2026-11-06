@@ -49,6 +49,21 @@ static std::mutex g_socket_mutex;
 
 namespace garuda::beam {
 
+struct GvmActor {
+    std::int64_t pid;
+    std::string name;
+    std::deque<Term> mailbox;
+    std::mutex mtx;
+    std::condition_variable cv;
+    bool is_alive{true};
+    std::array<Term, 256> registers;
+};
+
+static std::map<std::int64_t, std::shared_ptr<GvmActor>> g_actor_map;
+static std::atomic<std::int64_t> g_next_pid{1000};
+static std::mutex g_actor_mutex;
+static thread_local std::shared_ptr<GvmActor> t_current_actor = nullptr;
+
 struct DynamicRoute {
     std::string method;
     std::string path;
@@ -267,6 +282,16 @@ private:
 private:
     std::optional<Term> execute_instructions(const compiler::CodeGeneratorOutput& cg_out, std::size_t start_ip, const std::vector<Term>& initial_args = {}) {
         if (cg_out.all_instructions.empty() || start_ip >= cg_out.all_instructions.size()) return std::nullopt;
+
+        if (!t_current_actor) {
+            auto main_act = std::make_shared<GvmActor>();
+            main_act->pid = 100;
+            main_act->name = "main";
+            main_act->is_alive = true;
+            t_current_actor = main_act;
+            std::lock_guard<std::mutex> lock(g_actor_mutex);
+            g_actor_map[100] = main_act;
+        }
 
         std::array<Term, 256> x_regs;
         for (std::size_t i = 0; i < initial_args.size() && i < 256; ++i) {
@@ -788,15 +813,95 @@ private:
 
                     std::string raw_req(buf, bytes > 0 ? bytes : 0);
 
-                    std::string resp = "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Type: text/plain\r\nContent-Length: 19\r\n\r\nHalo dari Garuda!";
-                    if (raw_req.find("/health") != std::string::npos) {
-                        resp = "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Type: application/json\r\nContent-Length: 16\r\n\r\n{\"status\":\"ok\"}";
-                    } else if (raw_req.find("/echo") != std::string::npos) {
-                        std::size_t body_pos = raw_req.find("\r\n\r\n");
-                        std::string b = body_pos != std::string::npos ? raw_req.substr(body_pos + 4) : "";
-                        resp = "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Type: text/plain\r\nContent-Length: " + std::to_string(b.length()) + "\r\n\r\n" + b;
-                    } else if (raw_req.find("404") != std::string::npos || raw_req.find("/missing") != std::string::npos) {
-                        resp = "HTTP/1.1 404 Not Found\r\nConnection: close\r\nContent-Type: text/plain\r\nContent-Length: 9\r\n\r\nNot Found";
+                    // Build Req Map for handler function
+                    std::string req_method = "GET", req_path = "/", req_version = "HTTP/1.1", req_body = "";
+                    std::size_t header_end = raw_req.find("\r\n\r\n");
+                    std::size_t sep_len = 4;
+                    if (header_end == std::string::npos) {
+                        header_end = raw_req.find("\n\n");
+                        if (header_end != std::string::npos) sep_len = 2;
+                    }
+
+                    std::string headers_part = raw_req;
+                    if (header_end != std::string::npos) {
+                        headers_part = raw_req.substr(0, header_end);
+                        req_body = raw_req.substr(header_end + sep_len);
+                    }
+
+                    std::istringstream iss(headers_part);
+                    std::string request_line;
+                    if (std::getline(iss, request_line)) {
+                        if (!request_line.empty() && request_line.back() == '\r') request_line.pop_back();
+                        std::istringstream line_ss(request_line);
+                        line_ss >> req_method >> req_path >> req_version;
+                    }
+
+                    std::vector<Term> header_entries;
+                    std::string header_line;
+                    while (std::getline(iss, header_line)) {
+                        if (!header_line.empty() && header_line.back() == '\r') header_line.pop_back();
+                        if (header_line.empty()) continue;
+                        std::size_t colon = header_line.find(':');
+                        if (colon != std::string::npos) {
+                            std::string k = header_line.substr(0, colon);
+                            std::string v = header_line.substr(colon + 1);
+                            while (!v.empty() && (v.front() == ' ' || v.front() == '\t')) v.erase(0, 1);
+                            while (!v.empty() && (v.back() == ' ' || v.back() == '\t')) v.pop_back();
+                            std::vector<Term> kv = {Term(k), Term(v)};
+                            header_entries.push_back(Term(Tuple{std::make_shared<const std::vector<Term>>(std::move(kv))}));
+                        }
+                    }
+                    Term headers_map(Tuple{std::make_shared<const std::vector<Term>>(std::move(header_entries))});
+
+                    std::vector<Term> req_entries;
+                    auto add_req_kv = [&](const std::string& key, const Term& val) {
+                        std::vector<Term> kv = {Term(key), val};
+                        req_entries.push_back(Term(Tuple{std::make_shared<const std::vector<Term>>(std::move(kv))}));
+                    };
+
+                    add_req_kv("metode", Term(req_method));
+                    add_req_kv("method", Term(req_method));
+                    add_req_kv("path", Term(req_path));
+                    add_req_kv("versi", Term(req_version));
+                    add_req_kv("version", Term(req_version));
+                    add_req_kv("body", Term(req_body));
+                    add_req_kv("headers", headers_map);
+
+                    Term req_map_term(Tuple{std::make_shared<const std::vector<Term>>(std::move(req_entries))});
+
+                    std::string resp = "";
+                    Term handler_arg = x_regs.size() > 1 ? x_regs[1] : Term();
+                    std::string fn_handler = clean_str(handler_arg);
+
+                    if (!fn_handler.empty() && fn_handler != "nil") {
+                        std::size_t handler_ip = std::string::npos;
+                        for (const auto& [k, v] : cg_out.function_table) {
+                            if (k == fn_handler || k.rfind("." + fn_handler, 0) != std::string::npos || k.find(fn_handler) != std::string::npos) {
+                                handler_ip = v;
+                                break;
+                            }
+                        }
+
+                        if (handler_ip != std::string::npos) {
+                            std::vector<Term> call_args = {req_map_term};
+                            auto eval_ret = execute_instructions(cg_out, handler_ip, call_args);
+                            if (eval_ret.has_value()) {
+                                resp = clean_str(*eval_ret);
+                            }
+                        }
+                    }
+
+                    if (resp.empty()) {
+                        resp = "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Type: text/plain\r\nContent-Length: 19\r\n\r\nHalo dari Garuda!";
+                        if (raw_req.find("/health") != std::string::npos) {
+                            resp = "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Type: application/json\r\nContent-Length: 16\r\n\r\n{\"status\":\"ok\"}";
+                        } else if (raw_req.find("/echo") != std::string::npos) {
+                            std::size_t body_pos = raw_req.find("\r\n\r\n");
+                            std::string b = body_pos != std::string::npos ? raw_req.substr(body_pos + 4) : "";
+                            resp = "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Type: text/plain\r\nContent-Length: " + std::to_string(b.length()) + "\r\n\r\n" + b;
+                        } else if (raw_req.find("404") != std::string::npos || raw_req.find("/missing") != std::string::npos) {
+                            resp = "HTTP/1.1 404 Not Found\r\nConnection: close\r\nContent-Type: text/plain\r\nContent-Length: 9\r\n\r\nNot Found";
+                        }
                     }
 
                     #ifdef _WIN32
@@ -812,6 +917,128 @@ private:
 
                 CLOSE_SOCKET(server_fd);
                 x_regs[0] = Term(Atom{"benar"});
+                last_result = x_regs[0];
+                return true;
+            }
+
+            // Process.spawn(fn_name, arg1, ...) / cakra(fn_name, arg1, ...) / spawn(fn_name, arg1, ...)
+            if (is_mod_fn(fn_name, "Process", "spawn") || is_mod_fn(fn_name, "Process", "cakra") ||
+                fn_name == "spawn" || fn_name == "cakra") {
+                std::string spawn_fn = clean_str(x_regs[0]);
+                std::int64_t new_pid = g_next_pid++;
+                auto actor = std::make_shared<GvmActor>();
+                actor->pid = new_pid;
+                actor->name = spawn_fn;
+
+                {
+                    std::lock_guard<std::mutex> lock(g_actor_mutex);
+                    g_actor_map[new_pid] = actor;
+                }
+
+                std::vector<Term> call_args;
+                for (std::size_t i = 1; i < x_regs.size(); ++i) {
+                    if (!x_regs[i].is<std::monostate>()) {
+                        call_args.push_back(x_regs[i]);
+                    }
+                }
+
+                auto cg_out_copy = cg_out;
+                std::thread([this, actor, spawn_fn, call_args, cg_out_copy]() {
+                    t_current_actor = actor;
+                    std::size_t handler_ip = std::string::npos;
+                    for (const auto& [k, v] : cg_out_copy.function_table) {
+                        if (k == spawn_fn || k.rfind("." + spawn_fn, 0) != std::string::npos || k.find(spawn_fn) != std::string::npos) {
+                            handler_ip = v;
+                            break;
+                        }
+                    }
+                    if (handler_ip != std::string::npos) {
+                        execute_instructions(cg_out_copy, handler_ip, call_args);
+                    }
+                    actor->is_alive = false;
+                    actor->cv.notify_all();
+                }).detach();
+
+                x_regs[0] = Term(new_pid);
+                last_result = x_regs[0];
+                return true;
+            }
+
+            // Process.send(pid, msg) / kirim(pid, msg)
+            if (is_mod_fn(fn_name, "Process", "send") || is_mod_fn(fn_name, "Process", "kirim") ||
+                fn_name == "send" || fn_name == "kirim") {
+                std::int64_t pid = get_int_val(x_regs[0]);
+                Term msg = x_regs[1];
+
+                std::shared_ptr<GvmActor> target_actor = nullptr;
+                {
+                    std::lock_guard<std::mutex> lock(g_actor_mutex);
+                    auto it = g_actor_map.find(pid);
+                    if (it != g_actor_map.end()) target_actor = it->second;
+                }
+
+                if (target_actor && target_actor->is_alive) {
+                    {
+                        std::lock_guard<std::mutex> lock(target_actor->mtx);
+                        target_actor->mailbox.push_back(msg);
+                    }
+                    target_actor->cv.notify_one();
+                    x_regs[0] = Term(Atom{"benar"});
+                } else {
+                    x_regs[0] = Term(Atom{"salah"});
+                }
+                last_result = x_regs[0];
+                return true;
+            }
+
+            // Process.receive(timeout_ms) / tampa(timeout_ms) / receive(timeout_ms)
+            if (is_mod_fn(fn_name, "Process", "receive") || is_mod_fn(fn_name, "Process", "tampa") ||
+                fn_name == "receive" || fn_name == "tampa") {
+                std::int64_t timeout_ms = (!x_regs[0].is<std::monostate>()) ? get_int_val(x_regs[0]) : 5000;
+                if (timeout_ms <= 0) timeout_ms = 5000;
+
+                Term rec_msg;
+                bool got_msg = false;
+
+                if (t_current_actor) {
+                    std::unique_lock<std::mutex> lock(t_current_actor->mtx);
+                    if (t_current_actor->cv.wait_for(lock, std::chrono::milliseconds(timeout_ms), [&]() {
+                        return !t_current_actor->mailbox.empty();
+                    })) {
+                        rec_msg = t_current_actor->mailbox.front();
+                        t_current_actor->mailbox.pop_front();
+                        got_msg = true;
+                    }
+                }
+
+                if (got_msg) {
+                    x_regs[0] = rec_msg;
+                } else {
+                    x_regs[0] = Term(Atom{"nil"});
+                }
+                last_result = x_regs[0];
+                return true;
+            }
+
+            // Process.self() / diri() / self()
+            if (is_mod_fn(fn_name, "Process", "self") || fn_name == "self" || fn_name == "diri") {
+                std::int64_t cur_pid = t_current_actor ? t_current_actor->pid : 100;
+                x_regs[0] = Term(cur_pid);
+                last_result = x_regs[0];
+                return true;
+            }
+
+            // Process.is_alive(pid) / hidup(pid)
+            if (is_mod_fn(fn_name, "Process", "is_alive") || is_mod_fn(fn_name, "Process", "hidup") ||
+                fn_name == "is_alive" || fn_name == "hidup") {
+                std::int64_t pid = get_int_val(x_regs[0]);
+                bool alive = false;
+                {
+                    std::lock_guard<std::mutex> lock(g_actor_mutex);
+                    auto it = g_actor_map.find(pid);
+                    if (it != g_actor_map.end()) alive = it->second->is_alive;
+                }
+                x_regs[0] = Term(Atom{alive ? "benar" : "salah"});
                 last_result = x_regs[0];
                 return true;
             }
