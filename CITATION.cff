@@ -1,0 +1,48 @@
+cff-version: 1.2.0
+message: "If you use Garuda in your research or project, please cite it as below."
+type: software
+title: "Garuda Compiler (G-BEAM)"
+version: 67.0.0
+doi: ""
+date-released: 2025-11-05
+license: MIT
+url: "https://github.com/anggitPM17/garuda"
+repository-code: "https://github.com/anggitPM17/garuda"
+website: "https://richat.my.id"
+abstract: >
+  Garuda is a modern distributed programming language inspired by Erlang/OTP,
+  written 100% by an Indonesian developer. It features actor model concurrency,
+  pattern matching, destructuring, list/map comprehension, pipeline operator,
+  native HTTP server, and VM-based runtime (GVM). Garuda is designed for
+  building web servers, microservices, and distributed systems with
+  Indonesian-flavored syntax.
+
+authors:
+  - family-names: "Mituhu"
+    given-names: "Anggit Prasetyo"
+    email: "anggit.prasetyo3060@gmail.com"
+    affiliation: "Independent Developer, Semarang, Indonesia"
+    orcid: ""
+    website: "https://richat.my.id"
+
+keywords:
+  - programming-language
+  - compiler
+  - virtual-machine
+  - actor-model
+  - concurrency
+  - distributed-systems
+  - erlang-inspired
+  - indonesian-language
+  - garuda
+  - g-beam
+  - gvm
+
+references:
+  - type: software
+    title: "Garuda Compiler v67.0.0"
+    authors:
+      - family-names: "Mituhu"
+        given-names: "Anggit Prasetyo"
+    version: "67.0.0"
+    year: 2025

@@ -1,13 +1,15 @@
-# 🦅 GVM — Garuda Virtual Machine & Self-Hosting Compiler
+# 🦅 Garuda Compiler (G-BEAM) 🇮🇩
 
-**Runtime Terdistribusi C++ Setara Erlang/OTP & Compiler Mandiri. 100% Karya Anak Bangsa 🇮🇩**
+**Created by [Anggit Prasetyo Mituhu](https://github.com/anggitPM17)**  
+📍 Semarang, Jawa Tengah, Indonesia  
+📧 anggit.prasetyo3060@gmail.com • 📱 WhatsApp: +62 813-2992-5455  
+🌐 [richat.my.id](https://richat.my.id) • 🐙 [GitHub](https://github.com/anggitPM17/garuda)
 
-[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
-[![Platform](https://img.shields.io/badge/Platform-Linux%20%7C%20Windows%20%7C%20WASM-blue)](https://github.com/anggitPM17/garuda)
-[![Status](https://img.shields.io/badge/Status-Production%20%2B%20Self--Hosting-brightgreen)](https://github.com/anggitPM17/garuda)
-[![Self-Hosted](https://img.shields.io/badge/Self--Hosted-%E2%9C%85-brightgreen)](docs/self-hosting.md)
-[![RAM Usage](https://img.shields.io/badge/RAM-%3C%202MB-blueviolet)](https://github.com/anggitPM17/garuda)
-[![Performance](https://img.shields.io/badge/Performance-191%20RPS-orange)](https://github.com/anggitPM17/garuda)
+> **Garuda** adalah bahasa pemrograman terdistribusi modern yang ditulis **100% oleh anak Indonesia**, terinspirasi oleh Erlang/OTP, dengan fitur pattern matching, actor model, list/map comprehension, dan native HTTP server.
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Language: Garuda](https://img.shields.io/badge/Language-Garuda-red.svg)](https://richat.my.id)
+[![Made in Indonesia](https://img.shields.io/badge/Made%20in-Indonesia%20🇮🇩-red.svg)](https://richat.my.id)
 
 ---
 
@@ -157,12 +159,28 @@ Penyebab: **PASS 100% saat dijalankan terisolasi**, tapi FAIL saat berurutan dal
 
 ---
 
-## 📜 Lisensi & Kontribusi
+## 📜 License & Attribution
 
-Proyek ini dilesensikan di bawah **Apache License 2.0** — bebas digunakan, dimodifikasi, dan didistribusikan, termasuk untuk keperluan komersial, dengan tetap mempertahankan atribusi dan pemberitahuan lisensi.
+Garuda Compiler is released under the **MIT License**.  
+Copyright (c) 2025 **Anggit Prasetyo Mituhu**.
 
-Kontribusi sangat disambut baik! Silakan ajukan *Issue* atau *Pull Request* di repositori resmi GitHub [anggitPM17/garuda](https://github.com/anggitPM17/garuda).
+If you use, modify, or distribute Garuda, you **MUST** include the following attribution:
+
+> "Garuda Compiler by Anggit Prasetyo Mituhu (https://github.com/anggitPM17/garuda)"
+
+See [LICENSE](LICENSE), [AUTHORS](AUTHORS), and [NOTICE](NOTICE) files for full details.
 
 ---
 
-**Dibuat dengan ❤️ di Indonesia. © 2026 Garuda BEAM Contributors. 🇮🇩**
+## 📬 Contact
+
+- **Author**: Anggit Prasetyo Mituhu
+- **Email**: anggit.prasetyo3060@gmail.com
+- **WhatsApp**: +62 813-2992-5455
+- **Location**: Semarang, Jawa Tengah, Indonesia
+- **Website**: [richat.my.id](https://richat.my.id)
+- **GitHub**: [@anggitPM17](https://github.com/anggitPM17)
+
+---
+
+**Dibuat dengan ❤️ di Indonesia. © 2025 Anggit Prasetyo Mituhu. 🇮🇩**
