@@ -64,6 +64,17 @@ static std::atomic<std::int64_t> g_next_pid{1000};
 static std::mutex g_actor_mutex;
 static thread_local std::shared_ptr<GvmActor> t_current_actor = nullptr;
 
+struct GvmSupervisorSpec {
+    std::string name;
+    std::string strategy;
+    std::vector<std::int64_t> child_pids;
+    int restart_count{0};
+    std::chrono::steady_clock::time_point last_restart;
+};
+
+static std::map<std::int64_t, GvmSupervisorSpec> g_supervisor_map;
+static std::mutex g_sup_mutex;
+
 struct DynamicRoute {
     std::string method;
     std::string path;
@@ -1039,6 +1050,149 @@ private:
                     if (it != g_actor_map.end()) alive = it->second->is_alive;
                 }
                 x_regs[0] = Term(Atom{alive ? "benar" : "salah"});
+                last_result = x_regs[0];
+                return true;
+            }
+
+            // Supervisor.mulai(child_fn_name, strategy) / supervisor_mulai(child_fn_name, strategy)
+            if (is_mod_fn(fn_name, "Supervisor", "mulai") || is_mod_fn(fn_name, "Supervisor", "start") ||
+                fn_name == "supervisor_mulai") {
+                std::string child_fn = clean_str(x_regs[0]);
+                std::string strategy = clean_str(x_regs[1]);
+                if (strategy.empty() || strategy == "nil") strategy = "satu_untuk_satu";
+
+                std::int64_t sup_pid = g_next_pid++;
+                auto sup_actor = std::make_shared<GvmActor>();
+                sup_actor->pid = sup_pid;
+                sup_actor->name = "supervisor_" + child_fn;
+
+                {
+                    std::lock_guard<std::mutex> lock(g_actor_mutex);
+                    g_actor_map[sup_pid] = sup_actor;
+                }
+
+                std::int64_t child_pid = g_next_pid++;
+                auto child_actor = std::make_shared<GvmActor>();
+                child_actor->pid = child_pid;
+                child_actor->name = child_fn;
+
+                {
+                    std::lock_guard<std::mutex> lock(g_actor_mutex);
+                    g_actor_map[child_pid] = child_actor;
+                }
+
+                {
+                    std::lock_guard<std::mutex> lock(g_sup_mutex);
+                    GvmSupervisorSpec spec;
+                    spec.name = child_fn;
+                    spec.strategy = strategy;
+                    spec.child_pids.push_back(child_pid);
+                    spec.last_restart = std::chrono::steady_clock::now();
+                    g_supervisor_map[sup_pid] = spec;
+                }
+
+                auto cg_out_copy = cg_out;
+                std::thread([this, child_actor, child_fn, cg_out_copy]() {
+                    t_current_actor = child_actor;
+                    std::size_t handler_ip = std::string::npos;
+                    for (const auto& [k, v] : cg_out_copy.function_table) {
+                        if (k == child_fn || k.rfind("." + child_fn, 0) != std::string::npos || k.find(child_fn) != std::string::npos) {
+                            handler_ip = v;
+                            break;
+                        }
+                    }
+                    if (handler_ip != std::string::npos) {
+                        try {
+                            execute_instructions(cg_out_copy, handler_ip, {});
+                        } catch (...) {}
+                    }
+                    child_actor->is_alive = false;
+                }).detach();
+
+                x_regs[0] = Term(sup_pid);
+                last_result = x_regs[0];
+                return true;
+            }
+
+            // Supervisor.restart(sup_pid)
+            if (is_mod_fn(fn_name, "Supervisor", "restart")) {
+                std::int64_t sup_pid = get_int_val(x_regs[0]);
+                std::string child_fn = "";
+                std::string strategy = "satu_untuk_satu";
+                bool ok = false;
+
+                {
+                    std::lock_guard<std::mutex> lock(g_sup_mutex);
+                    auto it = g_supervisor_map.find(sup_pid);
+                    if (it != g_supervisor_map.end()) {
+                        child_fn = it->second.name;
+                        strategy = it->second.strategy;
+                        it->second.restart_count++;
+                        if (it->second.restart_count <= 3) {
+                            ok = true;
+                        }
+                    }
+                }
+
+                if (ok && !child_fn.empty()) {
+                    std::int64_t new_child_pid = g_next_pid++;
+                    auto new_child = std::make_shared<GvmActor>();
+                    new_child->pid = new_child_pid;
+                    new_child->name = child_fn;
+
+                    {
+                        std::lock_guard<std::mutex> lock(g_actor_mutex);
+                        g_actor_map[new_child_pid] = new_child;
+                    }
+
+                    auto cg_out_copy = cg_out;
+                    std::thread([this, new_child, child_fn, cg_out_copy]() {
+                        t_current_actor = new_child;
+                        std::size_t handler_ip = std::string::npos;
+                        for (const auto& [k, v] : cg_out_copy.function_table) {
+                            if (k == child_fn || k.find(child_fn) != std::string::npos) {
+                                handler_ip = v;
+                                break;
+                            }
+                        }
+                        if (handler_ip != std::string::npos) {
+                            execute_instructions(cg_out_copy, handler_ip, {});
+                        }
+                        new_child->is_alive = false;
+                    }).detach();
+
+                    x_regs[0] = Term(new_child_pid);
+                } else {
+                    x_regs[0] = Term(Atom{"eskalasi"});
+                }
+                last_result = x_regs[0];
+                return true;
+            }
+
+            // Supervisor.health(sup_pid)
+            if (is_mod_fn(fn_name, "Supervisor", "health")) {
+                std::int64_t sup_pid = get_int_val(x_regs[0]);
+                int restarts = 0;
+                std::string strat = "satu_untuk_satu";
+                {
+                    std::lock_guard<std::mutex> lock(g_sup_mutex);
+                    auto it = g_supervisor_map.find(sup_pid);
+                    if (it != g_supervisor_map.end()) {
+                        restarts = it->second.restart_count;
+                        strat = it->second.strategy;
+                    }
+                }
+
+                std::vector<Term> entries;
+                auto add_sup_kv = [&](const std::string& key, const Term& val) {
+                    std::vector<Term> kv = {Term(key), val};
+                    entries.push_back(Term(Tuple{std::make_shared<const std::vector<Term>>(std::move(kv))}));
+                };
+                add_sup_kv("restarts", Term(static_cast<std::int64_t>(restarts)));
+                add_sup_kv("strategi", Term(strat));
+                add_sup_kv("status", Term(Atom{restarts > 3 ? "eskalasi" : "sehat"}));
+
+                x_regs[0] = Term(Tuple{std::make_shared<const std::vector<Term>>(std::move(entries))});
                 last_result = x_regs[0];
                 return true;
             }
