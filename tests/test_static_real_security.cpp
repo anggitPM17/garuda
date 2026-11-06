@@ -55,18 +55,18 @@ int main() {
     engine.eval(code1);
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-    // Test 1: URL-encoded traversal %2e%2e must be rejected with 403 Forbidden
-    std::string res1 = run_curl_static("-s -o NUL -w \"%{http_code}\" http://127.0.0.1:9096/%2e%2e/%2e%2e/etc/passwd");
+    // Test 1: URL-encoded traversal %2e%2e with --path-as-is must be rejected with 403 Forbidden
+    std::string res1 = run_curl_static("--path-as-is -s -o NUL -w \"%{http_code}\" http://127.0.0.1:9096/%2e%2e/%2e%2e/etc/passwd");
     CHECK(res1.find("403") != std::string::npos, "Test 1 %2e%2e URL-encoded traversal must be 403");
     std::cout << "[Test 1] URL-encoded Traversal Rejection (%2e%2e -> 403) [PASS]\n";
 
     // Test 2: Double-encoded traversal %252e%252e must be rejected with 403 or 404
-    std::string res2 = run_curl_static("-s -o NUL -w \"%{http_code}\" http://127.0.0.1:9096/%252e%252e/etc/passwd");
+    std::string res2 = run_curl_static("--path-as-is -s -o NUL -w \"%{http_code}\" http://127.0.0.1:9096/%252e%252e/etc/passwd");
     CHECK(res2.find("403") != std::string::npos || res2.find("404") != std::string::npos, "Test 2 double-encoded traversal match");
     std::cout << "[Test 2] Double-encoded Traversal Rejection (%252e%252e -> 403/404) [PASS]\n";
 
     // Test 3: Path with ..%2f..%2fetc%2fpasswd must be rejected with 403
-    std::string res3 = run_curl_static("-s -o NUL -w \"%{http_code}\" http://127.0.0.1:9096/..%2f..%2fetc%2fpasswd");
+    std::string res3 = run_curl_static("--path-as-is -s -o NUL -w \"%{http_code}\" http://127.0.0.1:9096/..%2f..%2fetc%2fpasswd");
     CHECK(res3.find("403") != std::string::npos, "Test 3 ..%2f path traversal 403 match");
     std::cout << "[Test 3] Slanted Traversal Rejection (..%2f -> 403) [PASS]\n";
 

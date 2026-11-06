@@ -137,6 +137,27 @@ static std::string decode_ws_frame(const std::string& raw_frame, uint8_t& out_op
     return unmasked;
 }
 
+static std::string url_decode_path(const std::string& in) {
+    std::string out;
+    out.reserve(in.length());
+    for (size_t i = 0; i < in.length(); ++i) {
+        if (in[i] == '%' && i + 2 < in.length()) {
+            int h1 = std::isdigit(in[i+1]) ? in[i+1] - '0' : std::tolower(in[i+1]) - 'a' + 10;
+            int h2 = std::isdigit(in[i+2]) ? in[i+2] - '0' : std::tolower(in[i+2]) - 'a' + 10;
+            if (h1 >= 0 && h1 < 16 && h2 >= 0 && h2 < 16) {
+                out.push_back(static_cast<char>((h1 << 4) | h2));
+                i += 2;
+                continue;
+            }
+        }
+        out.push_back(in[i]);
+    }
+    if (out.find('%') != std::string::npos && out != in) {
+        return url_decode_path(out);
+    }
+    return out;
+}
+
 static bool generate_self_signed_cert_engine(std::string& out_cert_pem, std::string& out_key_pem) {
     mbedtls_pk_context key;
     mbedtls_x509write_cert write_cert;
@@ -2330,11 +2351,12 @@ private:
                                 line_ss >> m >> req_path;
                             }
 
+                            std::string decoded_path = url_decode_path(req_path);
                             std::string resp = "";
-                            if (req_path.find("..") != std::string::npos) {
+                            if (decoded_path.find("..") != std::string::npos) {
                                 resp = "HTTP/1.1 403 Forbidden\r\nContent-Type: text/plain\r\nContent-Length: 13\r\n\r\n403 Forbidden";
                             } else {
-                                std::string rel_path = req_path;
+                                std::string rel_path = decoded_path;
                                 if (rel_path == "/") rel_path = "/index.html";
                                 std::string full_path = public_dir + rel_path;
                                 if (!public_dir.empty() && public_dir.back() == '/' && !rel_path.empty() && rel_path.front() == '/') {
@@ -2387,7 +2409,8 @@ private:
             // File.baca_statis(path) / File.read_static(path)
             if (is_mod_fn(fn_name, "File", "baca_statis") || is_mod_fn(fn_name, "File", "read_static")) {
                 std::string path = clean_str(x_regs[0]);
-                if (path.find("..") != std::string::npos) {
+                std::string decoded = url_decode_path(path);
+                if (decoded.find("..") != std::string::npos) {
                     x_regs[0] = Term(Atom{"dilarang"});
                 } else {
                     x_regs[0] = Term(Atom{"sukses"});
