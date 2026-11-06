@@ -188,6 +188,9 @@ target_link_libraries(garuda_websocket_tests PRIVATE garuda)
 add_executable(garuda_websocket_real_handler_tests tests/test_websocket_real_handler.cpp)
 target_link_libraries(garuda_websocket_real_handler_tests PRIVATE garuda)
 
+add_executable(garuda_websocket_large_frame_tests tests/test_websocket_large_frame.cpp)
+target_link_libraries(garuda_websocket_large_frame_tests PRIVATE garuda)
+
 add_executable(garuda_https_tests tests/test_https.cpp)
 target_link_libraries(garuda_https_tests PRIVATE garuda)
 
