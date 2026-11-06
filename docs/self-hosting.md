@@ -51,6 +51,10 @@ Dalam ekosistem Garuda:
 | **Fase 10.5.2** | Real HTTPS TLS Server E2E (`Server.mulai_https`, real TLS read/write, status 200/404) | ✅ **TUNTAS** | 100% PASS (5/5 E2E PASS) |
 | **Fase 10.5.3** | Real Router & Middleware E2E (`Router.dispatch`, param extraction, CORS, Logging) | ✅ **TUNTAS** | 100% PASS (5/5 E2E PASS) |
 | **Fase 10.5.4** | Real Static File Server E2E (`Server.mulai_async_statis`, MIME, 403 Traversal, 404) | ✅ **TUNTAS** | 100% PASS (5/5 E2E PASS) |
+| **Fase 10.6.1** | Real TLS Handshake via mbedtls & `curl -k` Verification | ✅ **TUNTAS** | 100% PASS (5/5 RED->GREEN) |
+| **Fase 10.6.2** | Real Dynamic Route Registry & Pattern Matching (`/users/:id/posts/:post_id`) | ✅ **TUNTAS** | 100% PASS (5/5 RED->GREEN) |
+| **Fase 10.6.3** | Real WebSocket Handler Invocation & Ping/Pong Opcode 0x9/0xA | ✅ **TUNTAS** | 100% PASS (5/5 RED->GREEN) |
+| **Fase 10.6.4** | Real URL-Decode Path Traversal Security (%2e%2e, %252e%252e) | ✅ **TUNTAS** | 100% PASS (5/5 RED->GREEN) |
 
 ---
 
