@@ -1741,7 +1741,7 @@ private:
                 }
 
                 auto cg_out_copy = cg_out;
-                std::thread([this, server_fd, fn_handler, max_reqs, cg_out_copy]() {
+                std::thread([this, server_fd, fn_handler, max_reqs, cg_out_copy, clean_str]() {
                     for (int req_cnt = 0; req_cnt < max_reqs; ++req_cnt) {
                         sockaddr_in client_addr;
                         #ifdef _WIN32
@@ -1759,7 +1759,7 @@ private:
                             g_socket_map[cid] = client_fd;
                         }
 
-                        std::thread([this, client_fd, cid, fn_handler, cg_out_copy]() {
+                        std::thread([this, client_fd, cid, fn_handler, cg_out_copy, clean_str]() {
                             char buf[4096] = {0};
                             #ifdef _WIN32
                             int bytes = recv(client_fd, buf, 4095, 0);
@@ -1814,11 +1814,43 @@ private:
                                     break;
                                 }
 
+                                if (opcode == 0x9) { // Ping opcode -> Send Pong opcode 0xA
+                                    std::string pframe = encode_ws_frame(payload, 0xA);
+                                    #ifdef _WIN32
+                                    send(client_fd, pframe.data(), static_cast<int>(pframe.length()), 0);
+                                    #else
+                                    send(client_fd, pframe.data(), pframe.length(), 0);
+                                    #endif
+                                    continue;
+                                }
+
                                 std::string reply_text = "";
-                                if (payload == "ping") {
-                                    reply_text = "pong";
-                                } else if (!payload.empty()) {
-                                    reply_text = "Echo: " + payload;
+
+                                // Invoke custom Garuda handler if fn_handler is defined
+                                if (!fn_handler.empty() && fn_handler != "nil") {
+                                    std::size_t handler_ip = std::string::npos;
+                                    for (const auto& [k, v] : cg_out_copy.function_table) {
+                                        if (k == fn_handler || k.rfind("." + fn_handler, 0) != std::string::npos || k.find(fn_handler) != std::string::npos) {
+                                            handler_ip = v;
+                                            break;
+                                        }
+                                    }
+
+                                    if (handler_ip != std::string::npos) {
+                                        std::vector<Term> call_args = {Term(cid), Term(payload)};
+                                        auto eval_ret = execute_instructions(cg_out_copy, handler_ip, call_args);
+                                        if (eval_ret.has_value()) {
+                                            reply_text = clean_str(*eval_ret);
+                                        }
+                                    }
+                                }
+
+                                if (reply_text.empty()) {
+                                    if (payload == "ping") {
+                                        reply_text = "pong";
+                                    } else if (!payload.empty()) {
+                                        reply_text = "Echo: " + payload;
+                                    }
                                 }
 
                                 if (opcode == 0x2) { // Binary echo
