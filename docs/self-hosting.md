@@ -55,6 +55,10 @@ Dalam ekosistem Garuda:
 | **Fase 10.6.2** | Real Dynamic Route Registry & Pattern Matching (`/users/:id/posts/:post_id`) | ✅ **TUNTAS** | 100% PASS (5/5 RED->GREEN) |
 | **Fase 10.6.3** | Real WebSocket Handler Invocation & Ping/Pong Opcode 0x9/0xA | ✅ **TUNTAS** | 100% PASS (5/5 RED->GREEN) |
 | **Fase 10.6.4** | Real URL-Decode Path Traversal Security (%2e%2e, %252e%252e) | ✅ **TUNTAS** | 100% PASS (5/5 RED->GREEN) |
+| **Fase 10.7.1** | General Route Pattern Matching (`/:a/:b/:c`) | ✅ **TUNTAS** | 100% PASS (5/5 RED->GREEN) |
+| **Fase 10.7.2** | WebSocket Large Frame Payload (>4KB up to 100KB+) | ✅ **TUNTAS** | 100% PASS (5/5 RED->GREEN) |
+| **Fase 10.7.3** | Default `max_reqs` = 100 on All Async Servers | ✅ **TUNTAS** | 100% PASS (5/5 RED->GREEN) |
+| **Fase 10.7.4** | HTTPS Strict TLS-Only Hardening (No Plaintext Fallback) | ✅ **TUNTAS** | 100% PASS (5/5 RED->GREEN) |
 
 ---
 
