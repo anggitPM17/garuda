@@ -59,6 +59,9 @@ Dalam ekosistem Garuda:
 | **Fase 10.7.2** | WebSocket Large Frame Payload (>4KB up to 100KB+) | ✅ **TUNTAS** | 100% PASS (5/5 RED->GREEN) |
 | **Fase 10.7.3** | Default `max_reqs` = 100 on All Async Servers | ✅ **TUNTAS** | 100% PASS (5/5 RED->GREEN) |
 | **Fase 10.7.4** | HTTPS Strict TLS-Only Hardening (No Plaintext Fallback) | ✅ **TUNTAS** | 100% PASS (5/5 RED->GREEN) |
+| **Fase 10.8.1** | WebSocket Frame Fragmentation (`FIN=0` loop reassembly) | ✅ **TUNTAS** | 100% PASS (5/5 RED->GREEN) |
+| **Fase 10.8.2** | WebSocket Max Bound Security (16MB Limit & Close Frame `1009`) | ✅ **TUNTAS** | 100% PASS (5/5 RED->GREEN) |
+| **Fase 10.8.3** | Real Python WebSocket Client E2E (`websockets` library verification) | ✅ **TUNTAS** | 100% PASS (5/5 E2E PASS) |
 
 ---
 
