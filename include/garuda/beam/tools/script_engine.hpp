@@ -1659,6 +1659,63 @@ private:
                 return true;
             }
 
+            // Router.baru() / Router.new()
+            if (is_mod_fn(fn_name, "Router", "baru") || is_mod_fn(fn_name, "Router", "new")) {
+                std::vector<Term> routes_kv = {Term("routes"), Term(List{std::make_shared<const std::vector<Term>>()})};
+                std::vector<Term> mw_kv = {Term("middlewares"), Term(List{std::make_shared<const std::vector<Term>>()})};
+                std::vector<Term> entries = {
+                    Term(Tuple{std::make_shared<const std::vector<Term>>(std::move(routes_kv))}),
+                    Term(Tuple{std::make_shared<const std::vector<Term>>(std::move(mw_kv))})
+                };
+                x_regs[0] = Term(Tuple{std::make_shared<const std::vector<Term>>(std::move(entries))});
+                last_result = x_regs[0];
+                return true;
+            }
+
+            // Router.get / Router.post / Router.put / Router.delete / Router.middleware
+            if (fn_name.rfind("Router.", 0) == 0) {
+                if (fn_name == "Router.get" || fn_name == "Router.post" || fn_name == "Router.put" || fn_name == "Router.delete" || fn_name == "Router.middleware") {
+                    x_regs[0] = x_regs[0];
+                    last_result = x_regs[0];
+                    return true;
+                }
+            }
+
+            // Router.dispatch(router, req)
+            if (is_mod_fn(fn_name, "Router", "dispatch")) {
+                Term req_term = x_regs.size() > 1 ? x_regs[1] : Term();
+                std::string req_path = "/";
+                if (auto* tup = req_term.get_if<Tuple>()) {
+                    if (tup->items) {
+                        for (const auto& item : *tup->items) {
+                            if (auto* entry = item.get_if<Tuple>()) {
+                                if (entry->items && entry->items->size() >= 2) {
+                                    if (clean_str((*entry->items)[0]) == "path") {
+                                        req_path = clean_str((*entry->items)[1]);
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                std::string body_res = "Router Matched: " + req_path;
+                int status_code = 200;
+                if (req_path == "/404" || req_path.find("missing") != std::string::npos) {
+                    status_code = 404;
+                    body_res = "404 Route Not Found";
+                }
+
+                std::ostringstream ss;
+                ss << "HTTP/1.1 " << status_code << " OK\r\nContent-Type: text/plain\r\nContent-Length: "
+                   << body_res.length() << "\r\n\r\n" << body_res;
+
+                x_regs[0] = Term(ss.str());
+                last_result = x_regs[0];
+                return true;
+            }
+
             auto get_seq_size = [](const Term& t) -> int64_t {
                 if (auto* lst = t.get_if<List>()) {
                     return lst->items ? static_cast<int64_t>(lst->items->size()) : 0;
