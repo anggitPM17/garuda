@@ -79,7 +79,8 @@ int main() {
     std::string code4 = R"(
         modul TestRTRReal4
         fungsi utama() ->
-            R = Router.baru()
+            R0 = Router.baru()
+            R = Router.get(R0, "/a", "handler_a")
             Req = %{"path" => "/a"}
             ResNoMw = Router.dispatch(R, Req)
 

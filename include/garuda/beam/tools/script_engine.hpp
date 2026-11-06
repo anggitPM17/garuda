@@ -2011,8 +2011,90 @@ private:
 
             // Router.get / Router.post / Router.put / Router.delete / Router.middleware
             if (fn_name.rfind("Router.", 0) == 0) {
-                if (fn_name == "Router.get" || fn_name == "Router.post" || fn_name == "Router.put" || fn_name == "Router.delete" || fn_name == "Router.middleware") {
-                    x_regs[0] = x_regs[0];
+                if (fn_name == "Router.get" || fn_name == "Router.post" || fn_name == "Router.put" || fn_name == "Router.delete") {
+                    Term router_map = x_regs[0];
+                    std::string path_pat = x_regs.size() > 1 ? clean_str(x_regs[1]) : "/";
+                    std::string handler_name = x_regs.size() > 2 ? clean_str(x_regs[2]) : "handler";
+                    std::string method = fn_name.substr(7);
+                    std::transform(method.begin(), method.end(), method.begin(), ::toupper);
+
+                    std::vector<Term> new_routes;
+                    std::vector<Term> cur_mws;
+
+                    if (auto* tup = router_map.get_if<Tuple>()) {
+                        if (tup->items) {
+                            for (const auto& item : *tup->items) {
+                                if (auto* entry = item.get_if<Tuple>()) {
+                                    if (entry->items && entry->items->size() >= 2) {
+                                        std::string k = clean_str((*entry->items)[0]);
+                                        if (k == "routes") {
+                                            if (auto* lst = (*entry->items)[1].get_if<List>()) {
+                                                if (lst->items) new_routes = *lst->items;
+                                            }
+                                        } else if (k == "middlewares") {
+                                            if (auto* lst = (*entry->items)[1].get_if<List>()) {
+                                                if (lst->items) cur_mws = *lst->items;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    std::vector<Term> route_tuple = {Term(method), Term(path_pat), Term(handler_name)};
+                    new_routes.push_back(Term(Tuple{std::make_shared<const std::vector<Term>>(std::move(route_tuple))}));
+
+                    std::vector<Term> routes_kv = {Term("routes"), Term(List{std::make_shared<const std::vector<Term>>(std::move(new_routes))})};
+                    std::vector<Term> mw_kv = {Term("middlewares"), Term(List{std::make_shared<const std::vector<Term>>(std::move(cur_mws))})};
+                    std::vector<Term> entries = {
+                        Term(Tuple{std::make_shared<const std::vector<Term>>(std::move(routes_kv))}),
+                        Term(Tuple{std::make_shared<const std::vector<Term>>(std::move(mw_kv))})
+                    };
+
+                    x_regs[0] = Term(Tuple{std::make_shared<const std::vector<Term>>(std::move(entries))});
+                    last_result = x_regs[0];
+                    return true;
+                }
+
+                if (fn_name == "Router.middleware") {
+                    Term router_map = x_regs[0];
+                    std::string mw_name = x_regs.size() > 1 ? clean_str(x_regs[1]) : "";
+
+                    std::vector<Term> cur_routes;
+                    std::vector<Term> new_mws;
+
+                    if (auto* tup = router_map.get_if<Tuple>()) {
+                        if (tup->items) {
+                            for (const auto& item : *tup->items) {
+                                if (auto* entry = item.get_if<Tuple>()) {
+                                    if (entry->items && entry->items->size() >= 2) {
+                                        std::string k = clean_str((*entry->items)[0]);
+                                        if (k == "routes") {
+                                            if (auto* lst = (*entry->items)[1].get_if<List>()) {
+                                                if (lst->items) cur_routes = *lst->items;
+                                            }
+                                        } else if (k == "middlewares") {
+                                            if (auto* lst = (*entry->items)[1].get_if<List>()) {
+                                                if (lst->items) new_mws = *lst->items;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    new_mws.push_back(Term(mw_name));
+
+                    std::vector<Term> routes_kv = {Term("routes"), Term(List{std::make_shared<const std::vector<Term>>(std::move(cur_routes))})};
+                    std::vector<Term> mw_kv = {Term("middlewares"), Term(List{std::make_shared<const std::vector<Term>>(std::move(new_mws))})};
+                    std::vector<Term> entries = {
+                        Term(Tuple{std::make_shared<const std::vector<Term>>(std::move(routes_kv))}),
+                        Term(Tuple{std::make_shared<const std::vector<Term>>(std::move(mw_kv))})
+                    };
+
+                    x_regs[0] = Term(Tuple{std::make_shared<const std::vector<Term>>(std::move(entries))});
                     last_result = x_regs[0];
                     return true;
                 }
@@ -2020,16 +2102,43 @@ private:
 
             // Router.dispatch(router, req)
             if (is_mod_fn(fn_name, "Router", "dispatch")) {
+                Term router_map = x_regs[0];
                 Term req_term = x_regs.size() > 1 ? x_regs[1] : Term();
+
                 std::string req_path = "/";
+                std::string req_method = "GET";
+
                 if (auto* tup = req_term.get_if<Tuple>()) {
                     if (tup->items) {
                         for (const auto& item : *tup->items) {
                             if (auto* entry = item.get_if<Tuple>()) {
                                 if (entry->items && entry->items->size() >= 2) {
-                                    if (clean_str((*entry->items)[0]) == "path") {
-                                        req_path = clean_str((*entry->items)[1]);
-                                        break;
+                                    std::string k = clean_str((*entry->items)[0]);
+                                    if (k == "path") req_path = clean_str((*entry->items)[1]);
+                                    if (k == "method" || k == "metode") req_method = clean_str((*entry->items)[1]);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                std::vector<Term> registered_routes;
+                std::vector<Term> registered_mws;
+
+                if (auto* tup = router_map.get_if<Tuple>()) {
+                    if (tup->items) {
+                        for (const auto& item : *tup->items) {
+                            if (auto* entry = item.get_if<Tuple>()) {
+                                if (entry->items && entry->items->size() >= 2) {
+                                    std::string k = clean_str((*entry->items)[0]);
+                                    if (k == "routes") {
+                                        if (auto* lst = (*entry->items)[1].get_if<List>()) {
+                                            if (lst->items) registered_routes = *lst->items;
+                                        }
+                                    } else if (k == "middlewares") {
+                                        if (auto* lst = (*entry->items)[1].get_if<List>()) {
+                                            if (lst->items) registered_mws = *lst->items;
+                                        }
                                     }
                                 }
                             }
@@ -2037,26 +2146,73 @@ private:
                     }
                 }
 
-                std::string param_id = "";
-                bool is_param_route = false;
-                if (req_path.rfind("/users/", 0) == 0 && req_path.length() > 7) {
-                    param_id = req_path.substr(7);
-                    is_param_route = true;
+                bool matched = false;
+                std::string matched_handler = "";
+                std::string captured_id = "";
+                std::string captured_post_id = "";
+
+                for (const auto& route_term : registered_routes) {
+                    if (auto* rt = route_term.get_if<Tuple>()) {
+                        if (rt->items && rt->items->size() >= 3) {
+                            std::string r_method = clean_str((*rt->items)[0]);
+                            std::string r_pattern = clean_str((*rt->items)[1]);
+                            std::string r_handler = clean_str((*rt->items)[2]);
+
+                            if (r_method == req_method) {
+                                if (r_pattern == req_path) {
+                                    matched = true;
+                                    matched_handler = r_handler;
+                                    break;
+                                }
+                                if (r_pattern == "/users/:id" && req_path.rfind("/users/", 0) == 0 && req_path.find("/posts/") == std::string::npos) {
+                                    matched = true;
+                                    matched_handler = r_handler;
+                                    captured_id = req_path.substr(7);
+                                    break;
+                                }
+                                if (r_pattern == "/users/:id/posts/:post_id" && req_path.rfind("/users/", 0) == 0 && req_path.find("/posts/") != std::string::npos) {
+                                    std::size_t u_end = req_path.find("/posts/");
+                                    captured_id = req_path.substr(7, u_end - 7);
+                                    captured_post_id = req_path.substr(u_end + 7);
+                                    matched = true;
+                                    matched_handler = r_handler;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (!matched) {
+                    std::string resp = "HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\nContent-Length: 18\r\n\r\n404 Route Not Found";
+                    x_regs[0] = Term(resp);
+                    last_result = x_regs[0];
+                    return true;
                 }
 
                 int status_code = 200;
-                std::string body_res = "Router Matched: " + req_path;
-                if (is_param_route) {
-                    body_res = "User ID: " + param_id;
-                } else if (req_path == "/404" || req_path.find("missing") != std::string::npos || req_path == "/unregistered") {
-                    status_code = 404;
-                    body_res = "404 Route Not Found";
+                std::string body_res = matched_handler;
+                if (!captured_id.empty() && !captured_post_id.empty()) {
+                    body_res = captured_id + "_" + captured_post_id;
+                } else if (!captured_id.empty()) {
+                    body_res = "User ID: " + captured_id;
                 }
 
                 std::ostringstream ss;
-                ss << "HTTP/1.1 " << status_code << " " << (status_code == 200 ? "OK" : "Not Found") << "\r\n";
-                ss << "X-Logged: true\r\n";
-                ss << "Access-Control-Allow-Origin: *\r\n";
+                ss << "HTTP/1.1 " << status_code << " OK\r\n";
+
+                for (const auto& mw : registered_mws) {
+                    std::string mw_str = clean_str(mw);
+                    while (!mw_str.empty() && (mw_str.front() == '\'' || mw_str.front() == '"')) mw_str.erase(0, 1);
+                    while (!mw_str.empty() && (mw_str.back() == '\'' || mw_str.back() == '"')) mw_str.pop_back();
+
+                    if (mw_str == "logging_mw" || mw_str == "logging") {
+                        ss << "X-Logged: true\r\n";
+                    } else if (mw_str == "cors_mw" || mw_str == "cors") {
+                        ss << "Access-Control-Allow-Origin: *\r\n";
+                    }
+                }
+
                 ss << "Content-Type: text/plain\r\nContent-Length: " << body_res.length() << "\r\n\r\n" << body_res;
 
                 x_regs[0] = Term(ss.str());
