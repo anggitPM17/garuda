@@ -143,48 +143,70 @@ static bool read_ws_frame_complete(socket_t fd, std::string& out_frame) {
     int r = recv(fd, hdr, 2, 0);
     if (r < 2) return false;
 
-    out_frame.append(hdr, 2);
+    bool fin = (static_cast<uint8_t>(hdr[0]) & 0x80) != 0;
+    uint8_t opcode = static_cast<uint8_t>(hdr[0]) & 0x0F;
 
-    uint8_t second_byte = static_cast<uint8_t>(hdr[1]);
-    bool is_masked = (second_byte & 0x80) != 0;
-    uint64_t payload_len = second_byte & 0x7F;
+    auto read_single_payload = [fd](uint8_t first_len_byte, std::string& payload_out) -> bool {
+        bool is_masked = (first_len_byte & 0x80) != 0;
+        uint64_t payload_len = first_len_byte & 0x7F;
 
-    if (payload_len == 126) {
-        char ext[2] = {0};
-        int r_ext = recv(fd, ext, 2, 0);
-        if (r_ext < 2) return false;
-        out_frame.append(ext, 2);
-        payload_len = (static_cast<uint8_t>(ext[0]) << 8) | static_cast<uint8_t>(ext[1]);
-    } else if (payload_len == 127) {
-        char ext[8] = {0};
-        int r_ext = recv(fd, ext, 8, 0);
-        if (r_ext < 8) return false;
-        out_frame.append(ext, 8);
-        payload_len = 0;
-        for (int i = 0; i < 8; ++i) {
-            payload_len = (payload_len << 8) | static_cast<uint8_t>(ext[i]);
+        if (payload_len == 126) {
+            char ext[2] = {0};
+            if (recv(fd, ext, 2, 0) < 2) return false;
+            payload_len = (static_cast<uint8_t>(ext[0]) << 8) | static_cast<uint8_t>(ext[1]);
+        } else if (payload_len == 127) {
+            char ext[8] = {0};
+            if (recv(fd, ext, 8, 0) < 8) return false;
+            payload_len = 0;
+            for (int i = 0; i < 8; ++i) {
+                payload_len = (payload_len << 8) | static_cast<uint8_t>(ext[i]);
+            }
         }
-    }
 
-    if (is_masked) {
-        char mask_key[4] = {0};
-        int r_mask = recv(fd, mask_key, 4, 0);
-        if (r_mask < 4) return false;
-        out_frame.append(mask_key, 4);
-    }
-
-    if (payload_len > 0) {
-        size_t total_payload_read = 0;
-        std::vector<char> buf(8192);
-        while (total_payload_read < payload_len) {
-            size_t to_read = std::min(buf.size(), payload_len - total_payload_read);
-            int bytes = recv(fd, buf.data(), static_cast<int>(to_read), 0);
-            if (bytes <= 0) return false;
-            out_frame.append(buf.data(), bytes);
-            total_payload_read += bytes;
+        uint8_t mask_key[4] = {0};
+        if (is_masked) {
+            if (recv(fd, reinterpret_cast<char*>(mask_key), 4, 0) < 4) return false;
         }
+
+        std::string raw_payload = "";
+        if (payload_len > 0) {
+            raw_payload.resize(payload_len);
+            size_t total_payload_read = 0;
+            while (total_payload_read < payload_len) {
+                int bytes = recv(fd, &raw_payload[total_payload_read], static_cast<int>(payload_len - total_payload_read), 0);
+                if (bytes <= 0) return false;
+                total_payload_read += bytes;
+            }
+        }
+
+        if (is_masked) {
+            for (size_t i = 0; i < payload_len; ++i) {
+                raw_payload[i] ^= mask_key[i % 4];
+            }
+        }
+
+        payload_out.append(raw_payload);
+        return true;
+    };
+
+    std::string combined_payload = "";
+    if (!read_single_payload(static_cast<uint8_t>(hdr[1]), combined_payload)) return false;
+
+    while (!fin) {
+        char frag_hdr[2] = {0};
+        if (recv(fd, frag_hdr, 2, 0) < 2) return false;
+
+        fin = (static_cast<uint8_t>(frag_hdr[0]) & 0x80) != 0;
+        uint8_t frag_op = static_cast<uint8_t>(frag_hdr[0]) & 0x0F;
+
+        if (frag_op != 0x0 && frag_op != 0x8 && frag_op != 0x9 && frag_op != 0xA) {
+            return false;
+        }
+
+        if (!read_single_payload(static_cast<uint8_t>(frag_hdr[1]), combined_payload)) return false;
     }
 
+    out_frame = encode_ws_frame(combined_payload, opcode);
     return true;
 }
 
