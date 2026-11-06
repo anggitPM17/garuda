@@ -203,6 +203,9 @@ target_link_libraries(garuda_router_middleware_tests PRIVATE garuda)
 add_executable(garuda_router_real_registry_tests tests/test_router_real_registry.cpp)
 target_link_libraries(garuda_router_real_registry_tests PRIVATE garuda)
 
+add_executable(garuda_router_general_pattern_tests tests/test_router_general_pattern.cpp)
+target_link_libraries(garuda_router_general_pattern_tests PRIVATE garuda)
+
 add_executable(garuda_router_e2e_tests tests/test_router_e2e.cpp)
 target_link_libraries(garuda_router_e2e_tests PRIVATE garuda)
 
