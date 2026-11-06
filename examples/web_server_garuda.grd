@@ -1,0 +1,23 @@
+modul WebServerGaruda
+
+fungsi handle_request(Req) ->
+    Path = Map.ambil(Req, "path")
+    tinjau Path ing
+        "/" ->
+            Http.buat_respons(200, %{"Content-Type" => "text/html"}, "<h1>Halo dari Garuda Native HTTP Server!</h1><p>Ditulis 100% dalam bahasa Garuda.</p>")
+        "/health" ->
+            Http.buat_respons(200, %{"Content-Type" => "application/json"}, "{\"status\":\"ok\",\"engine\":\"garuda_native_http\"}")
+        "/info" ->
+            Http.buat_respons(200, %{"Content-Type" => "application/json"}, "{\"language\":\"Garuda\",\"version\":\"v67.0.0\",\"server\":\"native\"}")
+        _ ->
+            Http.buat_respons(404, %{"Content-Type" => "text/plain"}, "404 Not Found - Garuda Native HTTP Server")
+    rampung
+rampung
+
+fungsi utama() ->
+    cetak("🦅 Garuda Native HTTP Server starting on port 9090...")
+    cetak("Coba akses: http://localhost:9090/")
+    cetak("Health check: http://localhost:9090/health")
+    cetak("Info: http://localhost:9090/info")
+    Server.mulai(9090, handle_request, 1000)
+rampung
