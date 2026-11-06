@@ -158,6 +158,35 @@ static std::string url_decode_path(const std::string& in) {
     return out;
 }
 
+static bool match_pattern(const std::string& pattern, const std::string& path, std::vector<std::pair<std::string, std::string>>& params) {
+    std::vector<std::string> pat_segs;
+    std::vector<std::string> path_segs;
+
+    std::stringstream ss_pat(pattern);
+    std::string item;
+    while (std::getline(ss_pat, item, '/')) {
+        if (!item.empty()) pat_segs.push_back(item);
+    }
+
+    std::stringstream ss_path(path);
+    while (std::getline(ss_path, item, '/')) {
+        if (!item.empty()) path_segs.push_back(item);
+    }
+
+    if (pat_segs.size() != path_segs.size()) return false;
+
+    params.clear();
+    for (size_t i = 0; i < pat_segs.size(); ++i) {
+        if (!pat_segs[i].empty() && pat_segs[i].front() == ':') {
+            std::string param_name = pat_segs[i].substr(1);
+            params.push_back({param_name, path_segs[i]});
+        } else if (pat_segs[i] != path_segs[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
 static bool generate_self_signed_cert_engine(std::string& out_cert_pem, std::string& out_key_pem) {
     mbedtls_pk_context key;
     mbedtls_x509write_cert write_cert;
@@ -2201,8 +2230,7 @@ private:
 
                 bool matched = false;
                 std::string matched_handler = "";
-                std::string captured_id = "";
-                std::string captured_post_id = "";
+                std::vector<std::pair<std::string, std::string>> captured_params;
 
                 for (const auto& route_term : registered_routes) {
                     if (auto* rt = route_term.get_if<Tuple>()) {
@@ -2212,23 +2240,11 @@ private:
                             std::string r_handler = clean_str((*rt->items)[2]);
 
                             if (r_method == req_method) {
-                                if (r_pattern == req_path) {
+                                std::vector<std::pair<std::string, std::string>> ex_params;
+                                if (match_pattern(r_pattern, req_path, ex_params)) {
                                     matched = true;
                                     matched_handler = r_handler;
-                                    break;
-                                }
-                                if (r_pattern == "/users/:id" && req_path.rfind("/users/", 0) == 0 && req_path.find("/posts/") == std::string::npos) {
-                                    matched = true;
-                                    matched_handler = r_handler;
-                                    captured_id = req_path.substr(7);
-                                    break;
-                                }
-                                if (r_pattern == "/users/:id/posts/:post_id" && req_path.rfind("/users/", 0) == 0 && req_path.find("/posts/") != std::string::npos) {
-                                    std::size_t u_end = req_path.find("/posts/");
-                                    captured_id = req_path.substr(7, u_end - 7);
-                                    captured_post_id = req_path.substr(u_end + 7);
-                                    matched = true;
-                                    matched_handler = r_handler;
+                                    captured_params = ex_params;
                                     break;
                                 }
                             }
@@ -2245,10 +2261,13 @@ private:
 
                 int status_code = 200;
                 std::string body_res = matched_handler;
-                if (!captured_id.empty() && !captured_post_id.empty()) {
-                    body_res = captured_id + "_" + captured_post_id;
-                } else if (!captured_id.empty()) {
-                    body_res = "User ID: " + captured_id;
+                if (!captured_params.empty()) {
+                    std::ostringstream pss;
+                    for (size_t i = 0; i < captured_params.size(); ++i) {
+                        if (i > 0) pss << ", ";
+                        pss << captured_params[i].second;
+                    }
+                    body_res = pss.str();
                 }
 
                 std::ostringstream ss;
