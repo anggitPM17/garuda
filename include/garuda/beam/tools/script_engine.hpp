@@ -2062,16 +2062,12 @@ private:
                         if (client_fd == INVALID_SOCKET_VAL) break;
 
                         std::thread([this, client_fd, tls_ctx, fn_handler, cg_out_copy]() {
-                            std::string raw_req = "";
-                            bool handshake_ok = false;
-
                             if (tls_ctx) {
                                 TlsSocket tls_sock(tls_ctx, static_cast<int>(client_fd));
                                 if (tls_sock.handshake()) {
-                                    handshake_ok = true;
                                     char buf[4096] = {0};
                                     int bytes = tls_sock.read(buf, 4095);
-                                    if (bytes > 0) raw_req = std::string(buf, bytes);
+                                    std::string raw_req(buf, bytes > 0 ? bytes : 0);
 
                                     std::string resp = "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Type: text/html\r\nContent-Length: 8\r\n\r\nHTTPS OK";
                                     if (raw_req.find("/health") != std::string::npos) {
@@ -2082,35 +2078,15 @@ private:
 
                                     tls_sock.write(resp.data(), resp.length());
                                     tls_sock.close();
+                                    return;
                                 }
                             }
 
-                            if (!handshake_ok) {
-                                char buf[4096] = {0};
-                                #ifdef _WIN32
-                                int bytes = recv(client_fd, buf, 4095, 0);
-                                #else
-                                ssize_t bytes = recv(client_fd, buf, 4095, 0);
-                                #endif
-
-                                std::string req_str(buf, bytes > 0 ? bytes : 0);
-                                std::string resp = "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Type: text/html\r\nContent-Length: 8\r\n\r\nHTTPS OK";
-                                if (req_str.find("/health") != std::string::npos) {
-                                    resp = "HTTP/1.1 200 OK\r\nConnection: close\r\nContent-Type: application/json\r\nContent-Length: 14\r\n\r\n{\"https\":\"ok\"}";
-                                } else if (req_str.find("/missing") != std::string::npos) {
-                                    resp = "HTTP/1.1 404 Not Found\r\nConnection: close\r\nContent-Type: text/plain\r\nContent-Length: 13\r\n\r\n404 Not Found";
-                                }
-
-                                #ifdef _WIN32
-                                send(client_fd, resp.data(), static_cast<int>(resp.length()), 0);
-                                shutdown(client_fd, SD_SEND);
-                                closesocket(client_fd);
-                                #else
-                                send(client_fd, resp.data(), resp.length(), 0);
-                                shutdown(client_fd, SHUT_WR);
-                                close(client_fd);
-                                #endif
-                            }
+                            #ifdef _WIN32
+                            closesocket(client_fd);
+                            #else
+                            close(client_fd);
+                            #endif
                         }).detach();
                     }
 
