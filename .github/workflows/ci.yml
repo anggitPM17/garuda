@@ -1,54 +1,34 @@
-name: GVM CI/CD Build & Deploy
+name: Garuda Compiler CI & Cross-Platform Verification
 
 on:
   push:
     branches: [ main ]
+    tags: [ 'v*' ]
   pull_request:
     branches: [ main ]
 
 jobs:
   build-and-test:
-    name: Build C++ & Verify Binaries
-    runs-on: ubuntu-latest
+    name: Build & Test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+    - name: Checkout Code
+      uses: actions/checkout@v4
 
-      - name: Install System Dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y cmake build-essential libssl-dev libsqlite3-dev
+    - name: Configure CMake
+      run: cmake -B build -DCMAKE_BUILD_TYPE=Release
 
-      - name: Configure CMake
-        run: cmake -B build -DCMAKE_BUILD_TYPE=Release -DGARUDA_BUILD_TESTS=OFF
+    - name: Build All Targets
+      run: cmake --build build --config Release
 
-      - name: Build garuda_richat_server & gvm-admin
-        run: cmake --build build --target garuda_richat_server gvm-admin -j$(nproc)
+    - name: Run EventLoop Backend Tests
+      run: |
+        ${{ matrix.os == 'windows-latest' && '.\build\Release\garuda_event_loop_backend_tests.exe' || './build/garuda_event_loop_backend_tests' }}
 
-      - name: Verify Executables
-        run: |
-          ls -la build/garuda_richat_server
-          ls -la build/gvm-admin
-          ./build/gvm-admin help
-
-  deploy:
-    name: Auto Deploy to VPS
-    needs: build-and-test
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    steps:
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          script: |
-            cd /opt/garuda/garuda_v67_0_production/garuda_v67.0.0
-            git pull origin main
-            cd build && cmake .. -DCMAKE_BUILD_TYPE=Release -DGARUDA_BUILD_TESTS=OFF
-            make garuda_richat_server gvm-admin -j2
-            cp gvm-admin /usr/local/bin/gvm-admin
-            chmod +x /usr/local/bin/gvm-admin
-            systemctl restart richat-garuda
-            echo "✅ Auto-Deploy GVM Selesai: $(date)"
+    - name: Run EventLoop Benchmark
+      run: |
+        ${{ matrix.os == 'windows-latest' && '.\build\Release\bench_event_loop_backend.exe 1000 3' || './build/bench_event_loop_backend 10000 3' }}
