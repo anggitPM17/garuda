@@ -200,6 +200,9 @@ target_link_libraries(garuda_websocket_payload_bound_tests PRIVATE garuda)
 add_executable(garuda_websocket_real_client_tests tests/test_websocket_real_client.cpp)
 target_link_libraries(garuda_websocket_real_client_tests PRIVATE garuda)
 
+add_executable(garuda_async_event_loop_tests tests/test_async_event_loop.cpp)
+target_link_libraries(garuda_async_event_loop_tests PRIVATE garuda)
+
 add_executable(garuda_default_max_reqs_tests tests/test_default_max_reqs.cpp)
 target_link_libraries(garuda_default_max_reqs_tests PRIVATE garuda)
 
