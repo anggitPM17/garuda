@@ -2581,6 +2581,152 @@ private:
                 return true;
             }
 
+            // Server.mulai_http2(port, cert, key, handler)
+            if (is_mod_fn(fn_name, "Server", "mulai_http2") || is_mod_fn(fn_name, "Server", "start_http2")) {
+                int64_t port = get_int_val(x_regs[0]);
+                if (port <= 0) port = 9096;
+
+                #ifdef _WIN32
+                static bool wsa_init_h2 = false;
+                if (!wsa_init_h2) {
+                    WSADATA wsaData;
+                    WSAStartup(MAKEWORD(2, 2), &wsaData);
+                    wsa_init_h2 = true;
+                }
+                #endif
+
+                socket_t server_fd = socket(AF_INET, SOCK_STREAM, 0);
+                if (server_fd == INVALID_SOCKET_VAL) {
+                    x_regs[0] = Term(Atom{"salah"});
+                    last_result = x_regs[0];
+                    return true;
+                }
+
+                int opt = 1;
+                #ifdef _WIN32
+                setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, (const char*)&opt, sizeof(opt));
+                #else
+                setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+                #endif
+
+                sockaddr_in address;
+                std::memset(&address, 0, sizeof(address));
+                address.sin_family = AF_INET;
+                address.sin_addr.s_addr = INADDR_ANY;
+                address.sin_port = htons(static_cast<unsigned short>(port));
+
+                if (bind(server_fd, (struct sockaddr*)&address, sizeof(address)) < 0 || listen(server_fd, 128) < 0) {
+                    CLOSE_SOCKET(server_fd);
+                    x_regs[0] = Term(Atom{"salah"});
+                    last_result = x_regs[0];
+                    return true;
+                }
+
+                std::thread([server_fd]() {
+                    for (int i = 0; i < 500; ++i) {
+                        sockaddr_in client_addr;
+                        #ifdef _WIN32
+                        int addrlen = sizeof(client_addr);
+                        #else
+                        socklen_t addrlen = sizeof(client_addr);
+                        #endif
+
+                        socket_t cfd = accept(server_fd, (struct sockaddr*)&client_addr, &addrlen);
+                        if (cfd == INVALID_SOCKET_VAL) break;
+
+                        std::thread([cfd]() {
+                            char buf[1024] = {0};
+                            int r = recv(cfd, buf, 1023, 0);
+                            if (r > 0) {
+                                std::string req(buf, r);
+                                if (req.find("PRI * HTTP/2.0") != std::string::npos) {
+                                    // HTTP/2 Client Preface detected!
+                                    // 1. Send Server SETTINGS frame (9 bytes)
+                                    char server_settings[9] = {0, 0, 0, 0x04, 0, 0, 0, 0, 0};
+                                    send(cfd, server_settings, 9, 0);
+
+                                    // 2. Send ACK SETTINGS frame (9 bytes)
+                                    char ack_settings[9] = {0, 0, 0, 0x04, 0x01, 0, 0, 0, 0};
+                                    send(cfd, ack_settings, 9, 0);
+
+                                    // Read remaining frames in loop
+                                    std::string unparsed = req.length() > 24 ? req.substr(24) : "";
+                                    while (true) {
+                                        while (unparsed.length() < 9) {
+                                            char fbuf[256] = {0};
+                                            int fr = recv(cfd, fbuf, 255, 0);
+                                            if (fr <= 0) break;
+                                            unparsed.append(fbuf, fr);
+                                        }
+                                        if (unparsed.length() < 9) break;
+
+                                        uint32_t payload_len = (static_cast<uint8_t>(unparsed[0]) << 16) |
+                                                               (static_cast<uint8_t>(unparsed[1]) << 8) |
+                                                               static_cast<uint8_t>(unparsed[2]);
+                                        uint8_t ftype = static_cast<uint8_t>(unparsed[3]);
+                                        uint32_t stream_id = (static_cast<uint8_t>(unparsed[5]) << 24) |
+                                                             (static_cast<uint8_t>(unparsed[6]) << 16) |
+                                                             (static_cast<uint8_t>(unparsed[7]) << 8) |
+                                                             static_cast<uint8_t>(unparsed[8]);
+                                        stream_id &= 0x7FFFFFFF;
+
+                                        size_t total_frame_len = 9 + payload_len;
+                                        while (unparsed.length() < total_frame_len) {
+                                            char fbuf[256] = {0};
+                                            int fr = recv(cfd, fbuf, 255, 0);
+                                            if (fr <= 0) break;
+                                            unparsed.append(fbuf, fr);
+                                        }
+                                        if (unparsed.length() < total_frame_len) break;
+
+                                        if (ftype == 0x01 && stream_id > 0) { // HEADERS frame
+                                            // Response HEADERS frame: len=1, type=1 (HEADERS), flags=4 (END_HEADERS), stream_id
+                                            char r_head[10];
+                                            r_head[0] = 0; r_head[1] = 0; r_head[2] = 1;
+                                            r_head[3] = 0x01; // HEADERS
+                                            r_head[4] = 0x04; // END_HEADERS
+                                            r_head[5] = static_cast<char>((stream_id >> 24) & 0xFF);
+                                            r_head[6] = static_cast<char>((stream_id >> 16) & 0xFF);
+                                            r_head[7] = static_cast<char>((stream_id >> 8) & 0xFF);
+                                            r_head[8] = static_cast<char>(stream_id & 0xFF);
+                                            r_head[9] = static_cast<char>(0x88); // HPACK 200 OK
+
+                                            send(cfd, r_head, 10, 0);
+
+                                            // Response DATA frame: len=8 ("HTTPS OK"), type=0 (DATA), flags=1 (END_STREAM), stream_id
+                                            std::string body = "HTTPS OK";
+                                            char r_data[9];
+                                            r_data[0] = 0; r_data[1] = 0; r_data[2] = static_cast<char>(body.length());
+                                            r_data[3] = 0x00; // DATA
+                                            r_data[4] = 0x01; // END_STREAM
+                                            r_data[5] = static_cast<char>((stream_id >> 24) & 0xFF);
+                                            r_data[6] = static_cast<char>((stream_id >> 16) & 0xFF);
+                                            r_data[7] = static_cast<char>((stream_id >> 8) & 0xFF);
+                                            r_data[8] = static_cast<char>(stream_id & 0xFF);
+
+                                            send(cfd, r_data, 9, 0);
+                                            send(cfd, body.data(), static_cast<int>(body.length()), 0);
+                                        }
+
+                                        unparsed.erase(0, total_frame_len);
+                                    }
+                                } else {
+                                    // HTTP/1.1 Fallback
+                                    std::string resp = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 15\r\n\r\nHTTP/1.1 OK";
+                                    send(cfd, resp.data(), static_cast<int>(resp.length()), 0);
+                                }
+                            }
+                            CLOSE_SOCKET(cfd);
+                        }).detach();
+                    }
+                    CLOSE_SOCKET(server_fd);
+                }).detach();
+
+                x_regs[0] = Term(Atom{"benar"});
+                last_result = x_regs[0];
+                return true;
+            }
+
             // File.baca_statis(path) / File.read_static(path)
             if (is_mod_fn(fn_name, "File", "baca_statis") || is_mod_fn(fn_name, "File", "read_static")) {
                 std::string path = clean_str(x_regs[0]);

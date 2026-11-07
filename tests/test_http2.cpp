@@ -125,9 +125,15 @@ int main() {
         send(c4, h_s5, 10, 0);
 
         char rbuf[2048] = {0};
-        int r = recv(c4, rbuf, 2047, 0);
+        int total_r = 0;
+        auto start_t = std::chrono::steady_clock::now();
+        while (total_r < 57 && std::chrono::steady_clock::now() - start_t < std::chrono::seconds(2)) {
+            int r = recv(c4, rbuf + total_r, 2047 - total_r, 0);
+            if (r <= 0) break;
+            total_r += r;
+        }
         CLOSE_SOCKET(c4);
-        if (r >= 27) { // 3 response frame headers minimum
+        if (total_r >= 57) { // 3 response frame pairs (HEAD+DATA for stream 1, 3, 5)
             h2_multi_ok = true;
         }
     }
