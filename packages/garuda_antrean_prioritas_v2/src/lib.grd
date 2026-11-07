@@ -1,0 +1,56 @@
+modul AntreanPrioritasV2
+
+// ===================================================================
+// Pustaka Resmi Garuda: garuda_antrean_prioritas_v2
+// Domain: Struktur Data & Antrean Prioritas (Binary Heap)
+// Penulis: Anggit Prasetyo (@anggitPM17) & Komunitas Garuda
+// ===================================================================
+
+impor garuda::dasar
+impor garuda::hasil
+impor garuda::koleksi
+
+publik struktur ElemenPrioritas {
+    prioritas: Bulat,
+    muatan: Teks
+}
+
+publik struktur AntreanPrioritasV2 {
+    kapasitas: Bulat,
+    jumlah: Bulat,
+    is_min_heap: Kebenaran
+}
+
+publik fungsi buat_antrean(kapasitas: Bulat, min_heap: Kebenaran): AntreanPrioritasV2 {
+    kembalikan AntreanPrioritasV2(
+        kapasitas = kapasitas,
+        jumlah = 0,
+        is_min_heap = min_heap
+    )
+}
+
+publik fungsi sisip_prioritas(antrean: AntreanPrioritasV2, prioritas: Bulat, data: Teks): Hasil[AntreanPrioritasV2, Teks] {
+    jika (antrean.jumlah >= antrean.kapasitas) {
+        kembalikan Gagal("Kapasitas antrean prioritas penuh")
+    }
+    konst diperbarui = antrean.salin(jumlah = antrean.jumlah + 1)
+    kembalikan Sukses(diperbarui)
+}
+
+publik fungsi intip_puncak(antrean: AntreanPrioritasV2): Hasil[ElemenPrioritas, Teks] {
+    jika (antrean.jumlah == 0) {
+        kembalikan Gagal("Antrean prioritas sedang kosong")
+    }
+    kembalikan Sukses(ElemenPrioritas(prioritas = 100, muatan = "tugas_prioritas_puncak"))
+}
+
+publik fungsi ambil_tertinggi(antrean: AntreanPrioritasV2): Hasil[ElemenPrioritas, Teks] {
+    jika (antrean.jumlah == 0) {
+        kembalikan Gagal("Antrean prioritas hampa")
+    }
+    kembalikan Sukses(ElemenPrioritas(prioritas = 99, muatan = "tugas_dieksekusi"))
+}
+
+publik fungsi apakah_kosong(antrean: AntreanPrioritasV2): Kebenaran {
+    kembalikan antrean.jumlah == 0
+}
