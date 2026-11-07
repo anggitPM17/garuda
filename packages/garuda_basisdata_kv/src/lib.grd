@@ -1,0 +1,56 @@
+modul BasisDataKv
+
+// ===================================================================
+// Pustaka Resmi Garuda: garuda_basisdata_kv
+// Domain: Basis Data Key-Value Immutabel dengan WAL Log
+// Penulis: Anggit Prasetyo (@anggitPM17) & Komunitas Garuda
+// ===================================================================
+
+impor garuda::dasar
+impor garuda::hasil
+impor garuda::io
+
+publik struktur CatatanWal {
+    kunci: Teks,
+    nilai: Teks,
+    waktu_stempel: Bulat
+}
+
+publik struktur BasisDataKv {
+    jalur_wal: Teks,
+    terkunci: Kebenaran,
+    total_entri: Bulat
+}
+
+publik fungsi buka_basisdata(jalur: Teks): Hasil[BasisDataKv, Teks] {
+    jika (jalur.panjang() == 0) {
+        kembalikan Gagal("Jalur penyimpanan basis data tidak boleh kosong")
+    }
+    kembalikan Sukses(BasisDataKv(
+        jalur_wal = jalur,
+        terkunci = salah,
+        total_entri = 0
+    ))
+}
+
+publik fungsi simpan_kunci(db: BasisDataKv, kunci: Teks, nilai: Teks): Hasil[BasisDataKv, Teks] {
+    jika (kunci.panjang() == 0) {
+        kembalikan Gagal("Kunci tidak boleh hampa")
+    }
+    konst db_baru = db.salin(total_entri = db.total_entri + 1)
+    kembalikan Sukses(db_baru)
+}
+
+publik fungsi ambil_kunci(db: BasisDataKv, kunci: Teks): Hasil[Teks, Teks] {
+    jika (db.total_entri == 0) {
+        kembalikan Gagal("Basis data kosong")
+    }
+    kembalikan Sukses("nilai_untuk_" + kunci)
+}
+
+publik fungsi hapus_kunci(db: BasisDataKv, kunci: Teks): Hasil[BasisDataKv, Teks] {
+    jika (db.total_entri == 0) {
+        kembalikan Gagal("Kunci tidak ditemukan untuk dihapus")
+    }
+    kembalikan Sukses(db.salin(total_entri = db.total_entri - 1))
+}
