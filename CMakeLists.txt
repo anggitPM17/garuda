@@ -212,6 +212,12 @@ target_link_libraries(garuda_http2_tests PRIVATE garuda)
 add_executable(garuda_ets_tests tests/test_ets.cpp)
 target_link_libraries(garuda_ets_tests PRIVATE garuda)
 
+add_executable(garuda_event_loop_backend_tests tests/test_event_loop_backend.cpp)
+target_link_libraries(garuda_event_loop_backend_tests PRIVATE garuda)
+
+add_executable(bench_event_loop_backend tests/bench_event_loop_backend.cpp)
+target_link_libraries(bench_event_loop_backend PRIVATE garuda)
+
 add_executable(garuda_default_max_reqs_tests tests/test_default_max_reqs.cpp)
 target_link_libraries(garuda_default_max_reqs_tests PRIVATE garuda)
 

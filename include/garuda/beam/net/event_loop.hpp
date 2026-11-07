@@ -8,19 +8,21 @@
 #include <atomic>
 #include <thread>
 #include <chrono>
+#include <memory>
 #include <algorithm>
 
 #ifdef _WIN32
 #include <winsock2.h>
 #include <ws2tcpip.h>
 typedef SOCKET socket_t;
+#define INVALID_SOCKET_VAL INVALID_SOCKET
+#define CLOSE_SOCKET(s) closesocket(s)
 #else
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <poll.h>
 typedef int socket_t;
 #define INVALID_SOCKET_VAL -1
 #define CLOSE_SOCKET(s) close(s)
@@ -28,127 +30,46 @@ typedef int socket_t;
 
 namespace garuda::beam::net {
 
+constexpr int EV_READ  = 1 << 0;
+constexpr int EV_WRITE = 1 << 1;
+constexpr int EV_ERROR = 1 << 2;
+
+struct Event { socket_t fd; int events; };
+
+class EventLoopBackend {
+public:
+    virtual ~EventLoopBackend() = default;
+    virtual bool        init() { return false; }
+    virtual int         wait(Event*, int, int) { return -1; }
+    virtual bool        add(int) { return false; }
+    virtual bool        remove(int) { return false; }
+    virtual const char* name() const { return "stub"; }
+};
+
+class PollBackend : public EventLoopBackend {};
+
+inline std::unique_ptr<EventLoopBackend> make_default_backend() {
+    return nullptr; // STUB RED: return null to make Test 1 fail
+}
+
 class EventLoop {
 public:
     using ReadCallback = std::function<void(socket_t)>;
 
     EventLoop() : running_(false) {}
+    ~EventLoop() { stop(); }
 
-    ~EventLoop() {
-        stop();
-    }
+    const char* backend_name() const { return "stub"; }
 
-    void add_socket(socket_t fd, ReadCallback cb) {
-        std::lock_guard<std::mutex> lock(mutex_);
-        callbacks_[fd] = cb;
-    }
-
-    void remove_socket(socket_t fd) {
-        std::lock_guard<std::mutex> lock(mutex_);
-        callbacks_.erase(fd);
-    }
-
-    void start_in_thread() {
-        running_ = true;
-        loop_thread_ = std::thread([this]() { run(); });
-    }
-
-    void run() {
-        running_ = true;
-        while (running_) {
-            std::map<socket_t, ReadCallback> current_cbs;
-            {
-                std::lock_guard<std::mutex> lock(mutex_);
-                current_cbs = callbacks_;
-            }
-
-            if (current_cbs.empty()) {
-                std::this_thread::sleep_for(std::chrono::milliseconds(5));
-                continue;
-            }
-
-            #ifdef _WIN32
-            std::vector<WSAPOLLFD> poll_fds;
-            poll_fds.reserve(current_cbs.size());
-            std::vector<socket_t> fds_list;
-            fds_list.reserve(current_cbs.size());
-
-            for (const auto& [fd, cb] : current_cbs) {
-                WSAPOLLFD pfd;
-                pfd.fd = fd;
-                pfd.events = POLLIN;
-                pfd.revents = 0;
-                poll_fds.push_back(pfd);
-                fds_list.push_back(fd);
-            }
-
-            int ret = WSAPoll(poll_fds.data(), static_cast<ULONG>(poll_fds.size()), 50);
-
-            if (ret > 0) {
-                for (size_t i = 0; i < poll_fds.size(); ++i) {
-                    if (poll_fds[i].revents & POLLIN) {
-                        socket_t fd = fds_list[i];
-                        ReadCallback cb = nullptr;
-                        {
-                            std::lock_guard<std::mutex> lock(mutex_);
-                            auto it = callbacks_.find(fd);
-                            if (it != callbacks_.end()) cb = it->second;
-                        }
-                        if (cb) cb(fd);
-                    }
-                }
-            }
-            #else
-            std::vector<struct pollfd> poll_fds;
-            poll_fds.reserve(current_cbs.size());
-            std::vector<socket_t> fds_list;
-            fds_list.reserve(current_cbs.size());
-
-            for (const auto& [fd, cb] : current_cbs) {
-                struct pollfd pfd;
-                pfd.fd = fd;
-                pfd.events = POLLIN;
-                pfd.revents = 0;
-                poll_fds.push_back(pfd);
-                fds_list.push_back(fd);
-            }
-
-            int ret = poll(poll_fds.data(), static_cast<nfds_t>(poll_fds.size()), 50);
-
-            if (ret > 0) {
-                for (size_t i = 0; i < poll_fds.size(); ++i) {
-                    if (poll_fds[i].revents & POLLIN) {
-                        socket_t fd = fds_list[i];
-                        ReadCallback cb = nullptr;
-                        {
-                            std::lock_guard<std::mutex> lock(mutex_);
-                            auto it = callbacks_.find(fd);
-                            if (it != callbacks_.end()) cb = it->second;
-                        }
-                        if (cb) cb(fd);
-                    }
-                }
-            }
-            #endif
-        }
-    }
-
-    void stop() {
-        running_ = false;
-        if (loop_thread_.joinable()) {
-            loop_thread_.join();
-        }
-    }
-
-    bool is_running() const {
-        return running_;
-    }
+    void add_socket(socket_t, ReadCallback) {}
+    void remove_socket(socket_t) {}
+    void start_in_thread() {}
+    void run() {}
+    void stop() {}
+    bool is_running() const { return false; }
 
 private:
     std::atomic<bool> running_;
-    std::map<socket_t, ReadCallback> callbacks_;
-    std::mutex mutex_;
-    std::thread loop_thread_;
 };
 
 } // namespace garuda::beam::net
