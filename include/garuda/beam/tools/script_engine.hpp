@@ -2958,6 +2958,312 @@ private:
                 return true;
             }
 
+            // === Fase 12.1: Json.enkode / Json.dekode ===
+            if (is_mod_fn(fn_name, "Json", "enkode") || is_mod_fn(fn_name, "Json", "encode")) {
+                Term val = x_regs[0];
+                std::string result;
+
+                std::function<void(const Term&)> serialize = [&](const Term& t) {
+                    if (auto* s = t.get_if<std::string>()) {
+                        result += "\"";
+                        for (char c : *s) {
+                            if (c == '"') result += "\\\"";
+                            else if (c == '\\') result += "\\\\";
+                            else if (c == '\n') result += "\\n";
+                            else if (c == '\t') result += "\\t";
+                            else if (c == '\r') result += "\\r";
+                            else result += c;
+                        }
+                        result += "\"";
+                    } else if (std::holds_alternative<std::int64_t>(t.value())) {
+                        result += std::to_string(std::get<std::int64_t>(t.value()));
+                    } else if (std::holds_alternative<double>(t.value())) {
+                        result += std::to_string(std::get<double>(t.value()));
+                    } else if (is_atom(t, "benar") || is_atom(t, "true")) {
+                        result += "true";
+                    } else if (is_atom(t, "salah") || is_atom(t, "false") || is_atom(t, "nil") || is_atom(t, "null")) {
+                        result += "null";
+                    } else if (auto* tup = t.get_if<Tuple>()) {
+                        result += "[";
+                        if (tup->items) {
+                            for (size_t i = 0; i < tup->items->size(); ++i) {
+                                if (i > 0) result += ",";
+                                serialize((*tup->items)[i]);
+                            }
+                        }
+                        result += "]";
+                    } else if (auto* lst = t.get_if<List>()) {
+                        bool is_map = (lst->items && !lst->items->empty());
+                        if (is_map) {
+                            for (const auto& item : *lst->items) {
+                                auto* pair = item.get_if<Tuple>();
+                                if (!pair || !pair->items || pair->items->size() != 2 || !(*pair->items)[0].get_if<std::string>()) {
+                                    is_map = false;
+                                    break;
+                                }
+                            }
+                        }
+                        if (is_map) {
+                            result += "{";
+                            for (size_t i = 0; i < lst->items->size(); ++i) {
+                                if (i > 0) result += ",";
+                                auto* pair = (*lst->items)[i].get_if<Tuple>();
+                                auto* k = (*pair->items)[0].get_if<std::string>();
+                                result += "\"" + *k + "\":";
+                                serialize((*pair->items)[1]);
+                            }
+                            result += "}";
+                        } else {
+                            result += "[";
+                            if (lst->items) {
+                                for (size_t i = 0; i < lst->items->size(); ++i) {
+                                    if (i > 0) result += ",";
+                                    serialize((*lst->items)[i]);
+                                }
+                            }
+                            result += "]";
+                        }
+                    }
+                };
+                serialize(val);
+                x_regs[0] = Term(result);
+                last_result = x_regs[0];
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "Json", "dekode") || is_mod_fn(fn_name, "Json", "decode")) {
+                std::string s = clean_str(x_regs[0]);
+                size_t pos = 0;
+
+                std::function<Term()> parse = [&]() -> Term {
+                    while (pos < s.size() && std::isspace((unsigned char)s[pos])) pos++;
+                    if (pos >= s.size()) return Term(Atom{"nil"});
+                    char c = s[pos];
+                    if (c == '"') {
+                        pos++;
+                        std::string out;
+                        while (pos < s.size() && s[pos] != '"') {
+                            if (s[pos] == '\\' && pos + 1 < s.size()) {
+                                pos++;
+                                char esc = s[pos];
+                                if (esc == 'n') out += '\n';
+                                else if (esc == 't') out += '\t';
+                                else if (esc == 'r') out += '\r';
+                                else if (esc == '"') out += '"';
+                                else if (esc == '\\') out += '\\';
+                                else out += esc;
+                            } else out += s[pos];
+                            pos++;
+                        }
+                        if (pos < s.size()) pos++;
+                        return Term(out);
+                    }
+                    if (c == '{') {
+                        pos++;
+                        std::vector<Term> entries;
+                        while (true) {
+                            while (pos < s.size() && std::isspace((unsigned char)s[pos])) pos++;
+                            if (pos >= s.size()) break;
+                            if (s[pos] == '}') { pos++; break; }
+                            if (s[pos] == ',') { pos++; continue; }
+                            Term key = parse();
+                            while (pos < s.size() && std::isspace((unsigned char)s[pos])) pos++;
+                            if (pos < s.size() && s[pos] == ':') pos++;
+                            Term val = parse();
+                            std::vector<Term> pair = { key, val };
+                            entries.push_back(Term(Tuple{std::make_shared<const std::vector<Term>>(std::move(pair))}));
+                        }
+                        return Term(List{std::make_shared<const std::vector<Term>>(std::move(entries))});
+                    }
+                    if (c == '[') {
+                        pos++;
+                        std::vector<Term> items;
+                        while (true) {
+                            while (pos < s.size() && std::isspace((unsigned char)s[pos])) pos++;
+                            if (pos >= s.size()) break;
+                            if (s[pos] == ']') { pos++; break; }
+                            if (s[pos] == ',') { pos++; continue; }
+                            items.push_back(parse());
+                        }
+                        return Term(List{std::make_shared<const std::vector<Term>>(std::move(items))});
+                    }
+                    if (std::isdigit((unsigned char)c) || c == '-') {
+                        size_t start = pos;
+                        if (c == '-') pos++;
+                        while (pos < s.size() && std::isdigit((unsigned char)s[pos])) pos++;
+                        bool is_double = false;
+                        if (pos < s.size() && s[pos] == '.') {
+                            is_double = true;
+                            pos++;
+                            while (pos < s.size() && std::isdigit((unsigned char)s[pos])) pos++;
+                        }
+                        std::string num = s.substr(start, pos - start);
+                        if (is_double) return Term(std::stod(num));
+                        return Term((std::int64_t)std::stoll(num));
+                    }
+                    if (s.compare(pos, 4, "true") == 0) { pos += 4; return Term(Atom{"benar"}); }
+                    if (s.compare(pos, 5, "false") == 0) { pos += 5; return Term(Atom{"salah"}); }
+                    if (s.compare(pos, 4, "null") == 0) { pos += 4; return Term(Atom{"nil"}); }
+                    return Term(Atom{"nil"});
+                };
+                x_regs[0] = parse();
+                last_result = x_regs[0];
+                return true;
+            }
+
+            // === Fase 12.1: Json.enkode / Json.dekode ===
+            if (is_mod_fn(fn_name, "Json", "enkode") || is_mod_fn(fn_name, "Json", "encode")) {
+                Term val = x_regs[0];
+                std::string result;
+
+                std::function<void(const Term&)> serialize = [&](const Term& t) {
+                    if (auto* s = t.get_if<std::string>()) {
+                        result += "\"";
+                        for (char c : *s) {
+                            if (c == '"') result += "\\\"";
+                            else if (c == '\\') result += "\\\\";
+                            else if (c == '\n') result += "\\n";
+                            else if (c == '\t') result += "\\t";
+                            else if (c == '\r') result += "\\r";
+                            else result += c;
+                        }
+                        result += "\"";
+                    } else if (std::holds_alternative<std::int64_t>(t.value())) {
+                        result += std::to_string(std::get<std::int64_t>(t.value()));
+                    } else if (std::holds_alternative<double>(t.value())) {
+                        result += std::to_string(std::get<double>(t.value()));
+                    } else if (is_atom(t, "benar")) {
+                        result += "true";
+                    } else if (is_atom(t, "salah") || is_atom(t, "nil")) {
+                        result += "null";
+                    } else if (auto* tup = t.get_if<Tuple>()) {
+                        result += "[";
+                        if (tup->items) {
+                            for (size_t i = 0; i < tup->items->size(); ++i) {
+                                if (i > 0) result += ",";
+                                serialize((*tup->items)[i]);
+                            }
+                        }
+                        result += "]";
+                    } else if (auto* lst = t.get_if<List>()) {
+                        bool is_map = (lst->items && !lst->items->empty());
+                        if (is_map) {
+                            for (const auto& item : *lst->items) {
+                                auto* pair = item.get_if<Tuple>();
+                                if (!pair || !pair->items || pair->items->size() != 2 || !(*pair->items)[0].get_if<std::string>()) {
+                                    is_map = false;
+                                    break;
+                                }
+                            }
+                        }
+                        if (is_map) {
+                            result += "{";
+                            for (size_t i = 0; i < lst->items->size(); ++i) {
+                                if (i > 0) result += ",";
+                                auto* pair = (*lst->items)[i].get_if<Tuple>();
+                                auto* k = (*pair->items)[0].get_if<std::string>();
+                                result += "\"" + *k + "\":";
+                                serialize((*pair->items)[1]);
+                            }
+                            result += "}";
+                        } else {
+                            result += "[";
+                            if (lst->items) {
+                                for (size_t i = 0; i < lst->items->size(); ++i) {
+                                    if (i > 0) result += ",";
+                                    serialize((*lst->items)[i]);
+                                }
+                            }
+                            result += "]";
+                        }
+                    }
+                };
+                serialize(val);
+                x_regs[0] = Term(result);
+                last_result = x_regs[0];
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "Json", "dekode") || is_mod_fn(fn_name, "Json", "decode")) {
+                std::string s = clean_str(x_regs[0]);
+                size_t pos = 0;
+
+                std::function<Term()> parse = [&]() -> Term {
+                    while (pos < s.size() && std::isspace((unsigned char)s[pos])) pos++;
+                    if (pos >= s.size()) return Term(Atom{"nil"});
+                    char c = s[pos];
+                    if (c == '"') {
+                        pos++;
+                        std::string out;
+                        while (pos < s.size() && s[pos] != '"') {
+                            if (s[pos] == '\\' && pos + 1 < s.size()) {
+                                pos++;
+                                char esc = s[pos];
+                                if (esc == 'n') out += '\n';
+                                else if (esc == 't') out += '\t';
+                                else if (esc == 'r') out += '\r';
+                                else if (esc == '"') out += '"';
+                                else if (esc == '\\') out += '\\';
+                                else out += esc;
+                            } else out += s[pos];
+                            pos++;
+                        }
+                        if (pos < s.size()) pos++;
+                        return Term(out);
+                    }
+                    if (c == '{') {
+                        pos++;
+                        std::vector<Term> entries;
+                        while (true) {
+                            while (pos < s.size() && std::isspace((unsigned char)s[pos])) pos++;
+                            if (pos >= s.size()) break;
+                            if (s[pos] == '}') { pos++; break; }
+                            if (s[pos] == ',') { pos++; continue; }
+                            Term key = parse();
+                            while (pos < s.size() && std::isspace((unsigned char)s[pos])) pos++;
+                            if (pos < s.size() && s[pos] == ':') pos++;
+                            Term val = parse();
+                            std::vector<Term> pair = { key, val };
+                            entries.push_back(Term(Tuple{std::make_shared<const std::vector<Term>>(std::move(pair))}));
+                        }
+                        return Term(List{std::make_shared<const std::vector<Term>>(std::move(entries))});
+                    }
+                    if (c == '[') {
+                        pos++;
+                        std::vector<Term> items;
+                        while (true) {
+                            while (pos < s.size() && std::isspace((unsigned char)s[pos])) pos++;
+                            if (pos >= s.size()) break;
+                            if (s[pos] == ']') { pos++; break; }
+                            if (s[pos] == ',') { pos++; continue; }
+                            items.push_back(parse());
+                        }
+                        return Term(List{std::make_shared<const std::vector<Term>>(std::move(items))});
+                    }
+                    if (std::isdigit((unsigned char)c) || c == '-') {
+                        size_t start = pos;
+                        if (c == '-') pos++;
+                        while (pos < s.size() && std::isdigit((unsigned char)s[pos])) pos++;
+                        bool is_double = false;
+                        if (pos < s.size() && s[pos] == '.') {
+                            is_double = true;
+                            pos++;
+                            while (pos < s.size() && std::isdigit((unsigned char)s[pos])) pos++;
+                        }
+                        std::string num = s.substr(start, pos - start);
+                        if (is_double) return Term(std::stod(num));
+                        return Term((std::int64_t)std::stoll(num));
+                    }
+                    if (s.compare(pos, 4, "true") == 0) { pos += 4; return Term(Atom{"benar"}); }
+                    if (s.compare(pos, 5, "false") == 0) { pos += 5; return Term(Atom{"salah"}); }
+                    if (s.compare(pos, 4, "null") == 0) { pos += 4; return Term(Atom{"nil"}); }
+                    return Term(Atom{"nil"});
+                };
+                x_regs[0] = parse();
+                last_result = x_regs[0];
+                return true;
+            }
+
             auto get_seq_size = [](const Term& t) -> int64_t {
                 if (auto* lst = t.get_if<List>()) {
                     return lst->items ? static_cast<int64_t>(lst->items->size()) : 0;
