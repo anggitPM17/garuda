@@ -9,6 +9,7 @@
 #include "../stdlib/string.hpp"
 #include "../net/tls.hpp"
 #include "../net/event_loop.hpp"
+#include "../stdlib/ets.hpp"
 
 #include <algorithm>
 #include <array>
@@ -2882,6 +2883,76 @@ private:
                     x_regs[0] = Term(Atom{"dilarang"});
                 } else {
                     x_regs[0] = Term(Atom{"sukses"});
+                }
+                last_result = x_regs[0];
+                return true;
+            }
+
+            // Et s.baru() / Ets.new() / Ets.create()
+            if (is_mod_fn(fn_name, "Ets", "baru") || is_mod_fn(fn_name, "Ets", "new") ||
+                is_mod_fn(fn_name, "Ets", "buat") || is_mod_fn(fn_name, "Ets", "create")) {
+                std::int64_t tid = garuda::beam::stdlib::EtsManager::instance().create_table();
+                x_regs[0] = Term(tid);
+                last_result = x_regs[0];
+                return true;
+            }
+
+            // Et s.sisip(table_id, key, val) / Ets.insert(table_id, key, val)
+            if (is_mod_fn(fn_name, "Ets", "sisip") || is_mod_fn(fn_name, "Ets", "insert")) {
+                std::int64_t tid = get_int_val(x_regs[0]);
+                std::string key = clean_str(x_regs[1]);
+                Term val = x_regs[2];
+
+                auto table = garuda::beam::stdlib::EtsManager::instance().get_table(tid);
+                if (table) {
+                    table->insert(key, val);
+                    x_regs[0] = Term(Atom{"benar"});
+                } else {
+                    x_regs[0] = Term(Atom{"salah"});
+                }
+                last_result = x_regs[0];
+                return true;
+            }
+
+            // Et s.cari(table_id, key) / Ets.lookup(table_id, key)
+            if (is_mod_fn(fn_name, "Ets", "cari") || is_mod_fn(fn_name, "Ets", "lookup")) {
+                std::int64_t tid = get_int_val(x_regs[0]);
+                std::string key = clean_str(x_regs[1]);
+
+                auto table = garuda::beam::stdlib::EtsManager::instance().get_table(tid);
+                if (table) {
+                    x_regs[0] = table->lookup(key);
+                } else {
+                    x_regs[0] = Term(Atom{"nil"});
+                }
+                last_result = x_regs[0];
+                return true;
+            }
+
+            // Et s.hapus(table_id, key) / Ets.delete(table_id, key)
+            if (is_mod_fn(fn_name, "Ets", "hapus") || is_mod_fn(fn_name, "Ets", "delete")) {
+                std::int64_t tid = get_int_val(x_regs[0]);
+                std::string key = clean_str(x_regs[1]);
+
+                auto table = garuda::beam::stdlib::EtsManager::instance().get_table(tid);
+                if (table && table->erase(key)) {
+                    x_regs[0] = Term(Atom{"benar"});
+                } else {
+                    x_regs[0] = Term(Atom{"salah"});
+                }
+                last_result = x_regs[0];
+                return true;
+            }
+
+            // Et s.semua(table_id) / Ets.all(table_id)
+            if (is_mod_fn(fn_name, "Ets", "semua") || is_mod_fn(fn_name, "Ets", "all")) {
+                std::int64_t tid = get_int_val(x_regs[0]);
+
+                auto table = garuda::beam::stdlib::EtsManager::instance().get_table(tid);
+                if (table) {
+                    x_regs[0] = table->all();
+                } else {
+                    x_regs[0] = Term(List{});
                 }
                 last_result = x_regs[0];
                 return true;

@@ -19,32 +19,47 @@ int main() {
     std::cout << "GARUDA COMPILER — FASE 11 IN-MEMORY TABLE (ETS) TEST SUITE\n";
     std::cout << "=======================================================\n\n";
 
-    // Test 1: Et s.baru() -> assert table ID > 0
-    auto r1 = engine.eval("modul TEts1 fungsi utama() -> Et s.baru() rampung");
+    // Test 1: Ets.baru() -> assert table ID > 0
+    auto r1 = engine.eval("modul TEts1 fungsi utama() -> Ets.baru() rampung");
     std::int64_t tid = 0;
     if (r1.has_value() && std::holds_alternative<std::int64_t>(r1->value())) {
         tid = std::get<std::int64_t>(r1->value());
     }
 
     if (tid > 0) {
-        std::cout << "[Test 1] Et s.baru() -> Created Table ID: " << tid << " [PASS]\n";
+        std::cout << "[Test 1] Ets.baru() -> Created Table ID: " << tid << " [PASS]\n";
     } else {
-        std::cout << "[Test 1] Et s.baru() -> [FAIL] Expected positive table ID, got 0\n";
+        std::cout << "[Test 1] Ets.baru() -> [FAIL] Expected positive table ID, got 0\n";
         failures++;
     }
 
-    // Test 2: Et s.sisip(T, "user_1", "Anggit") then Et s.cari(T, "user_1") -> assert "Anggit"
-    std::string code2 = "modul TEts2 fungsi utama() -> T = Et s.baru(), Et s.sisip(T, 'user_1', 'Anggit'), Et s.cari(T, 'user_1') rampung";
+    // Test 2: Ets.sisip(T, "user_1", "Anggit") then Ets.cari(T, "user_1") -> assert "Anggit"
+    std::string code2 = R"(
+        modul TEts2
+        fungsi utama() ->
+            T = Ets.baru()
+            Ets.sisip(T, "user_1", "Anggit")
+            Ets.cari(T, "user_1")
+        rampung
+    )";
     auto r2 = engine.eval(code2);
     if (r2.has_value() && std::holds_alternative<std::string>(r2->value()) && std::get<std::string>(r2->value()) == "Anggit") {
-        std::cout << "[Test 2] Et s.sisip & Et s.cari -> Matched Value 'Anggit' [PASS]\n";
+        std::cout << "[Test 2] Ets.sisip & Ets.cari -> Matched Value 'Anggit' [PASS]\n";
     } else {
-        std::cout << "[Test 2] Et s.sisip & Et s.cari -> [FAIL] Expected 'Anggit'\n";
+        std::cout << "[Test 2] Ets.sisip & Ets.cari -> [FAIL] Expected 'Anggit'\n";
         failures++;
     }
 
     // Test 3: Overwrite value with same key -> assert updated value "Tebet"
-    std::string code3 = "modul TEts3 fungsi utama() -> T = Et s.baru(), Et s.sisip(T, 'kota', 'Jakarta'), Et s.sisip(T, 'kota', 'Tebet'), Et s.cari(T, 'kota') rampung";
+    std::string code3 = R"(
+        modul TEts3
+        fungsi utama() ->
+            T = Ets.baru()
+            Ets.sisip(T, "kota", "Jakarta")
+            Ets.sisip(T, "kota", "Tebet")
+            Ets.cari(T, "kota")
+        rampung
+    )";
     auto r3 = engine.eval(code3);
     if (r3.has_value() && std::holds_alternative<std::string>(r3->value()) && std::get<std::string>(r3->value()) == "Tebet") {
         std::cout << "[Test 3] Overwrite Key with Updated Value 'Tebet' [PASS]\n";
@@ -53,13 +68,21 @@ int main() {
         failures++;
     }
 
-    // Test 4: Et s.hapus(T, "user_1") -> assert Et s.cari returns nil
-    std::string code4 = "modul TEts4 fungsi utama() -> T = Et s.baru(), Et s.sisip(T, 'key1', 'val1'), Et s.hapus(T, 'key1'), Et s.cari(T, 'key1') rampung";
+    // Test 4: Ets.hapus(T, "user_1") -> assert Ets.cari returns nil
+    std::string code4 = R"(
+        modul TEts4
+        fungsi utama() ->
+            T = Ets.baru()
+            Ets.sisip(T, "key1", "val1")
+            Ets.hapus(T, "key1")
+            Ets.cari(T, "key1")
+        rampung
+    )";
     auto r4 = engine.eval(code4);
     if (r4.has_value() && garuda::beam::is_atom(*r4, "nil")) {
-        std::cout << "[Test 4] Et s.hapus Key -> Lookup returns nil [PASS]\n";
+        std::cout << "[Test 4] Ets.hapus Key -> Lookup returns nil [PASS]\n";
     } else {
-        std::cout << "[Test 4] Et s.hapus Key -> [FAIL] Expected nil after delete\n";
+        std::cout << "[Test 4] Ets.hapus Key -> [FAIL] Expected nil after delete\n";
         failures++;
     }
 
