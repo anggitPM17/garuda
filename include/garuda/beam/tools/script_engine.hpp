@@ -8,6 +8,7 @@
 #include "../io/filesystem.hpp"
 #include "../stdlib/string.hpp"
 #include "../net/tls.hpp"
+#include "../net/event_loop.hpp"
 
 #include <algorithm>
 #include <array>
@@ -2482,6 +2483,98 @@ private:
 
                     CLOSE_SOCKET(server_fd);
                 }).detach();
+
+                x_regs[0] = Term(Atom{"benar"});
+                last_result = x_regs[0];
+                return true;
+            }
+
+            // Server.mulai_async_event_loop(port, handler_fn, max_reqs)
+            if (is_mod_fn(fn_name, "Server", "mulai_async_event_loop") || is_mod_fn(fn_name, "Server", "start_async_event_loop")) {
+                int64_t port = get_int_val(x_regs[0]);
+                if (port <= 0) port = 9095;
+
+                #ifdef _WIN32
+                static bool wsa_init_ev = false;
+                if (!wsa_init_ev) {
+                    WSADATA wsaData;
+                    WSAStartup(MAKEWORD(2, 2), &wsaData);
+                    wsa_init_ev = true;
+                }
+                #endif
+
+                socket_t server_fd = socket(AF_INET, SOCK_STREAM, 0);
+                if (server_fd == INVALID_SOCKET_VAL) {
+                    x_regs[0] = Term(Atom{"salah"});
+                    last_result = x_regs[0];
+                    return true;
+                }
+
+                int opt = 1;
+                #ifdef _WIN32
+                setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, (const char*)&opt, sizeof(opt));
+                u_long mode = 1;
+                ioctlsocket(server_fd, FIONBIO, &mode);
+                #else
+                setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+                fcntl(server_fd, F_SETFL, O_NONBLOCK);
+                #endif
+
+                sockaddr_in address;
+                std::memset(&address, 0, sizeof(address));
+                address.sin_family = AF_INET;
+                address.sin_addr.s_addr = INADDR_ANY;
+                address.sin_port = htons(static_cast<unsigned short>(port));
+
+                if (bind(server_fd, (struct sockaddr*)&address, sizeof(address)) < 0 || listen(server_fd, 1024) < 0) {
+                    CLOSE_SOCKET(server_fd);
+                    x_regs[0] = Term(Atom{"salah"});
+                    last_result = x_regs[0];
+                    return true;
+                }
+
+                static auto ev_loop = std::make_shared<garuda::beam::net::EventLoop>();
+
+                ev_loop->add_socket(server_fd, [server_fd](socket_t sfd) {
+                    while (true) {
+                        sockaddr_in client_addr;
+                        #ifdef _WIN32
+                        int addrlen = sizeof(client_addr);
+                        #else
+                        socklen_t addrlen = sizeof(client_addr);
+                        #endif
+
+                        socket_t cfd = accept(server_fd, (struct sockaddr*)&client_addr, &addrlen);
+                        if (cfd == INVALID_SOCKET_VAL) break;
+
+                        #ifdef _WIN32
+                        u_long m = 1;
+                        ioctlsocket(cfd, FIONBIO, &m);
+                        #else
+                        fcntl(cfd, F_SETFL, O_NONBLOCK);
+                        #endif
+
+                        ev_loop->add_socket(cfd, [](socket_t client_sfd) {
+                            char buf[1024] = {0};
+                            int r = recv(client_sfd, buf, 1023, 0);
+                            if (r > 0) {
+                                std::string req_str(buf, r);
+                                std::string resp = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: 12\r\n\r\nEVENTLOOP OK";
+                                send(client_sfd, resp.data(), static_cast<int>(resp.length()), 0);
+
+                                if (req_str.find("Connection: close") != std::string::npos) {
+                                    ev_loop->remove_socket(client_sfd);
+                                    CLOSE_SOCKET(client_sfd);
+                                }
+                            } else {
+                                ev_loop->remove_socket(client_sfd);
+                                CLOSE_SOCKET(client_sfd);
+                            }
+                        });
+                    }
+                });
+
+                ev_loop->start_in_thread();
 
                 x_regs[0] = Term(Atom{"benar"});
                 last_result = x_regs[0];
