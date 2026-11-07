@@ -1,5 +1,5 @@
 // =====================================================================
-// GARUDA COMPILER — FASE 11.3 EVENT-LOOP BACKEND TEST SUITE (RED -> GREEN)
+// GARUDA COMPILER — FASE 11.3 EVENT-LOOP BACKEND TEST SUITE (6 TESTS)
 // =====================================================================
 
 #include "../include/garuda/beam/net/event_loop.hpp"
@@ -63,7 +63,8 @@ static bool make_socketpair(socket_t& out_a, socket_t& out_b) {
     socket_t client = socket(AF_INET, SOCK_STREAM, 0);
     if (client == INVALID_SOCKET_VAL) { CLOSE_SOCKET(listener); return false; }
     if (connect(client, (sockaddr*)&a, sizeof(a)) < 0) {
-        CLOSE_SOCKET(client); CLOSE_SOCKET(listener); return false; }
+        CLOSE_SOCKET(client); CLOSE_SOCKET(listener); return false;
+    }
     socket_t server = accept(listener, nullptr, nullptr);
     CLOSE_SOCKET(listener);
     if (server == INVALID_SOCKET_VAL) { CLOSE_SOCKET(client); return false; }
@@ -75,7 +76,7 @@ static bool make_socketpair(socket_t& out_a, socket_t& out_b) {
 
 int main() {
     std::cout << "=======================================================\n";
-    std::cout << "GARUDA COMPILER — FASE 11.3 EVENT-LOOP BACKEND SUITE\n";
+    std::cout << "GARUDA COMPILER — FASE 11.3 EVENT-LOOP BACKEND SUITE (6 TESTS)\n";
     std::cout << "=======================================================\n\n";
 
     // ---------------------------------------------------------------
@@ -264,6 +265,92 @@ int main() {
     }
 
     // ---------------------------------------------------------------
+    // Test 6: TRUE concurrent add/remove from two threads racing
+    //         while the loop is running. Proves mutex correctness
+    //         under simultaneous mutation (not just sequential).
+    //         Placed BEFORE Test 5 cumulative gate.
+    // ---------------------------------------------------------------
+    {
+        EventLoop loop;
+        loop.start_in_thread();
+
+        std::atomic<bool> stop{false};
+        std::atomic<int>  added{0};
+        std::atomic<int>  removed{0};
+        std::vector<socket_t> shared_a, shared_b;
+        std::mutex vec_mutex;
+
+        // Thread 1: continuously add socketpair fds to the loop
+        std::thread adder([&]() {
+            for (int i = 0; i < 100 && !stop.load(); ++i) {
+                socket_t x = INVALID_SOCKET_VAL, y = INVALID_SOCKET_VAL;
+                if (!make_socketpair(x, y)) continue;
+                loop.add_socket(x, [](socket_t){});
+                {
+                    std::lock_guard<std::mutex> lk(vec_mutex);
+                    shared_a.push_back(x);
+                    shared_b.push_back(y);
+                }
+                added++;
+            }
+        });
+
+        // Thread 2: continuously remove socketpair fds from the loop
+        //         WHILE adder is still running (true concurrency)
+        std::thread remover([&]() {
+            while (removed.load() < 50 && !stop.load()) {
+                socket_t fd = INVALID_SOCKET_VAL, peer = INVALID_SOCKET_VAL;
+                {
+                    std::lock_guard<std::mutex> lk(vec_mutex);
+                    if (!shared_a.empty()) {
+                        fd = shared_a.back();
+                        peer = shared_b.back();
+                        shared_a.pop_back();
+                        shared_b.pop_back();
+                    }
+                }
+                if (fd == INVALID_SOCKET_VAL) {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+                    continue;
+                }
+                loop.remove_socket(fd);
+                CLOSE_SOCKET(fd);
+                CLOSE_SOCKET(peer);
+                removed++;
+            }
+        });
+
+        // Let both threads run for up to 3 seconds
+        auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(3);
+        while ((added.load() < 100 || removed.load() < 50)
+               && std::chrono::steady_clock::now() < deadline) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(5));
+        }
+        stop = true;
+        adder.join();
+        remover.join();
+
+        // Final cleanup of any remaining fds
+        loop.stop();
+        {
+            std::lock_guard<std::mutex> lk(vec_mutex);
+            for (size_t i = 0; i < shared_a.size(); ++i) {
+                loop.remove_socket(shared_a[i]);
+                CLOSE_SOCKET(shared_a[i]);
+                CLOSE_SOCKET(shared_b[i]);
+            }
+        }
+
+        CHECK(added.load() >= 80, ("Test 6 added: " + std::to_string(added.load()) + " >= 80").c_str());
+        CHECK(removed.load() >= 40, ("Test 6 removed: " + std::to_string(removed.load()) + " >= 40").c_str());
+        CHECK(added.load() - removed.load() == (int)(shared_a.size()), "Test 6 counter consistency: added - removed == remaining");
+        if (g_failures == 0)
+            std::cout << "[Test 6] True concurrent add/remove race "
+                      << "(added=" << added.load()
+                      << ", removed=" << removed.load() << ") [PASS]\n";
+    }
+
+    // ---------------------------------------------------------------
     // Test 5: Cumulative regression gate (Fase 11 backend still works)
     //         Prior failures MUST cascade here.
     // ---------------------------------------------------------------
@@ -272,23 +359,22 @@ int main() {
         CHECK(all_prior_pass, "Test 5 cumulative: prior tests must all pass");
 
         if (all_prior_pass) {
-            // Sanity: EventLoop still has backend_name()
             EventLoop l;
             CHECK(l.backend_name() != nullptr && std::strlen(l.backend_name()) > 0,
                   "Test 5 backend_name non-empty");
-            std::cout << "[Test 5] Cumulative gate: all backend tests PASS "
-                         "(backend=" << l.backend_name() << ") [PASS]\n";
+            std::cout << "[Test 5] Cumulative gate: all backend tests (incl. Test 6) PASS "
+                      << "(backend=" << l.backend_name() << ") [PASS]\n";
         } else {
             std::cout << "[Test 5] Cumulative gate FAILED (prior tests failed)\n";
         }
     }
 
     if (g_failures > 0) {
-        std::cout << "\n❌ " << g_failures << "/5 TESTS FAILED ON STUB CODE!\n";
+        std::cout << "\n❌ " << g_failures << "/6 TESTS FAILED!\n";
         return 1;
     }
     std::cout << "\n========================================\n";
-    std::cout << "🎉 ALL 5 FASE 11.3 EVENT-LOOP BACKEND TESTS PASSED!\n";
+    std::cout << "🎉 ALL 6 FASE 11.3 EVENT-LOOP BACKEND TESTS PASSED!\n";
     std::cout << "========================================\n";
     return 0;
 }
