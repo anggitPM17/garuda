@@ -209,6 +209,9 @@ target_link_libraries(garuda_websocket_deflate_tests PRIVATE garuda)
 add_executable(garuda_http2_tests tests/test_http2.cpp)
 target_link_libraries(garuda_http2_tests PRIVATE garuda)
 
+add_executable(garuda_ets_tests tests/test_ets.cpp)
+target_link_libraries(garuda_ets_tests PRIVATE garuda)
+
 add_executable(garuda_default_max_reqs_tests tests/test_default_max_reqs.cpp)
 target_link_libraries(garuda_default_max_reqs_tests PRIVATE garuda)
 
