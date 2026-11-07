@@ -6,29 +6,79 @@ on:
     tags: [ 'v*' ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   build-and-test:
     name: Build & Test (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
 
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-    - name: Configure CMake
-      run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+      - name: Configure CMake (POSIX)
+        if: matrix.os != 'windows-latest'
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
 
-    - name: Build All Targets
-      run: cmake --build build --config Release
+      - name: Configure CMake (Windows)
+        if: matrix.os == 'windows-latest'
+        run: cmake -B build
 
-    - name: Run EventLoop Backend Tests
-      run: |
-        ${{ matrix.os == 'windows-latest' && '.\build\Release\garuda_event_loop_backend_tests.exe' || './build/garuda_event_loop_backend_tests' }}
+      - name: Build EventLoop Backend Tests + Benchmark
+        run: cmake --build build --config Release --target garuda_event_loop_backend_tests bench_event_loop_backend
 
-    - name: Run EventLoop Benchmark
-      run: |
-        ${{ matrix.os == 'windows-latest' && '.\build\Release\bench_event_loop_backend.exe 1000 3' || './build/bench_event_loop_backend 10000 3' }}
+      - name: Run Backend Test Suite (5/5 PASS required)
+        shell: bash
+        run: |
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            ./build/Release/garuda_event_loop_backend_tests.exe
+          else
+            ./build/garuda_event_loop_backend_tests
+          fi
+
+      - name: Benchmark — Linux (epoll, 10k socketpairs, must be >= 200k ops/s)
+        if: matrix.os == 'ubuntu-latest'
+        shell: bash
+        run: |
+          set -e
+          ./build/bench_event_loop_backend 10000 3 | tee bench_output.txt
+          THROUGHPUT=$(grep -oE '[0-9]+(\.[0-9]+)? ops/s' bench_output.txt | head -1 | awk '{print int($1)}')
+          echo "epoll peak throughput = $THROUGHPUT ops/s"
+          if [ -z "$THROUGHPUT" ] || [ "$THROUGHPUT" -lt 200000 ]; then
+            echo "::error::epoll throughput $THROUGHPUT < 200000 ops/s (HARD GATE FAILED)"
+            exit 1
+          fi
+          echo "✅ epoll throughput gate passed"
+
+      - name: Benchmark — macOS (kqueue, 10k socketpairs, must be >= 200k ops/s)
+        if: matrix.os == 'macos-latest'
+        shell: bash
+        run: |
+          set -e
+          ./build/bench_event_loop_backend 10000 3 | tee bench_output.txt
+          THROUGHPUT=$(grep -oE '[0-9]+(\.[0-9]+)? ops/s' bench_output.txt | head -1 | awk '{print int($1)}')
+          echo "kqueue peak throughput = $THROUGHPUT ops/s"
+          if [ -z "$THROUGHPUT" ] || [ "$THROUGHPUT" -lt 200000 ]; then
+            echo "::error::kqueue throughput $THROUGHPUT < 200000 ops/s (HARD GATE FAILED)"
+            exit 1
+          fi
+          echo "✅ kqueue throughput gate passed"
+
+      - name: Benchmark — Windows (poll/WSAPoll, 1k socketpairs, informational only)
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          .\build\Release\bench_event_loop_backend.exe 1000 3
+
+      - name: Upload benchmark log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bench-log-${{ matrix.os }}
+          path: bench_output.txt
+          if-no-files-found: ignore
