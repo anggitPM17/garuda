@@ -224,6 +224,9 @@ target_link_libraries(garuda_json_bif_tests PRIVATE garuda)
 add_executable(garuda_http_client_bif_tests tests/test_http_client_bif.cpp)
 target_link_libraries(garuda_http_client_bif_tests PRIVATE garuda)
 
+add_executable(garuda_env_bif_tests tests/test_env_bif.cpp)
+target_link_libraries(garuda_env_bif_tests PRIVATE garuda)
+
 add_executable(garuda_default_max_reqs_tests tests/test_default_max_reqs.cpp)
 target_link_libraries(garuda_default_max_reqs_tests PRIVATE garuda)
 
