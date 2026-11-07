@@ -25,7 +25,7 @@ int main() {
     engine.eval(R"(
         modul THttpCli
         fungsi utama() ->
-            Server.mulai_async(9191, "public")
+            Server.mulai_async_statis(9191, "public")
         rampung
     )");
     std::this_thread::sleep_for(std::chrono::milliseconds(300));

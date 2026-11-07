@@ -3111,6 +3111,72 @@ private:
                 return true;
             }
 
+            // === Fase 12.2: Http.ambil / Http.kirim ===
+            if (is_mod_fn(fn_name, "Http", "ambil") || is_mod_fn(fn_name, "Http", "get")) {
+                std::string url = clean_str(x_regs[0]);
+                try {
+                    size_t proto_end = url.find("://");
+                    if (proto_end == std::string::npos) {
+                        x_regs[0] = Term(Atom{"salah"});
+                        last_result = x_regs[0];
+                        return true;
+                    }
+                    std::string rest = url.substr(proto_end + 3);
+                    size_t slash = rest.find('/');
+                    std::string host_port = (slash == std::string::npos) ? rest : rest.substr(0, slash);
+                    std::string path = (slash == std::string::npos) ? "/" : rest.substr(slash);
+                    size_t colon = host_port.find(':');
+                    std::string host = (colon == std::string::npos) ? host_port : host_port.substr(0, colon);
+                    int port = (colon == std::string::npos) ? 80 : std::stoi(host_port.substr(colon + 1));
+
+                    httplib::Client cli(host, port);
+                    cli.set_connection_timeout(5, 0);
+                    auto res = cli.Get(path.c_str());
+                    if (res) {
+                        x_regs[0] = Term(res->body);
+                    } else {
+                        x_regs[0] = Term(Atom{"salah"});
+                    }
+                } catch (...) {
+                    x_regs[0] = Term(Atom{"salah"});
+                }
+                last_result = x_regs[0];
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "Http", "kirim") || is_mod_fn(fn_name, "Http", "post")) {
+                std::string url = clean_str(x_regs[0]);
+                std::string body = (x_regs.size() > 1) ? clean_str(x_regs[1]) : "";
+                try {
+                    size_t proto_end = url.find("://");
+                    if (proto_end == std::string::npos) {
+                        x_regs[0] = Term(Atom{"salah"});
+                        last_result = x_regs[0];
+                        return true;
+                    }
+                    std::string rest = url.substr(proto_end + 3);
+                    size_t slash = rest.find('/');
+                    std::string host_port = (slash == std::string::npos) ? rest : rest.substr(0, slash);
+                    std::string path = (slash == std::string::npos) ? "/" : rest.substr(slash);
+                    size_t colon = host_port.find(':');
+                    std::string host = (colon == std::string::npos) ? host_port : host_port.substr(0, colon);
+                    int port = (colon == std::string::npos) ? 80 : std::stoi(host_port.substr(colon + 1));
+
+                    httplib::Client cli(host, port);
+                    cli.set_connection_timeout(5, 0);
+                    auto res = cli.Post(path.c_str(), body, "application/json");
+                    if (res) {
+                        x_regs[0] = Term(res->body);
+                    } else {
+                        x_regs[0] = Term(Atom{"salah"});
+                    }
+                } catch (...) {
+                    x_regs[0] = Term(Atom{"salah"});
+                }
+                last_result = x_regs[0];
+                return true;
+            }
+
             // === Fase 12.1: Json.enkode / Json.dekode ===
             if (is_mod_fn(fn_name, "Json", "enkode") || is_mod_fn(fn_name, "Json", "encode")) {
                 Term val = x_regs[0];
