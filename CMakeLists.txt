@@ -203,6 +203,9 @@ target_link_libraries(garuda_websocket_real_client_tests PRIVATE garuda)
 add_executable(garuda_async_event_loop_tests tests/test_async_event_loop.cpp)
 target_link_libraries(garuda_async_event_loop_tests PRIVATE garuda)
 
+add_executable(garuda_websocket_deflate_tests tests/test_websocket_deflate.cpp)
+target_link_libraries(garuda_websocket_deflate_tests PRIVATE garuda)
+
 add_executable(garuda_http2_tests tests/test_http2.cpp)
 target_link_libraries(garuda_http2_tests PRIVATE garuda)
 
