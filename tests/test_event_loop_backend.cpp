@@ -42,15 +42,15 @@ static void CHECK(bool cond, const char* msg) {
 // ---------------------------------------------------------------
 static bool make_socketpair(socket_t& out_a, socket_t& out_b) {
 #ifdef _WIN32
-    WSADATA wsa; WSAStartup(MAKEWORD(2,2), &wsa);
+    static bool wsa_init_sp = false;
+    if (!wsa_init_sp) {
+        WSADATA wsa; WSAStartup(MAKEWORD(2,2), &wsa);
+        wsa_init_sp = true;
+    }
+#endif
     socket_t listener = socket(AF_INET, SOCK_STREAM, 0);
     if (listener == INVALID_SOCKET_VAL) return false;
-    u_long m = 1; ioctlsocket(listener, FIONBIO, &m);
-#else
-    socket_t listener = socket(AF_INET, SOCK_STREAM, 0);
-    if (listener < 0) return false;
-    fcntl(listener, F_SETFL, O_NONBLOCK);
-#endif
+
     int opt = 1;
     setsockopt(listener, SOL_SOCKET, SO_REUSEADDR, (const char*)&opt, sizeof(opt));
     sockaddr_in a{}; a.sin_family = AF_INET;
@@ -63,8 +63,7 @@ static bool make_socketpair(socket_t& out_a, socket_t& out_b) {
     socket_t client = socket(AF_INET, SOCK_STREAM, 0);
     if (client == INVALID_SOCKET_VAL) { CLOSE_SOCKET(listener); return false; }
     if (connect(client, (sockaddr*)&a, sizeof(a)) < 0) {
-        CLOSE_SOCKET(client); CLOSE_SOCKET(listener); return false;
-    }
+        CLOSE_SOCKET(client); CLOSE_SOCKET(listener); return false; }
     socket_t server = accept(listener, nullptr, nullptr);
     CLOSE_SOCKET(listener);
     if (server == INVALID_SOCKET_VAL) { CLOSE_SOCKET(client); return false; }
