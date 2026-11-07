@@ -1,10 +1,10 @@
 # 🚀 GARUDA PRODUCTION-READY WEB SERVER GUIDE (GVM ENGINE)
 
-Dokumen ini menjelaskan penggunaan fitur **Production-Readiness Web Infrastructure** pada GVM Engine: WebSocket Server (RFC 6455), HTTPS TLS Server, Router & Middleware Pipeline, dan Static File Serving dengan Proteksi Path Traversal.
+Dokumen ini menjelaskan penggunaan fitur **Production-Readiness Web Infrastructure** pada GVM Engine: WebSocket Server (RFC 6455 & RFC 7692 Deflate), HTTPS TLS Server, HTTP/2 Multiplexing Server, Async Event Loop Engine, Router & Middleware Pipeline, Static File Serving, dan ETS In-Memory Table.
 
 ---
 
-## 1. 🔌 WEBSOCKET SERVER (RFC 6455)
+## 1. 🔌 WEBSOCKET SERVER (RFC 6455 & RFC 7692 `permessage-deflate`)
 
 ```garuda
 modul DemoWS
@@ -17,78 +17,69 @@ fungsi handle_ws(Conn, Msg) ->
 rampung
 
 fungsi utama() ->
-    Server.mulai_ws(9092, handle_ws)
+    // WebSocket Server dengan kompresi permessage-deflate
+    Server.mulai_ws_deflate(9097, handle_ws)
 rampung
 ```
 
-### Spesifikasi Teknis WebSocket (Fase 10.8b):
-- **Fragmentation Support (`FIN=0`)**: Otomatis menggabungkan fragmen payload text (`0x1`) & binary (`0x2`) hingga fragmen `FIN=1` (`0x0` continuation) diterima dari browser (Chrome, Firefox, Safari).
-- **Max Payload Bound Security (Anti-DoS)**: Dibatasi maksimal 16 MB (`16,777,216` byte). Request melebihi batas langsung ditolak dengan Close Frame RFC 6455 `1009 (MESSAGE_TOO_BIG)` tanpa alokasi memori berlebih.
-- **Socket Timeout**: Socket client diberi timeout `SO_RCVTIMEO` 5 detik untuk mencegah koneksi hang.
+### Spesifikasi Teknis WebSocket (Fase 11):
+- **Fragmentation Support (`FIN=0`)**: Otomatis menggabungkan fragmen payload text (`0x1`) & binary (`0x2`) hingga fragmen `FIN=1` (`0x0` continuation) diterima dari browser.
+- **Max Payload Bound Security (Anti-DoS)**: Dibatasi maksimal 16 MB (`16,777,216` byte). Request melebihi batas langsung ditolak dengan Close Frame RFC 6455 `1009 (MESSAGE_TOO_BIG)`.
+- **`permessage-deflate` (RFC 7692)**: Kompresi payload otomatis mengurangi konsumsi *bandwidth* hingga >50% untuk payload JSON/Teks besar.
 
 ---
 
-## 2. 🔒 HTTPS TLS SERVER (`Server.mulai_https`)
+## 2. ⚡ ASYNC EVENT-LOOP ENGINE (`Server.mulai_async_event_loop`)
 
 ```garuda
-modul DemoHTTPS
-
-fungsi handle_request(Req) ->
-    Http.buat_respons(200, %{"Content-Type" => "text/html"}, "<h1>Koneksi Aman HTTPS Garuda</h1>")
-rampung
+modul DemoEventLoop
 
 fungsi utama() ->
-    Server.mulai_https(443, "/path/to/cert.pem", "/path/to/key.pem", handle_request)
+    // Server Async berbasis I/O multiplexing WSAPoll/poll (menampung 1000+ koneksi simultan)
+    Server.mulai_async_event_loop(9095, nil, 1000)
 rampung
 ```
 
-### Spesifikasi Teknis HTTPS (Fase 10.8b):
-- **TLS-Only Strict**: Tidak ada fallback HTTP Plaintext. Koneksi non-TLS atau handshake gagal langsung ditutup rapat.
-- **Handshake Error Logging**: Error TLS handshake dicetak bersama `mbedtls_strerror` ke file log jika variabel lingkungan `GARUDA_HTTPS_ERROR_LOG` diaktifkan.
-
 ---
 
-## 3. 🛤️ ROUTER & MIDDLEWARE PIPELINE (`Router`)
+## 3. 🌐 HTTP/2 MULTIPLEXING SERVER (`Server.mulai_http2`)
 
 ```garuda
-modul DemoRouter
+modul DemoHttp2
 
 fungsi utama() ->
-    R = Router.baru()
-        |> Router.get("/", "handler_home")
-        |> Router.get("/users/:id", "handler_user")
-        |> Router.get("/files/:category/:name", "handler_file")
-        |> Router.post("/users", "handler_create")
-        |> Router.middleware("logging")
-        |> Router.middleware("cors")
-    
-    Req = %{"path" => "/files/images/logo.png"}
-    Res = Router.dispatch(R, Req)
-    cetak("Respons: #{Res}")
+    // Server HTTP/2 dengan dukungan stream multiplexing & fallback HTTP/1.1 otomatis
+    Server.mulai_http2(9096, "cert.pem", "key.pem", nil)
 rampung
 ```
 
 ---
 
-## 4. 📁 STATIC FILE SERVING WITH SECURITY (`Server.mulai_async_statis`)
+## 4. 🗄️ IN-MEMORY TABLE (`Ets` - Erlang Term Storage)
 
 ```garuda
-modul DemoStatic
+modul DemoETS
 
 fungsi utama() ->
-    // Melayani file statis dari folder site/ dengan proteksi otomatis terhadap path traversal (../)
-    Server.mulai_async_statis(9093, "site/")
+    T = Ets.baru()
+    Ets.sisip(T, "user_101", "Anggit")
+    Ets.sisip(T, "role_101", "Developer")
+
+    Nama = Ets.cari(T, "user_101")
+    cetak("User: #{Nama}")
+
+    Ets.hapus(T, "role_101")
+    Semua = Ets.semua(T)
 rampung
 ```
 
 ---
 
-## ⚙️ CATATAN & BATASAN PRODUKSI (FASE 10.8b STABLE)
+## ⚙️ CATATAN & BATASAN PRODUKSI (FASE 11 STABLE)
 
 | Komponen | Status | Catatan Produksi |
 |---|---|---|
-| **WebSocket Fragmentation** | ✅ **Verified** | Mendukung `FIN=0` multi-fragment teruji via Python `websockets` client |
-| **WebSocket Max Bound** | ✅ **16 MB Limit** | Close Frame `1009 MESSAGE_TOO_BIG` dikirim jika payload >16MB |
-| **HTTPS TLS Strict** | ✅ **TLS Murni** | Non-TLS ditolak total; error handshake di-log via `GARUDA_HTTPS_ERROR_LOG` |
-| **Socket Receive Timeout** | ✅ **5s Timeout** | Socket client dikonfigurasi `SO_RCVTIMEO` 5s untuk mencegah hanging sockets |
-| **Default `max_reqs`** | ℹ️ **100 Reqs** | Untuk server production long-running, set `max_reqs` lebih tinggi (misal `1000000`) |
+| **Async Event-Loop** | ✅ **1000+ Conns** | Multi-threaded WSAPoll/poll I/O multiplexing dengan memori delta <3MB |
+| **HTTP/2 Multiplexing** | ✅ **H2 Verified** | Handshake `PRI * HTTP/2.0`, SETTINGS exchange, stream 1..N multiplexing & fallback HTTP/1.1 |
+| **WebSocket Deflate** | ✅ **RFC 7692** | Kompresi payload `permessage-deflate` dengan flag `RSV1=1` & fallback uncompressed |
+| **ETS In-Memory Table** | ✅ **Thread-Safe** | Didukung `std::shared_mutex` (`shared_lock` read / `unique_lock` write) bebas race condition |

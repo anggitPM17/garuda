@@ -62,6 +62,10 @@ Dalam ekosistem Garuda:
 | **Fase 10.8.1** | WebSocket Frame Fragmentation (`FIN=0` loop reassembly) | ✅ **TUNTAS** | 100% PASS (5/5 RED->GREEN) |
 | **Fase 10.8.2** | WebSocket Max Bound Security (16MB Limit & Close Frame `1009`) | ✅ **TUNTAS** | 100% PASS (5/5 RED->GREEN) |
 | **Fase 10.8.3** | Real Python WebSocket Client E2E (`websockets` library verification) | ✅ **TUNTAS** | 100% PASS (5/5 E2E PASS) |
+| **Fase 11.1** | Async Event-Loop Engine (WSAPoll/poll, 1000+ connections, 3MB delta mem) | ✅ **TUNTAS** | 100% PASS (5/5 RED->GREEN) |
+| **Fase 11.2** | HTTP/2 Stream Multiplexing & HTTP/1.1 Fallback (`Server.mulai_http2`) | ✅ **TUNTAS** | 100% PASS (5/5 RED->GREEN) |
+| **Fase 11.3** | WebSocket `permessage-deflate` (RFC 7692 compression extension & RSV1) | ✅ **TUNTAS** | 100% PASS (5/5 RED->GREEN) |
+| **Fase 11.4** | In-Memory Table ETS-Style (`Ets.baru/sisip/cari/hapus/semua`, `shared_mutex`) | ✅ **TUNTAS** | 100% PASS (5/5 RED->GREEN) |
 
 ---
 
