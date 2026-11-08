@@ -1,56 +1,165 @@
 modul AntreanPrioritas
 
-// ===================================================================
-// Pustaka Resmi Garuda: garuda_antrean_prioritas
-// Domain: Struktur Data & Antrean Prioritas (Binary Heap)
-// Penulis: Anggit Prasetyo (@anggitPM17) & Komunitas Garuda
-// ===================================================================
-
 impor garuda::dasar
 impor garuda::hasil
-impor garuda::koleksi
 
 publik struktur ElemenPrioritas {
     prioritas: Bulat,
-    muatan: Teks
+    muatan: Teks,
+    urutan_masuk: Bulat
 }
 
 publik struktur AntreanPrioritas {
     kapasitas: Bulat,
     jumlah: Bulat,
-    is_min_heap: Kebenaran
+    apakah_min_heap: Kebenaran,
+    antrean: Daftar[ElemenPrioritas],
+    penghitung_urutan: Bulat
 }
 
-publik fungsi buat_antrean(kapasitas: Bulat, min_heap: Kebenaran): AntreanPrioritas {
+publik fungsi inisialisasi(): AntreanPrioritas {
+    kembalikan buat_antrean(benar, 64)
+}
+
+publik fungsi buat_antrean(apakah_min: Kebenaran, kapasitas_awal: Bulat): AntreanPrioritas {
     kembalikan AntreanPrioritas(
-        kapasitas = kapasitas,
+        kapasitas = kapasitas_awal,
         jumlah = 0,
-        is_min_heap = min_heap
+        apakah_min_heap = apakah_min,
+        antrean = [],
+        penghitung_urutan = 0
     )
 }
 
-publik fungsi sisip_prioritas(antrean: AntreanPrioritas, prioritas: Bulat, data: Teks): Hasil[AntreanPrioritas, Teks] {
-    jika (antrean.jumlah >= antrean.kapasitas) {
-        kembalikan Gagal("Kapasitas antrean prioritas penuh")
-    }
-    konst diperbarui = antrean.salin(jumlah = antrean.jumlah + 1)
-    kembalikan Sukses(diperbarui)
+publik fungsi ukuran(q: AntreanPrioritas): Bulat {
+    kembalikan q.jumlah
 }
 
-publik fungsi intip_puncak(antrean: AntreanPrioritas): Hasil[ElemenPrioritas, Teks] {
-    jika (antrean.jumlah == 0) {
-        kembalikan Gagal("Antrean prioritas sedang kosong")
-    }
-    kembalikan Sukses(ElemenPrioritas(prioritas = 100, muatan = "tugas_prioritas_puncak"))
+publik fungsi apakah_kosong(q: AntreanPrioritas): Kebenaran {
+    kembalikan q.jumlah == 0
 }
 
-publik fungsi ambil_tertinggi(antrean: AntreanPrioritas): Hasil[ElemenPrioritas, Teks] {
-    jika (antrean.jumlah == 0) {
-        kembalikan Gagal("Antrean prioritas hampa")
+publik fungsi sisip(q: AntreanPrioritas, prioritas: Bulat, muatan: Teks): AntreanPrioritas {
+    konst nomor_urut = q.penghitung_urutan + 1
+    konst baru = ElemenPrioritas(prioritas = prioritas, muatan = muatan, urutan_masuk = nomor_urut)
+    variabel daftar_baru = q.antrean + [baru]
+    variabel indeks = daftar_baru.panjang() - 1
+
+    // Heapify-up penyeimbangan pohon biner
+    saat (indeks > 0) {
+        konst induk = (indeks - 1) / 2
+        konst el_sekarang = daftar_baru.ambil(indeks)
+        konst el_induk = daftar_baru.ambil(induk)
+        
+        variabel harus_tukar = salah
+        jika (q.apakah_min_heap) {
+            jika (el_sekarang.prioritas < el_induk.prioritas) {
+                harus_tukar = benar
+            } lainnya jika (el_sekarang.prioritas == el_induk.prioritas && el_sekarang.urutan_masuk < el_induk.urutan_masuk) {
+                harus_tukar = benar
+            }
+        } lainnya {
+            jika (el_sekarang.prioritas > el_induk.prioritas) {
+                harus_tukar = benar
+            } lainnya jika (el_sekarang.prioritas == el_induk.prioritas && el_sekarang.urutan_masuk < el_induk.urutan_masuk) {
+                harus_tukar = benar
+            }
+        }
+
+        jika (harus_tukar) {
+            daftar_baru = daftar_baru.tukar(indeks, induk)
+            indeks = induk
+        } lainnya {
+            berhenti
+        }
     }
-    kembalikan Sukses(ElemenPrioritas(prioritas = 99, muatan = "tugas_dieksekusi"))
+
+    kembalikan AntreanPrioritas(
+        kapasitas = q.kapasitas,
+        jumlah = q.jumlah + 1,
+        apakah_min_heap = q.apakah_min_heap,
+        antrean = daftar_baru,
+        penghitung_urutan = nomor_urut
+    )
 }
 
-publik fungsi apakah_kosong(antrean: AntreanPrioritas): Kebenaran {
-    kembalikan antrean.jumlah == 0
+publik fungsi sisip_prioritas(q: AntreanPrioritas, prioritas: Bulat, muatan: Teks): AntreanPrioritas {
+    kembalikan sisip(q, prioritas, muatan)
+}
+
+publik fungsi ambil_tertinggi(q: AntreanPrioritas): Hasil[Pasangan[ElemenPrioritas, AntreanPrioritas], Teks] {
+    kembalikan ambil_puncak(q)
+}
+
+publik fungsi intip_puncak(q: AntreanPrioritas): Hasil[ElemenPrioritas, Teks] {
+    jika (q.jumlah == 0 || q.antrean.panjang() == 0) {
+        kembalikan Gagal("Antrean prioritas kosong")
+    }
+    kembalikan Sukses(q.antrean.ambil(0))
+}
+
+publik fungsi ambil_puncak(q: AntreanPrioritas): Hasil[Pasangan[ElemenPrioritas, AntreanPrioritas], Teks] {
+    jika (q.jumlah == 0 || q.antrean.panjang() == 0) {
+        kembalikan Gagal("Tidak dapat mengambil elemen: antrean kosong")
+    }
+    
+    konst puncak = q.antrean.ambil(0)
+    jika (q.jumlah == 1) {
+        konst antrean_hampa = AntreanPrioritas(
+            kapasitas = q.kapasitas,
+            jumlah = 0,
+            apakah_min_heap = q.apakah_min_heap,
+            antrean = [],
+            penghitung_urutan = q.penghitung_urutan
+        )
+        kembalikan Sukses(Pasangan(puncak, antrean_hampa))
+    }
+
+    // Pindahkan elemen terakhir ke akar lalu heapify-down
+    konst elemen_terakhir = q.antrean.ambil(q.antrean.panjang() - 1)
+    variabel daftar_baru = [elemen_terakhir] + q.antrean.potong(1, q.antrean.panjang() - 1)
+    variabel pos = 0
+    konst total = daftar_baru.panjang()
+
+    saat (benar) {
+        konst kiri = (2 * pos) + 1
+        konst kanan = (2 * pos) + 2
+        variabel target = pos
+
+        jika (kiri < total) {
+            konst el_kiri = daftar_baru.ambil(kiri)
+            konst el_target = daftar_baru.ambil(target)
+            jika (q.apakah_min_heap && el_kiri.prioritas < el_target.prioritas) {
+                target = kiri
+            } lainnya jika (!q.apakah_min_heap && el_kiri.prioritas > el_target.prioritas) {
+                target = kiri
+            }
+        }
+
+        jika (kanan < total) {
+            konst el_kanan = daftar_baru.ambil(kanan)
+            konst el_target = daftar_baru.ambil(target)
+            jika (q.apakah_min_heap && el_kanan.prioritas < el_target.prioritas) {
+                target = kanan
+            } lainnya jika (!q.apakah_min_heap && el_kanan.prioritas > el_target.prioritas) {
+                target = kanan
+            }
+        }
+
+        jika (target != pos) {
+            daftar_baru = daftar_baru.tukar(pos, target)
+            pos = target
+        } lainnya {
+            berhenti
+        }
+    }
+
+    konst q_baru = AntreanPrioritas(
+        kapasitas = q.kapasitas,
+        jumlah = q.jumlah - 1,
+        apakah_min_heap = q.apakah_min_heap,
+        antrean = daftar_baru,
+        penghitung_urutan = q.penghitung_urutan
+    )
+    kembalikan Sukses(Pasangan(puncak, q_baru))
 }
