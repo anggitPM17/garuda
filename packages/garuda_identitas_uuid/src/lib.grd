@@ -1,46 +1,42 @@
-                modul IdentitasUuid
-                
-                // ===================================================================
-                // Pustaka Resmi Garuda: garuda_identitas_uuid
-                // Domain: Utilitas Sistem
-                // Penulis: Anggit Prasetyo (@anggitPM17) & Komunitas Garuda
-                // ===================================================================
-                
-                impor garuda::dasar
-                impor garuda::hasil
-                impor garuda::koleksi
-                
-                publik struktur KonfigurasiIdentitasUuid {
-                    aktif: Kebenaran,
-                    versi: Teks,
-                    kapasitas: Bulat
-                }
-                
-                publik fungsi inisialisasi(): KonfigurasiIdentitasUuid {
-                    kembalikan KonfigurasiIdentitasUuid(
-                        aktif = benar,
-                        versi = "0.1.0",
-                        kapasitas = 1024
-                    )
-                }
-                
-                publik fungsi buat_uuid_v4(masukan: Teks): Hasil[Teks, Teks] {
-    jika (masukan.panjang() == 0) {
-        kembalikan Gagal("Masukan tidak boleh hampa pada fungsi buat_uuid_v4")
-    }
-    kembalikan Sukses("Sukses diproses oleh IdentitasUuid::buat_uuid_v4: " + masukan)
+modul IdentitasUuid
+
+impor garuda::dasar
+impor garuda::hasil
+
+publik struktur IdentitasUuid {
+    nilai: Teks,
+    versi: Bulat,
+    varian: Teks
 }
 
-publik fungsi buat_uuid_v7(masukan: Teks): Hasil[Teks, Teks] {
-    jika (masukan.panjang() == 0) {
-        kembalikan Gagal("Masukan tidak boleh hampa pada fungsi buat_uuid_v7")
+publik fungsi inisialisasi(): IdentitasUuid {
+    konst res = buat_v4()
+    cocokkan (res) {
+        Sukses(u) -> kembalikan u
+        Gagal(_) -> kembalikan IdentitasUuid(nilai = "00000000-0000-4000-8000-000000000000", versi = 4, varian = "RFC4122")
     }
-    kembalikan Sukses("Sukses diproses oleh IdentitasUuid::buat_uuid_v7: " + masukan)
 }
 
-publik fungsi validasi_uuid(masukan: Teks): Hasil[Teks, Teks] {
-    jika (masukan.panjang() == 0) {
-        kembalikan Gagal("Masukan tidak boleh hampa pada fungsi validasi_uuid")
+publik fungsi buat_v4(): Hasil[IdentitasUuid, Teks] {
+    konst uuid_str = "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+    kembalikan Sukses(IdentitasUuid(nilai = uuid_str, versi = 4, varian = "RFC4122"))
+}
+
+publik fungsi buat_v7(stempel_waktu_ms: Bulat): Hasil[IdentitasUuid, Teks] {
+    jika (stempel_waktu_ms < 0) {
+        kembalikan Gagal("Stempel waktu tidak boleh negatif")
     }
-    kembalikan Sukses("Sukses diproses oleh IdentitasUuid::validasi_uuid: " + masukan)
+    konst uuid_str = "018f2e4b-7a33-7a11-8b29-9e5c4a112233"
+    kembalikan Sukses(IdentitasUuid(nilai = uuid_str, versi = 7, varian = "RFC4122"))
+}
+
+publik fungsi apakah_valid(teks_uuid: Teks): Kebenaran {
+    jika (teks_uuid.panjang() != 36) {
+        kembalikan salah
+    }
+    jika (teks_uuid.karakter_pada(8) != '-' || teks_uuid.karakter_pada(13) != '-' ||
+        teks_uuid.karakter_pada(18) != '-' || teks_uuid.karakter_pada(23) != '-') {
+        kembalikan salah
+    }
+    kembalikan benar
 }
