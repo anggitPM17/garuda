@@ -5,7 +5,7 @@
 
 ---
 
-## 🤖 Konteks untuk Agen AI (baca dulu)
+## 🤖 Konteks
 
 - **Garuda**: bahasa pemrograman (ekstensi `.grd`, compiler `grdc`, runtime **GVM**, REPL) dengan **sintaks Indonesia + model aktor** (terinspirasi BEAM/Erlang/Elixir).
 - **Prinsip kerja**: *"Pengerasan dulu, ekspansi kemudian."* Jangan membuka lapis baru sebelum gate keluar lapis sebelumnya tercapai.
