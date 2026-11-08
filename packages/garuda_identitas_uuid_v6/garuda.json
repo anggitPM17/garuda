@@ -1,0 +1,24 @@
+{
+  "nama": "garuda_identitas_uuid_v6",
+  "modul": "IdentitasUuidV6",
+  "versi": "0.1.0",
+  "penulis": "Kontributor Garuda & AI Studio",
+  "deskripsi": "Generator UUID versi 4 (acak kriptografis) dan versi 7 (time-ordered).",
+  "lisensi": "MIT",
+  "jenis": "pustaka_murni",
+  "titik_masuk": "src/lib.grd",
+  "gpm": {
+    "versi_kompatibel": ">=0.4.0",
+    "arsitektur": "gvm-universal",
+    "registri": "https://gpm.garuda-lang.org/v1"
+  },
+  "dependensi": {
+    "garuda_dasar": "^1.0.0",
+    "garuda_hasil": "^1.0.0"
+  },
+  "naskah": {
+    "bangun": "grdmix bangun --rilis",
+    "uji": "grdmix uji --semua",
+    "format": "grdmix format ."
+  }
+}
