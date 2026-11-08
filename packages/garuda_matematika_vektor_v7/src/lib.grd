@@ -1,0 +1,46 @@
+modul MatematikaVektorV7
+
+// ===================================================================
+// Pustaka Resmi Garuda: garuda_matematika_vektor_v7
+// Domain: Aljabar Vektor & Matriks Presisi Tinggi
+// Penulis: Anggit Prasetyo (@anggitPM17) & Komunitas Garuda
+// ===================================================================
+
+impor garuda::dasar
+impor garuda::hasil
+
+publik struktur Vektor2D {
+    x: Pecahan,
+    y: Pecahan
+}
+
+publik struktur Vektor3D {
+    x: Pecahan,
+    y: Pecahan,
+    z: Pecahan
+}
+
+publik fungsi buat_vektor_2d(x: Pecahan, y: Pecahan): Vektor2D {
+    kembalikan Vektor2D(x = x, y = y)
+}
+
+publik fungsi tambah_vektor_2d(a: Vektor2D, b: Vektor2D): Vektor2D {
+    kembalikan Vektor2D(x = a.x + b.x, y = a.y + b.y)
+}
+
+publik fungsi perkalian_titik_2d(a: Vektor2D, b: Vektor2D): Pecahan {
+    kembalikan (a.x * b.x) + (a.y * b.y)
+}
+
+publik fungsi panjang_vektor_2d(v: Vektor2D): Pecahan {
+    konst kuadrat = (v.x * v.x) + (v.y * v.y)
+    kembalikan kuadrat.akar_kuadrat()
+}
+
+publik fungsi normalisasi_2d(v: Vektor2D): Hasil[Vektor2D, Teks] {
+    konst len = panjang_vektor_2d(v)
+    jika (len == 0.0) {
+        kembalikan Gagal("Tidak dapat menormalisasi vektor nol")
+    }
+    kembalikan Sukses(Vektor2D(x = v.x / len, y = v.y / len))
+}
