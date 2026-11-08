@@ -1,0 +1,13 @@
+[paket]
+nama = "garuda_grafika_matriks_komputasi_cepat"
+versi = "0.1.0"
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
+edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Varian Cepat berkinerja tinggi: Operasi aljabar matriks NxN, eliminasi Gauss-Jordan, dan dekomposisi LU."
+
+[target.pustaka]
+jalur = "src/lib.grd"
+
+[uji]
+berkas = ["src/test.grd"]
