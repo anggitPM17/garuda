@@ -1,0 +1,11 @@
+[paket]
+nama = "garuda_kripto_aes256_v4"
+versi = "0.1.0"
+penulis = ["Kontributor Garuda <kontributor@garuda-lang.org>"]
+edisi = "2026"
+
+[target.pustaka]
+jalur = "src/lib.grd"
+
+[uji]
+berkas = ["src/test.grd"]
