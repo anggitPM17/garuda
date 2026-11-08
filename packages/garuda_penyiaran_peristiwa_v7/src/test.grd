@@ -1,32 +1,30 @@
 modul UjiPenyiaranPeristiwaV7
 
-// ===================================================================
-// Pengujian Unit Resmi: UjiPenyiaranPeristiwaV7
-// Target: GVM Unit Test Engine (grdmix test)
-// ===================================================================
-
 impor PenyiaranPeristiwaV7
 impor garuda::pengujian
 impor garuda::penegasan
 
 @uji
-fungsi uji_integritas_arsitektur(): Hasil[Hampa, Teks] {
-    konst inisial = PenyiaranPeristiwaV7::inisialisasi()
-    tegaskan_benar(inisial.aktif, "Status paket harus aktif")
-    tegaskan_sama(inisial.versi, "0.1.0", "Versi awal paket harus 0.1.0")
+fungsi uji_langganan_dan_siarkan(): Hasil[Hampa, Teks] {
+    konst bus = PenyiaranPeristiwaV7.baru()
+    PenyiaranPeristiwaV7.langganan_topik(bus, "topik_utama", "subscriber_1")
+    konst s = PenyiaranPeristiwaV7.siarkan_peristiwa(bus, "topik_utama", "pesan_event")
+    tegaskan_sama(s, "subscriber_1", "Siarkan harus mengembalikan subscriber_1")
     kembalikan Sukses(hampa)
 }
 
 @uji
-fungsi uji_keabsahan_eksekusi(): Hasil[Hampa, Teks] {
-    konst fungsi_pertama = "langganan_topik"
-    tegaskan_benar(fungsi_pertama.panjang() > 0, "Nama fungsi harus terdefinisi")
+fungsi uji_siarkan_topik_kosong(): Hasil[Hampa, Teks] {
+    konst bus = PenyiaranPeristiwaV7.baru()
+    konst s = PenyiaranPeristiwaV7.siarkan_peristiwa(bus, "topik_tidak_ada", "pesan")
+    tegaskan_sama(s, "galat", "Siarkan topik tidak ada harus mengembalikan galat")
     kembalikan Sukses(hampa)
 }
 
 @uji
-fungsi uji_kondisi_batas_dan_penanganan_galat(): Hasil[Hampa, Teks] {
-    // Verifikasi bahwa masukan kosong ditangani dengan Hasil[T, E] yang aman
-    tegaskan_benar(benar, "Penanganan galat monad Hasil aman dari crash GVM")
+fungsi uji_langganan_kosong(): Hasil[Hampa, Teks] {
+    konst bus = PenyiaranPeristiwaV7.baru()
+    konst r = PenyiaranPeristiwaV7.langganan_topik(bus, "", "sub")
+    tegaskan_sama(r, "galat", "Langganan topik kosong harus mengembalikan galat")
     kembalikan Sukses(hampa)
 }
