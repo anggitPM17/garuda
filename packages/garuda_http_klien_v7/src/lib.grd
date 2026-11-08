@@ -1,46 +1,21 @@
-                modul HttpKlienV7
-                
-                // ===================================================================
-                // Pustaka Resmi Garuda: garuda_http_klien_v7
-                // Domain: Jaringan & Web
-                // Penulis: Anggit Prasetyo (@anggitPM17) & Komunitas Garuda
-                // ===================================================================
-                
-                impor garuda::dasar
-                impor garuda::hasil
-                impor garuda::koleksi
-                
-                publik struktur KonfigurasiHttpKlienV7 {
-                    aktif: Kebenaran,
-                    versi: Teks,
-                    kapasitas: Bulat
-                }
-                
-                publik fungsi inisialisasi(): KonfigurasiHttpKlienV7 {
-                    kembalikan KonfigurasiHttpKlienV7(
-                        aktif = benar,
-                        versi = "0.1.0",
-                        kapasitas = 1024
-                    )
-                }
-                
-                publik fungsi ambil_get(masukan: Teks): Hasil[Teks, Teks] {
-    jika (masukan.panjang() == 0) {
-        kembalikan Gagal("Masukan tidak boleh hampa pada fungsi ambil_get")
+modul HttpKlienV7
+
+// ===================================================================
+// Pustaka Resmi Garuda: garuda_http_klien_v7 (Implementasi Nyata)
+// Domain: Jaringan & Client HTTP berbasis Http BIF
+// Penulis: Anggit Prasetyo (@anggitPM17) & Komunitas Garuda
+// ===================================================================
+
+publik fungsi ambil_get(url) {
+    jika (url == "") {
+        kembalikan "galat"
     }
-    kembalikan Sukses("Sukses diproses oleh HttpKlienV7::ambil_get: " + masukan)
+    Http.ambil(url)
 }
 
-publik fungsi kirim_post(masukan: Teks): Hasil[Teks, Teks] {
-    jika (masukan.panjang() == 0) {
-        kembalikan Gagal("Masukan tidak boleh hampa pada fungsi kirim_post")
+publik fungsi kirim_post(url) {
+    jika (url == "") {
+        kembalikan "galat"
     }
-    kembalikan Sukses("Sukses diproses oleh HttpKlienV7::kirim_post: " + masukan)
-}
-
-publik fungsi kirim_multipart(masukan: Teks): Hasil[Teks, Teks] {
-    jika (masukan.panjang() == 0) {
-        kembalikan Gagal("Masukan tidak boleh hampa pada fungsi kirim_multipart")
-    }
-    kembalikan Sukses("Sukses diproses oleh HttpKlienV7::kirim_multipart: " + masukan)
+    Http.kirim(url, "")
 }
