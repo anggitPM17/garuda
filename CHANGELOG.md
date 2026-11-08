@@ -5,7 +5,31 @@ Format pencatatan mematuhi [Keep a Changelog](https://keepachangelog.com/en/1.0.
 
 ---
 
-## [v67.0.0] - 2026-10-29
+## [v67.0.0] - 2025-05-18
+
+### 🚀 Added — Fase 14: Logika Modul Packages (Tag: `v67-fase14-packages-logic-stable`)
+* **Event Bus Ets (`PenyiaranPeristiwa`)**: Implementasi nyata bus peristiwa berbasis ETS (`77c6725`).
+* **Matematika Vektor (`MatematikaVektor`)**: Operasi aljabar & geometri vektor (`6fd30d3`).
+* **CSV Tabel (`CsvTabel`)**: Parsing & penulisan format CSV (`e386990`).
+* **Regex Pola (`RegexPola`)**: Pencocokan pola regex (`4c05e70`).
+* **Identitas UUID (`IdentitasUuid`)**: Generator & validasi UUID v4 (`b9409ff`).
+* **Http Klien (`HttpKlien`)**: Client HTTP wrapper berbasis Http BIF (`35f6fee`).
+* **Antrean Prioritas (`AntreanPrioritas`)**: Priority queue berbasis ETS (`d6dfcc5`).
+* **Kripto AES-256 (`KriptoAes256`)**: Enkripsi & dekripsi AES-256 (`d73ac7b`).
+* **JWT Token (`JwtToken`)**: Pembuat & verifikator token JWT (`a38ef84`).
+* **Basis Data KV (`BasisdataKv`)**: Key-Value Database in-memory berbasis ETS (`c7ec219`).
+
+### 📦 Added — Fase 13: Package Ecosystem & Manager
+* **72 Paket Garuda** lengkap di `packages/` (`garuda.json`, `grdmix.toml`, `README.md`, `src/lib.grd`, `src/test.grd`).
+* **Package Manager (`grdmix`)**: Semver resolution, verifikasi checksum SHA-256, & generator stub pustaka standar.
+
+### ⚡ Added — Fase 12: Fitur User-Facing Language
+* **JSON BIF**: `Json.enkode` & `Json.dekode`.
+* **Http BIF**: `Http.ambil` & `Http.kirim`.
+* **Env BIF**: `Env.baca` & `Env.muat_config`.
+* **Server Router**: `Server.mulai_router`.
+* **TodoAPI**: Aplikasi referensi `.grd` murni di `examples/todo_api/`.
+
 
 ### 🚀 Added (Fitur Baru)
 * **Garuda Arena Game Engine (D.6)**: Real-time 30 FPS multiplayer actor game engine C++ dengan WebSocket broadcast, fisika peluru, collision detection, dan respawn.
