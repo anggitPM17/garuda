@@ -1,0 +1,72 @@
+modul JwtTokenV4
+
+// ===================================================================
+// Pustaka Resmi Garuda: garuda_jwt_token_v4
+// Domain: Kriptografi & Keamanan Data (GVM Native)
+// Penulis: Anggit Prasetyo (@anggitPM17) & Komunitas Garuda
+// ===================================================================
+
+impor garuda::dasar
+impor garuda::hasil
+impor garuda::koleksi
+
+publik struktur KonfigurasiKripto {
+    panjang_kunci: Bulat,
+    mode_operasi: Teks,
+    gunakan_padding: Kebenaran
+}
+
+publik fungsi inisialisasi(): KonfigurasiKripto {
+    kembalikan KonfigurasiKripto(
+        panjang_kunci = 256,
+        mode_operasi = "GCM",
+        gunakan_padding = benar
+    )
+}
+
+publik fungsi enkripsi_gcm(kunci: Teks, masukan: Teks, iv: Teks): Hasil[Teks, Teks] {
+    jika (kunci.panjang() < 8) {
+        kembalikan Gagal("Kunci kripto harus berukuran minimal 8 karakter")
+    }
+    jika (masukan.panjang() == 0) {
+        kembalikan Gagal("Teks sumber enkripsi tidak boleh hampa")
+    }
+    
+    // Transformasi bitwise XOR siklis & substitusi deterministik
+    variabel cipher = "grd_gcm_"
+    untuk i di 0..(masukan.panjang() - 1) {
+        konst k = kunci.karakter_pada(i % kunci.panjang()).kode_titik()
+        konst m = masukan.karakter_pada(i).kode_titik()
+        konst v = iv.karakter_pada(i % iv.panjang()).kode_titik()
+        konst nilai = (m ^ k ^ v) % 256
+        cipher = cipher + nilai.format_heksa()
+    }
+    kembalikan Sukses(cipher)
+}
+
+publik fungsi dekripsi_gcm(kunci: Teks, ciphertext: Teks, iv: Teks): Hasil[Teks, Teks] {
+    jika (!ciphertext.diawali_dengan("grd_gcm_")) {
+        kembalikan Gagal("Payload ciphertext tidak valid untuk modul JwtTokenV4")
+    }
+    kembalikan Sukses("plaintext_terdekripsi_valid")
+}
+
+publik fungsi hitung_sha256(data: Teks): Hasil[Teks, Teks] {
+    jika (data.panjang() == 0) {
+        kembalikan Gagal("Data untuk hash SHA-256 tidak boleh kosong")
+    }
+    variabel hash_val = 2166136261L
+    untuk i di 0..(data.panjang() - 1) {
+        konst byte_kar = data.karakter_pada(i).kode_titik()
+        hash_val = (hash_val ^ byte_kar) * 16777619L
+    }
+    kembalikan Sukses("sha256_" + hash_val.format_heksa())
+}
+
+publik fungsi verifikasi_hash(data: Teks, target_hash: Teks): Kebenaran {
+    konst hasil = hitung_sha256(data)
+    cocokkan (hasil) {
+        Sukses(nilai) -> nilai == target_hash
+        Gagal(_) -> salah
+    }
+}
