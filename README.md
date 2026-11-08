@@ -105,8 +105,10 @@ powershell -ExecutionPolicy Bypass -File "scratch/run_all_tests.ps1"
 ## 📚 Dokumentasi
 
 - **[Laporan Verifikasi Fase 14](docs/verification-report-fase14.md)** — Bukti eksekusi test & status komponen.
+- **[Panduan Self-Hosting Bootstrap](docs/bootstrap.md)** — Arsitektur 3-Stage self-hosting compiler & verifikasi `garuda_bootstrap_grd_tests.exe` (PASS 15/15).
 - **[Catatan Rilis & CHANGELOG](CHANGELOG.md)** — Riwayat perubahan rilis.
 - **[Peta Pencapaian Ekosistem](ACHIEVEMENTS.md)** — Rangkuman 6 pilar ekosistem GVM.
+
 
 ---
 

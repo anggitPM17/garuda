@@ -2,7 +2,7 @@
 
 **Tanggal Verifikasi:** 2025-05-18  
 **HEAD Diverifikasi:** `5918fdb` / `77c6725` — `feat(green-fase14-penyiaran-peristiwa-v7): implementasi nyata bus peristiwa berbasis Ets`  
-**Tag Terakhir:** `v67-fase14-verified-20250518`  
+**Tag Terakhir:** `v67-fase14-verified-20250518-2`  
 
 ---
 
@@ -46,9 +46,15 @@ Terverifikasi commit dan implementasi nyata di kode C++ G-BEAM & paket `.grd`:
 9. **JwtToken / JWT Serializer** (`a38ef84`) — `garuda_crypto_tests.exe` (PASS)
 10. **BasisdataKv / Key-Value Ets Engine** (`c7ec219`) — `garuda_ets_tests.exe` (PASS)
 
-### 2.5 Self-Hosting Bootstrap (Fase 4 / Sprint BS)
-- Source code compiler self-hosting di `src/`: `bootstrap.grd`, `bootstrap_lexer.grd`, `bootstrap_parser.grd`, `bootstrap_codegen.grd`, `bootstrap_eval.grd`, `self_compile.grd`.
-- **Test Executable**: `garuda_bootstrap_grd_tests.exe` (PASS — 15/15 assertions pass).
+### 2.5 Status Verifikasi Self-Hosting (Fase 4 / Sprint BS) — ✅ TERVERIFIKASI
+- **Bukti Source Code (`src/*.grd`)**: 16 file komponen compiler murni di `src/` (`bootstrap.grd`, `bootstrap_lexer.grd`, `bootstrap_parser.grd`, `bootstrap_codegen.grd`, `bootstrap_eval.grd`, `self_compile.grd`, `grdc.grd`, `grdrun.grd`, `vm.grd`, `eval.grd`, `lexer.grd`, `parser.grd`, `codegen.grd`, `bif.grd`, `memory.grd`, `process.grd`).
+- **Bukti Test Executable**: `garuda_bootstrap_grd_tests.exe` (**PASS 100% — 15/15 Assertions**, ExitCode=0).
+- **Proses Bootstrap Pipeline**:
+  - *Stage 0 (C++ Engine)* memuat kompilator `src/bootstrap.grd` -> mengompilasi kode sumber Garuda.
+  - *Stage 1 (Compiler Garuda Pertama)* -> menghasilkan Bytecode Stage 1.
+  - *Stage 2 (Self-Compilation Loop)* via `src/self_compile.grd` -> mengompilasi ulang source code `.grd`.
+  - *Verifikasi Fixpoint (BS13-BS15)* -> `SelfCompile.kompilasi_teks` & `SelfCompile.kompilasi_dan_jalankan` PASS sempurna.
+- **Dokumentasi Terkait**: `docs/bootstrap.md`.
 
 ---
 
@@ -81,3 +87,4 @@ Test suite berikut berjalan sebagai server / socket listener berkelanjutan. Pada
 - Log Hasil Test Lengkap: `docs/test-results-current.csv`
 - Commit History: `git log --oneline -20`
 - Manifest Package Verification: 72 paket di `packages/`
+- Bootstrap Verification: `garuda_bootstrap_grd_tests.exe` (PASS 15/15) & `docs/bootstrap.md`
