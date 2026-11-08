@@ -1,46 +1,51 @@
-                modul PenyiaranPeristiwa
-                
-                // ===================================================================
-                // Pustaka Resmi Garuda: garuda_penyiaran_peristiwa
-                // Domain: Pola Desain & Aktor
-                // Penulis: Anggit Prasetyo (@anggitPM17) & Komunitas Garuda
-                // ===================================================================
-                
-                impor garuda::dasar
-                impor garuda::hasil
-                impor garuda::koleksi
-                
-                publik struktur KonfigurasiPenyiaranPeristiwa {
-                    aktif: Kebenaran,
-                    versi: Teks,
-                    kapasitas: Bulat
-                }
-                
-                publik fungsi inisialisasi(): KonfigurasiPenyiaranPeristiwa {
-                    kembalikan KonfigurasiPenyiaranPeristiwa(
-                        aktif = benar,
-                        versi = "0.1.0",
-                        kapasitas = 1024
-                    )
-                }
-                
-                publik fungsi langganan_topik(masukan: Teks): Hasil[Teks, Teks] {
-    jika (masukan.panjang() == 0) {
-        kembalikan Gagal("Masukan tidak boleh hampa pada fungsi langganan_topik")
-    }
-    kembalikan Sukses("Sukses diproses oleh PenyiaranPeristiwa::langganan_topik: " + masukan)
+modul PenyiaranPeristiwa
+
+impor garuda::dasar
+impor garuda::hasil
+
+publik struktur PelangganTopik {
+    id_pelanggan: Teks,
+    topik: Teks,
+    aktif: Kebenaran
 }
 
-publik fungsi siarkan_peristiwa(masukan: Teks): Hasil[Teks, Teks] {
-    jika (masukan.panjang() == 0) {
-        kembalikan Gagal("Masukan tidak boleh hampa pada fungsi siarkan_peristiwa")
-    }
-    kembalikan Sukses("Sukses diproses oleh PenyiaranPeristiwa::siarkan_peristiwa: " + masukan)
+publik struktur PenyiaranPeristiwa {
+    daftar_pelanggan: Daftar[PelangganTopik],
+    total_peristiwa_disiarkan: Bulat
 }
 
-publik fungsi hentikan_langganan(masukan: Teks): Hasil[Teks, Teks] {
-    jika (masukan.panjang() == 0) {
-        kembalikan Gagal("Masukan tidak boleh hampa pada fungsi hentikan_langganan")
+publik fungsi inisialisasi(): PenyiaranPeristiwa {
+    kembalikan PenyiaranPeristiwa(daftar_pelanggan = [], total_peristiwa_disiarkan = 0)
+}
+
+publik fungsi langganan(penyiar: PenyiaranPeristiwa, topik: Teks, id_pelanggan: Teks): PenyiaranPeristiwa {
+    konst baru = PelangganTopik(id_pelanggan = id_pelanggan, topik = topik, aktif = benar)
+    kembalikan PenyiaranPeristiwa(
+        daftar_pelanggan = penyiar.daftar_pelanggan + [baru],
+        total_peristiwa_disiarkan = penyiar.total_peristiwa_disiarkan
+    )
+}
+
+publik fungsi berhenti_langganan(penyiar: PenyiaranPeristiwa, id_pelanggan: Teks): PenyiaranPeristiwa {
+    variabel baru: Daftar[PelangganTopik] = []
+    untuk p di penyiar.daftar_pelanggan {
+        jika (p.id_pelanggan != id_pelanggan) {
+            baru = baru + [p]
+        }
     }
-    kembalikan Sukses("Sukses diproses oleh PenyiaranPeristiwa::hentikan_langganan: " + masukan)
+    kembalikan PenyiaranPeristiwa(daftar_pelanggan = baru, total_peristiwa_disiarkan = penyiar.total_peristiwa_disiarkan)
+}
+
+publik fungsi siarkan(penyiar: PenyiaranPeristiwa, topik: Teks, muatan: Teks): Pasangan[Bulat, PenyiaranPeristiwa] {
+    variabel penerima = 0
+    untuk p di penyiar.daftar_pelanggan {
+        jika (p.topik == topik && p.aktif) {
+            penerima = penerima + 1
+        }
+    }
+    konst update = PenyiaranPeristiwa(
+        daftar_pelanggan = penyiar.daftar_pelanggan,
+        total_peristiwa_disiarkan = penyiar.total_peristiwa_disiarkan + 1
+    )
+    kembalikan Pasangan(penerima, update)
 }
