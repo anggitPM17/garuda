@@ -1,0 +1,13 @@
+[paket]
+nama = "garuda_basisdata_hnsw_vektor"
+versi = "0.1.0"
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
+edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Indeks graf Hierarchical Navigable Small World untuk pencarian vektor kemiripan AI."
+
+[target.pustaka]
+jalur = "src/lib.grd"
+
+[uji]
+berkas = ["src/test.grd"]
