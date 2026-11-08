@@ -1,32 +1,28 @@
 modul UjiKriptoAes256V8
 
-// ===================================================================
-// Pengujian Unit Resmi: UjiKriptoAes256V8
-// Target: GVM Unit Test Engine (grdmix test)
-// ===================================================================
-
 impor KriptoAes256V8
 impor garuda::pengujian
 impor garuda::penegasan
 
 @uji
-fungsi uji_integritas_arsitektur(): Hasil[Hampa, Teks] {
-    konst inisial = KriptoAes256V8::inisialisasi()
-    tegaskan_benar(inisial.aktif, "Status paket harus aktif")
-    tegaskan_sama(inisial.versi, "0.1.0", "Versi awal paket harus 0.1.0")
+fungsi uji_enkripsi_dan_dekripsi(): Hasil[Hampa, Teks] {
+    konst enc = KriptoAes256V8.enkripsi("pesan_rahasia_999", "kunci_32_bytes_panjang_sekali_1")
+    konst dec = KriptoAes256V8.dekripsi(enc, "kunci_32_bytes_panjang_sekali_1")
+    tegaskan_sama(dec, "pesan_rahasia_999", "Dekripsi harus mengembalikan pesan_rahasia_999")
     kembalikan Sukses(hampa)
 }
 
 @uji
-fungsi uji_keabsahan_eksekusi(): Hasil[Hampa, Teks] {
-    konst fungsi_pertama = "enkripsi_gcm"
-    tegaskan_benar(fungsi_pertama.panjang() > 0, "Nama fungsi harus terdefinisi")
+fungsi uji_kunci_salah(): Hasil[Hampa, Teks] {
+    konst enc = KriptoAes256V8.enkripsi("pesan_rahasia_999", "kunci_32_bytes_panjang_sekali_1")
+    konst dec = KriptoAes256V8.dekripsi(enc, "kunci_salah")
+    tegaskan_sama(dec, "galat", "Kunci salah harus mengembalikan galat")
     kembalikan Sukses(hampa)
 }
 
 @uji
-fungsi uji_kondisi_batas_dan_penanganan_galat(): Hasil[Hampa, Teks] {
-    // Verifikasi bahwa masukan kosong ditangani dengan Hasil[T, E] yang aman
-    tegaskan_benar(benar, "Penanganan galat monad Hasil aman dari crash GVM")
+fungsi uji_masukan_kosong(): Hasil[Hampa, Teks] {
+    konst res = KriptoAes256V8.enkripsi("", "kunci")
+    tegaskan_sama(res, "galat", "Teks kosong harus mengembalikan galat")
     kembalikan Sukses(hampa)
 }
