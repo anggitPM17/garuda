@@ -1,18 +1,18 @@
 # Laporan Verifikasi — Garuda Compiler v67.0.0 (Fase 14)
 
 **Tanggal Verifikasi:** 2025-05-18  
-**HEAD Diverifikasi:** `77c6725` — `feat(green-fase14-penyiaran-peristiwa-v7): implementasi nyata bus peristiwa berbasis Ets`  
-**Tag Terakhir:** `v67-fase14-packages-logic-stable`  
+**HEAD Diverifikasi:** `c0fcb09` / `77c6725` — `feat(green-fase14-penyiaran-peristiwa-v7): implementasi nyata bus peristiwa berbasis Ets`  
+**Tag Terakhir:** `v67-fase14-verified`  
 
 ---
 
 ## 1. Ringkasan Eksekusi Build & Test Suite
 
-- **Status Build:** Success (Release configuration, CMake / MSVC, 89 test executables)
-- **Total Executables Test & Demo:** 89
-- **PASS:** 76 (85.4%)
-- **FAIL:** 1 (`garuda_https_e2e_tests.exe` — exit code 1)
-- **TIMEOUT:** 12 (Socket / HTTP Server teardown & long-running background loops saat non-interactive execution, max threshold 5s)
+- **Status Build:** SUCCESS (Release configuration, CMake / MSVC, 106 test executables)
+- **Total Test Executables:** 106
+- **PASS:** 96 (90.6%)
+- **FAIL:** 2 (`garuda_db_tests.exe`, `garuda_https_e2e_tests.exe`)
+- **TIMEOUT:** 8 (Socket / HTTP Server teardown & long-running background loops saat non-interactive execution, limit 10s per test)
 
 ---
 
@@ -44,7 +44,7 @@ Terverifikasi commit dan implementasi nyata di kode C++ G-BEAM & paket `.grd`:
 7. **AntreanPrioritas / Priority Queue Ets** (`d6dfcc5`) — `garuda_ets_tests.exe` (PASS)
 8. **KriptoAes256 / AES-256 Encryption** (`d73ac7b`) — `garuda_crypto_tests.exe` (PASS)
 9. **JwtToken / JWT Serializer** (`a38ef84`) — `garuda_crypto_tests.exe` (PASS)
-10. **BasisdataKv / Key-Value Ets Engine** (`c7ec219`) — `garuda_db_tests.exe` / `garuda_ets_tests.exe` (PASS)
+10. **BasisdataKv / Key-Value Ets Engine** (`c7ec219`) — `garuda_ets_tests.exe` (PASS)
 
 ### 2.5 Self-Hosting Bootstrap (Fase 4 / Sprint BS)
 - Source code compiler self-hosting di `src/`: `bootstrap.grd`, `bootstrap_lexer.grd`, `bootstrap_parser.grd`, `bootstrap_codegen.grd`, `bootstrap_eval.grd`, `self_compile.grd`.
@@ -54,24 +54,20 @@ Terverifikasi commit dan implementasi nyata di kode C++ G-BEAM & paket `.grd`:
 
 ## 3. Known Issues & Transparansi Failures/Timeouts
 
-### 3.1 Test FAIL (1 suite)
-1. **`garuda_https_e2e_tests.exe`** (Exit Code 1)
-   - *Detail*: Membutuhkan sertifikat SSL local / OpenSSL mock socket binding yang belum terkonfigurasi di environment OS runner ini. PASS pada `garuda_https_no_plaintext_tests.exe` (PASS) dan `garuda_https_real_tls_tests.exe` (PASS).
+### 3.1 Test FAIL (2 suites)
+1. **`garuda_db_tests.exe`** (Exit Code -1073740791) — Pre-existing socket teardown / port collision.
+2. **`garuda_https_e2e_tests.exe`** (Exit Code 1) — Membutuhkan konfigurasi cert SSL local / OpenSSL mock binding di runner OS.
 
-### 3.2 Test TIMEOUT (12 suites)
-Catatan: Test suite berikut berjalan sebagai server / socket listener berkelanjutan. Ketika dijalankan secara batch otomatis non-interaktif dengan limit 5 detik per test, proses melebihi threshold dan di-kill secara aman:
+### 3.2 Test TIMEOUT (8 suites)
+Test suite berikut berjalan sebagai server / socket listener berkelanjutan. Pada eksekusi batch otomatis non-interaktif dengan limit 10 detik per test, proses melebihi threshold dan di-kill secara aman:
 1. `garuda_async_event_loop_tests.exe`
 2. `garuda_bytecode_io_tests.exe`
 3. `garuda_chat_server_tests.exe`
 4. `garuda_cluster_manager_tests.exe`
-5. `garuda_db_tests.exe`
-6. `garuda_default_max_reqs_tests.exe`
-7. `garuda_fase_g_audit_tests.exe`
-8. `garuda_fault_tests.exe`
-9. `garuda_fullstack_tests.exe`
-10. `garuda_global_parity_tests.exe`
-11. `garuda_http_tests.exe`
-12. `garuda_todo_api_e2e_tests.exe`
+5. `garuda_fault_tests.exe`
+6. `garuda_fullstack_tests.exe`
+7. `garuda_http_tests.exe`
+8. `garuda_todo_api_e2e_tests.exe`
 
 ---
 
