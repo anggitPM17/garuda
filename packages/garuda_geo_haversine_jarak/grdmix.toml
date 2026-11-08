@@ -1,0 +1,13 @@
+[paket]
+nama = "garuda_geo_haversine_jarak"
+versi = "0.1.0"
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
+edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Perhitungan jarak lingkaran besar antara dua titik koordinat bumi."
+
+[target.pustaka]
+jalur = "src/lib.grd"
+
+[uji]
+berkas = ["src/test.grd"]
