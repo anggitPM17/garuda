@@ -1,8 +1,10 @@
 [paket]
 nama = "garuda_basisdata_kv"
 versi = "0.1.0"
-penulis = ["Kontributor Garuda <kontributor@garuda-lang.org>"]
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
 edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Penyimpanan kunci-nilai persistensi nyata berbasis Write-Ahead Log (WAL) dengan pemulihan pasca-crash dan kompaksi."
 
 [target.pustaka]
 jalur = "src/lib.grd"
