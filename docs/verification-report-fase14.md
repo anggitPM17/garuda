@@ -1,18 +1,18 @@
 # Laporan Verifikasi — Garuda Compiler v67.0.0 (Fase 14)
 
 **Tanggal Verifikasi:** 2025-05-18  
-**HEAD Diverifikasi:** `c0fcb09` / `77c6725` — `feat(green-fase14-penyiaran-peristiwa-v7): implementasi nyata bus peristiwa berbasis Ets`  
+**HEAD Diverifikasi:** `cf99eb9` / `77c6725` — `feat(green-fase14-penyiaran-peristiwa-v7): implementasi nyata bus peristiwa berbasis Ets`  
 **Tag Terakhir:** `v67-fase14-verified`  
 
 ---
 
 ## 1. Ringkasan Eksekusi Build & Test Suite
 
-- **Status Build:** SUCCESS (Release configuration, CMake / MSVC, 106 test executables)
-- **Total Test Executables:** 106
-- **PASS:** 96 (90.6%)
-- **FAIL:** 2 (`garuda_db_tests.exe`, `garuda_https_e2e_tests.exe`)
-- **TIMEOUT:** 8 (Socket / HTTP Server teardown & long-running background loops saat non-interactive execution, limit 10s per test)
+- **Status Build:** SUCCESS (Release configuration, CMake / MSVC, 112 test executables)
+- **Total Test Executables:** 112
+- **PASS:** 101 (90.2%)
+- **FAIL:** 5 (`garuda_chat_server_tests.exe`, `garuda_db_tests.exe`, `garuda_event_loop_backend_tests.exe`, `garuda_fullstack_tests.exe`, `garuda_https_e2e_tests.exe`)
+- **TIMEOUT:** 6 (Socket / HTTP Server teardown & long-running background loops saat non-interactive execution, limit 10s per test)
 
 ---
 
@@ -54,20 +54,21 @@ Terverifikasi commit dan implementasi nyata di kode C++ G-BEAM & paket `.grd`:
 
 ## 3. Known Issues & Transparansi Failures/Timeouts
 
-### 3.1 Test FAIL (2 suites)
-1. **`garuda_db_tests.exe`** (Exit Code -1073740791) — Pre-existing socket teardown / port collision.
-2. **`garuda_https_e2e_tests.exe`** (Exit Code 1) — Membutuhkan konfigurasi cert SSL local / OpenSSL mock binding di runner OS.
+### 3.1 Test FAIL (5 suites)
+1. **`garuda_chat_server_tests.exe`** (Exit Code -1073740791) — Socket teardown / port collision.
+2. **`garuda_db_tests.exe`** (Exit Code -1073740791) — Socket teardown / port collision.
+3. **`garuda_event_loop_backend_tests.exe`** (Exit Code -1073740940) — Socket teardown.
+4. **`garuda_fullstack_tests.exe`** (Exit Code -1073740791) — Socket teardown / port collision.
+5. **`garuda_https_e2e_tests.exe`** (Exit Code 1) — Membutuhkan konfigurasi cert SSL local / OpenSSL mock binding di runner OS.
 
-### 3.2 Test TIMEOUT (8 suites)
+### 3.2 Test TIMEOUT (6 suites)
 Test suite berikut berjalan sebagai server / socket listener berkelanjutan. Pada eksekusi batch otomatis non-interaktif dengan limit 10 detik per test, proses melebihi threshold dan di-kill secara aman:
 1. `garuda_async_event_loop_tests.exe`
 2. `garuda_bytecode_io_tests.exe`
-3. `garuda_chat_server_tests.exe`
-4. `garuda_cluster_manager_tests.exe`
-5. `garuda_fault_tests.exe`
-6. `garuda_fullstack_tests.exe`
-7. `garuda_http_tests.exe`
-8. `garuda_todo_api_e2e_tests.exe`
+3. `garuda_cluster_manager_tests.exe`
+4. `garuda_fault_tests.exe`
+5. `garuda_http_tests.exe`
+6. `garuda_todo_api_e2e_tests.exe`
 
 ---
 

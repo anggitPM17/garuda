@@ -19,7 +19,7 @@ garuda_bootstrap_grd_tests.exe,PASS,0
 garuda_bytecode_io_tests.exe,TIMEOUT,-1
 garuda_bytecode_tests.exe,PASS,0
 garuda_captcha_pow_tests.exe,PASS,0
-garuda_chat_server_tests.exe,TIMEOUT,-1
+garuda_chat_server_tests.exe,FAIL,-1073740791
 garuda_cli_example_tests.exe,PASS,0
 garuda_cluster_manager_tests.exe,TIMEOUT,-1
 garuda_codegen_grd_tests.exe,PASS,0
@@ -47,7 +47,7 @@ garuda_error_handling_tests.exe,PASS,0
 garuda_error_reporting_tests.exe,PASS,0
 garuda_error_tests.exe,PASS,0
 garuda_ets_tests.exe,PASS,0
-garuda_event_loop_backend_tests.exe,PASS,0
+garuda_event_loop_backend_tests.exe,FAIL,-1073740940
 garuda_fase_g_audit_tests.exe,PASS,0
 garuda_fault_tests.exe,TIMEOUT,-1
 garuda_feature_tests.exe,PASS,0
@@ -56,7 +56,7 @@ garuda_ffi_tests.exe,PASS,0
 garuda_file_grd_tests.exe,PASS,0
 garuda_formatter_linter_tests.exe,PASS,0
 garuda_fs_process_tests.exe,PASS,0
-garuda_fullstack_tests.exe,TIMEOUT,-1
+garuda_fullstack_tests.exe,FAIL,-1073740791
 garuda_fuzzing_tests.exe,PASS,0
 garuda_gc_scale_tests.exe,PASS,0
 garuda_generic_tests.exe,PASS,0
@@ -103,5 +103,11 @@ garuda_jwt_tests.exe,PASS,0
 garuda_key_transparency_tests.exe,PASS,0
 garuda_lexer_grd_tests.exe,PASS,0
 garuda_lexer_tests.exe,PASS,0
+garuda_list_grd_tests.exe,PASS,0
+garuda_live_view_tests.exe,PASS,0
+garuda_logger_tests.exe,PASS,0
+garuda_lsp_tests.exe,PASS,0
+garuda_macro_tests.exe,PASS,0
+garuda_map_comprehension_tests.exe,PASS,0
 garuda_package_manager_tests.exe,PASS,0
 garuda_todo_api_e2e_tests.exe,TIMEOUT,-1
