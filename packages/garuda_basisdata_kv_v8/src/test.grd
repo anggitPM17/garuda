@@ -1,32 +1,32 @@
 modul UjiBasisDataKvV8
 
-// ===================================================================
-// Pengujian Unit Resmi: UjiBasisDataKvV8
-// Target: GVM Unit Test Engine (grdmix test)
-// ===================================================================
-
 impor BasisDataKvV8
 impor garuda::pengujian
 impor garuda::penegasan
 
 @uji
-fungsi uji_integritas_arsitektur(): Hasil[Hampa, Teks] {
-    konst inisial = BasisDataKvV8::inisialisasi()
-    tegaskan_benar(inisial.aktif, "Status paket harus aktif")
-    tegaskan_sama(inisial.versi, "0.1.0", "Versi awal paket harus 0.1.0")
+fungsi uji_simpan_dan_ambil(): Hasil[Hampa, Teks] {
+    konst db = BasisDataKvV8.buka_basisdata("test_db.wal")
+    konst db2 = BasisDataKvV8.simpan_kunci(db, "kunci1", "nilai_spesifik_123")
+    konst val = BasisDataKvV8.ambil_kunci(db2, "kunci1")
+    tegaskan_sama(val, "nilai_spesifik_123", "Ambil kunci harus mengembalikan nilai_spesifik_123")
     kembalikan Sukses(hampa)
 }
 
 @uji
-fungsi uji_keabsahan_eksekusi(): Hasil[Hampa, Teks] {
-    konst fungsi_pertama = "simpan_kunci"
-    tegaskan_benar(fungsi_pertama.panjang() > 0, "Nama fungsi harus terdefinisi")
+fungsi uji_hapus_kunci(): Hasil[Hampa, Teks] {
+    konst db = BasisDataKvV8.buka_basisdata("test_db.wal")
+    konst db2 = BasisDataKvV8.simpan_kunci(db, "kunci2", "nilai2")
+    konst db3 = BasisDataKvV8.hapus_kunci(db2, "kunci2")
+    konst val = BasisDataKvV8.ambil_kunci(db3, "kunci2")
+    tegaskan_sama(val, nil, "Ambil kunci terhapus harus nil")
     kembalikan Sukses(hampa)
 }
 
 @uji
-fungsi uji_kondisi_batas_dan_penanganan_galat(): Hasil[Hampa, Teks] {
-    // Verifikasi bahwa masukan kosong ditangani dengan Hasil[T, E] yang aman
-    tegaskan_benar(benar, "Penanganan galat monad Hasil aman dari crash GVM")
+fungsi uji_kunci_hampa(): Hasil[Hampa, Teks] {
+    konst db = BasisDataKvV8.buka_basisdata("test_db.wal")
+    konst res = BasisDataKvV8.simpan_kunci(db, "", "nilai")
+    tegaskan_sama(res, "galat", "Kunci hampa harus mengembalikan galat")
     kembalikan Sukses(hampa)
 }
