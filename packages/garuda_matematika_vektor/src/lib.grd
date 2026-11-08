@@ -1,346 +1,92 @@
-Berikut adalah rancangan lengkap pustaka paket **`garuda_matematika_vektor`** untuk ekosistem bahasa Garuda (.grd).
-
----
-
-### 1. Berkas Manifest: `garuda.json`
-
-```json
-{
-  "nama": "garuda_matematika_vektor",
-  "versi": "0.1.0",
-  "deskripsi": "Pustaka aljabar linier, komputasi matriks 4x4, dan manipulasi vektor 2D/3D untuk bahasa Garuda.",
-  "penulis": ["Tim Arsitek Garuda <pengembang@garuda-lang.org>"],
-  "lisensi": "MIT",
-  "repositori": "https://github.com/anggitPM17/garuda_matematika_vektor",
-  "entri": "src/lib.grd",
-  "target": "gvm",
-  "dependensi": {}
-}
-```
-
----
-
-### 2. Berkas Implementasi: `src/lib.grd`
-
-```garuda
 modul MatematikaVektor
 
-impor Inti.Matematika sebagai Math
+impor garuda::dasar
+impor garuda::hasil
 
-// =============================================================================
-// STRUKTUR DATA
-// =============================================================================
-
-ekspor struktur Vektor2 {
-    x: Desimal,
-    y: Desimal
+publik struktur Vektor2 {
+    x: Pecahan,
+    y: Pecahan
 }
 
-ekspor struktur Vektor3 {
-    x: Desimal,
-    y: Desimal,
-    z: Desimal
+publik struktur Vektor2D {
+    x: Pecahan,
+    y: Pecahan
 }
 
-// Representasi matriks 4x4 baris-utama (row-major) 16 elemen:
-// [ m00, m01, m02, m03,
-//   m10, m11, m12, m13,
-//   m20, m21, m22, m23,
-//   m30, m31, m32, m33 ]
-ekspor struktur Matriks4x4 {
-    elemen: Daftar[Desimal]
+publik struktur Vektor3 {
+    x: Pecahan,
+    y: Pecahan,
+    z: Pecahan
 }
 
-// =============================================================================
-// OPERASI VEKTOR 2D
-// =============================================================================
-
-ekspor fungsi baru_v2(x: Desimal, y: Desimal): Vektor2 {
-    kembalikan Vektor2 { x: x, y: y }
+publik struktur Vektor3D {
+    x: Pecahan,
+    y: Pecahan,
+    z: Pecahan
 }
 
-ekspor fungsi tambah_v2(a: Vektor2, b: Vektor2): Vektor2 {
-    kembalikan Vektor2 {
-        x: a.x + b.x,
-        y: a.y + b.y
-    }
+publik struktur Matriks4 {
+    elemen: Daftar[Pecahan]
 }
 
-ekspor fungsi kurang_v2(a: Vektor2, b: Vektor2): Vektor2 {
-    kembalikan Vektor2 {
-        x: a.x - b.x,
-        y: a.y - b.y
-    }
+publik fungsi inisialisasi(): Vektor2D {
+    kembalikan Vektor2D(x = 0.0, y = 0.0)
 }
 
-ekspor fungsi skala_v2(v: Vektor2, k: Desimal): Vektor2 {
-    kembalikan Vektor2 {
-        x: v.x * k,
-        y: v.y * k
-    }
+publik fungsi buat_vektor_2d(x: Pecahan, y: Pecahan): Vektor2D {
+    kembalikan Vektor2D(x = x, y = y)
 }
 
-ekspor fungsi titik_v2(a: Vektor2, b: Vektor2): Desimal {
+publik fungsi buat_vektor2(x: Pecahan, y: Pecahan): Vektor2 {
+    kembalikan Vektor2(x = x, y = y)
+}
+
+publik fungsi tambah_vektor_2d(a: Vektor2D, b: Vektor2D): Vektor2D {
+    kembalikan Vektor2D(x = a.x + b.x, y = a.y + b.y)
+}
+
+publik fungsi perkalian_titik_2d(a: Vektor2D, b: Vektor2D): Pecahan {
     kembalikan (a.x * b.x) + (a.y * b.y)
 }
 
-ekspor fungsi panjang_kuadrat_v2(v: Vektor2): Desimal {
-    kembalikan titik_v2(v, v)
+publik fungsi panjang_vektor_2d(v: Vektor2D): Pecahan {
+    konst kuadrat = (v.x * v.x) + (v.y * v.y)
+    kembalikan kuadrat.akar_kuadrat()
 }
 
-ekspor fungsi panjang_v2(v: Vektor2): Desimal {
-    kembalikan Math.akar(panjang_kuadrat_v2(v))
-}
-
-ekspor fungsi normalisasi_v2(v: Vektor2): Hasil[Vektor2, Teks] {
-    tetapkan p = panjang_v2(v)
-    jika p == 0.0 {
-        kembalikan Hasil.Gagal("Tidak dapat menormalisasi vektor dengan panjang nol.")
-    } lainnya {
-        kembalikan Hasil.Sukses(Vektor2 {
-            x: v.x / p,
-            y: v.y / p
-        })
+publik fungsi normalisasi_2d(v: Vektor2D): Hasil[Vektor2D, Teks] {
+    konst len = panjang_vektor_2d(v)
+    jika (len == 0.0) {
+        kembalikan Gagal("Tidak dapat menormalisasi vektor nol")
     }
+    kembalikan Sukses(Vektor2D(x = v.x / len, y = v.y / len))
 }
 
-// =============================================================================
-// OPERASI VEKTOR 3D
-// =============================================================================
-
-ekspor fungsi baru_v3(x: Desimal, y: Desimal, z: Desimal): Vektor3 {
-    kembalikan Vektor3 { x: x, y: y, z: z }
+publik fungsi tambah_vektor2(a: Vektor2, b: Vektor2): Vektor2 {
+    kembalikan Vektor2(x = a.x + b.x, y = a.y + b.y)
 }
 
-ekspor fungsi tambah_v3(a: Vektor3, b: Vektor3): Vektor3 {
-    kembalikan Vektor3 {
-        x: a.x + b.x,
-        y: a.y + b.y,
-        z: a.z + b.z
-    }
+publik fungsi titik_vektor2(a: Vektor2, b: Vektor2): Pecahan {
+    kembalikan (a.x * b.x) + (a.y * b.y)
 }
 
-ekspor fungsi kurang_v3(a: Vektor3, b: Vektor3): Vektor3 {
-    kembalikan Vektor3 {
-        x: a.x - b.x,
-        y: a.y - b.y,
-        z: a.z - b.z
-    }
+publik fungsi buat_vektor3(x: Pecahan, y: Pecahan, z: Pecahan): Vektor3 {
+    kembalikan Vektor3(x = x, y = y, z = z)
 }
 
-ekspor fungsi skala_v3(v: Vektor3, k: Desimal): Vektor3 {
-    kembalikan Vektor3 {
-        x: v.x * k,
-        y: v.y * k,
-        z: v.z * k
-    }
+publik fungsi perkalian_silang(a: Vektor3, b: Vektor3): Vektor3 {
+    kembalikan Vektor3(
+        x = (a.y * b.z) - (a.z * b.y),
+        y = (a.z * b.x) - (a.x * b.z),
+        z = (a.x * b.y) - (a.y * b.x)
+    )
 }
 
-ekspor fungsi titik_v3(a: Vektor3, b: Vektor3): Desimal {
-    kembalikan (a.x * b.x) + (a.y * b.y) + (a.z * b.z)
-}
-
-ekspor fungsi silang_v3(a: Vektor3, b: Vektor3): Vektor3 {
-    kembalikan Vektor3 {
-        x: (a.y * b.z) - (a.z * b.y),
-        y: (a.z * b.x) - (a.x * b.z),
-        z: (a.x * b.y) - (a.y * b.x)
-    }
-}
-
-ekspor fungsi panjang_kuadrat_v3(v: Vektor3): Desimal {
-    kembalikan titik_v3(v, v)
-}
-
-ekspor fungsi panjang_v3(v: Vektor3): Desimal {
-    kembalikan Math.akar(panjang_kuadrat_v3(v))
-}
-
-ekspor fungsi normalisasi_v3(v: Vektor3): Hasil[Vektor3, Teks] {
-    tetapkan p = panjang_v3(v)
-    jika p == 0.0 {
-        kembalikan Hasil.Gagal("Tidak dapat menormalisasi vektor 3D dengan panjang nol.")
-    } lainnya {
-        kembalikan Hasil.Sukses(Vektor3 {
-            x: v.x / p,
-            y: v.y / p,
-            z: v.z / p
-        })
-    }
-}
-
-// =============================================================================
-// OPERASI MATRIKS 4X4
-// =============================================================================
-
-ekspor fungsi identitas_m4(): Matriks4x4 {
-    kembalikan Matriks4x4 {
-        elemen: [
-            1.0, 0.0, 0.0, 0.0,
-            0.0, 1.0, 0.0, 0.0,
-            0.0, 0.0, 1.0, 0.0,
-            0.0, 0.0, 0.0, 1.0
-        ]
-    }
-}
-
-ekspor fungsi ambil_elemen(m: Matriks4x4, baris: Bilangan, kolom: Bilangan): Desimal {
-    kembalikan m.elemen[(baris * 4) + kolom]
-}
-
-ekspor fungsi kali_m4(a: Matriks4x4, b: Matriks4x4): Matriks4x4 {
-    tetapkan fungsi hitung_sel(b_idx: Bilangan, k_idx: Bilangan): Desimal {
-        kembalikan (ambil_elemen(a, b_idx, 0) * ambil_elemen(b, 0, k_idx)) +
-                   (ambil_elemen(a, b_idx, 1) * ambil_elemen(b, 1, k_idx)) +
-                   (ambil_elemen(a, b_idx, 2) * ambil_elemen(b, 2, k_idx)) +
-                   (ambil_elemen(a, b_idx, 3) * ambil_elemen(b, 3, k_idx))
-    }
-
-    kembalikan Matriks4x4 {
-        elemen: [
-            hitung_sel(0, 0), hitung_sel(0, 1), hitung_sel(0, 2), hitung_sel(0, 3),
-            hitung_sel(1, 0), hitung_sel(1, 1), hitung_sel(1, 2), hitung_sel(1, 3),
-            hitung_sel(2, 0), hitung_sel(2, 1), hitung_sel(2, 2), hitung_sel(2, 3),
-            hitung_sel(3, 0), hitung_sel(3, 1), hitung_sel(3, 2), hitung_sel(3, 3)
-        ]
-    }
-}
-
-ekspor fungsi translasi_m4(tx: Desimal, ty: Desimal, tz: Desimal): Matriks4x4 {
-    kembalikan Matriks4x4 {
-        elemen: [
-            1.0, 0.0, 0.0, tx,
-            0.0, 1.0, 0.0, ty,
-            0.0, 0.0, 1.0, tz,
-            0.0, 0.0, 0.0, 1.0
-        ]
-    }
-}
-
-ekspor fungsi skala_m4(sx: Desimal, sy: Desimal, sz: Desimal): Matriks4x4 {
-    kembalikan Matriks4x4 {
-        elemen: [
-            sx,  0.0, 0.0, 0.0,
-            0.0, sy,  0.0, 0.0,
-            0.0, 0.0, sz,  0.0,
-            0.0, 0.0, 0.0, 1.0
-        ]
-    }
-}
-
-ekspor fungsi transpos_m4(m: Matriks4x4): Matriks4x4 {
-    kembalikan Matriks4x4 {
-        elemen: [
-            ambil_elemen(m, 0, 0), ambil_elemen(m, 1, 0), ambil_elemen(m, 2, 0), ambil_elemen(m, 3, 0),
-            ambil_elemen(m, 0, 1), ambil_elemen(m, 1, 1), ambil_elemen(m, 2, 1), ambil_elemen(m, 3, 1),
-            ambil_elemen(m, 0, 2), ambil_elemen(m, 1, 2), ambil_elemen(m, 2, 2), ambil_elemen(m, 3, 2),
-            ambil_elemen(m, 0, 3), ambil_elemen(m, 1, 3), ambil_elemen(m, 2, 3), ambil_elemen(m, 3, 3)
-        ]
-    }
-}
-
-// Transformasi koordinat affine (vektor titik dengan w = 1.0)
-ekspor fungsi transformasi_v3(m: Matriks4x4, v: Vektor3): Vektor3 {
-    tetapkan x = (ambil_elemen(m, 0, 0) * v.x) + (ambil_elemen(m, 0, 1) * v.y) + (ambil_elemen(m, 0, 2) * v.z) + ambil_elemen(m, 0, 3)
-    tetapkan y = (ambil_elemen(m, 1, 0) * v.x) + (ambil_elemen(m, 1, 1) * v.y) + (ambil_elemen(m, 1, 2) * v.z) + ambil_elemen(m, 1, 3)
-    tetapkan z = (ambil_elemen(m, 2, 0) * v.x) + (ambil_elemen(m, 2, 1) * v.y) + (ambil_elemen(m, 2, 2) * v.z) + ambil_elemen(m, 2, 3)
-    tetapkan w = (ambil_elemen(m, 3, 0) * v.x) + (ambil_elemen(m, 3, 1) * v.y) + (ambil_elemen(m, 3, 2) * v.z) + ambil_elemen(m, 3, 3)
-
-    jika w != 1.0 dan w != 0.0 {
-        kembalikan Vektor3 { x: x / w, y: y / w, z: z / w }
-    } lainnya {
-        kembalikan Vektor3 { x: x, y: y, z: z }
-    }
-}
-```
-
----
-
-### 3. Berkas Unit Test: `test/test.grd`
-
-```garuda
-modul UjiMatematikaVektor
-
-impor Inti.Pengujian { tegaskan, tegaskan_sama, jalankan_semua }
-impor MatematikaVektor sebagai MV
-
-fungsi uji_vektor2() {
-    tetapkan v1 = MV.baru_v2(3.0, 4.0)
-    tetapkan v2 = MV.baru_v2(1.0, 2.0)
-
-    // Pengujian Penjumlahan & Pengurangan
-    tetapkan hasil_tambah = MV.tambah_v2(v1, v2)
-    tegaskan_sama(hasil_tambah.x, 4.0)
-    tegaskan_sama(hasil_tambah.y, 6.0)
-
-    // Pengujian Panjang Vektor (Norm Pythagoras 3-4-5)
-    tetapkan panjang = MV.panjang_v2(v1)
-    tegaskan_sama(panjang, 5.0)
-
-    // Pengujian Normalisasi
-    cocokkan MV.normalisasi_v2(v1) {
-        Hasil.Sukses(norm) => {
-            tegaskan_sama(norm.x, 0.6)
-            tegaskan_sama(norm.y, 0.8)
-        },
-        Hasil.Gagal(_) => tegaskan(salah)
-    }
-
-    // Normalisasi vektor nol wajib menghasilkan Hasil.Gagal
-    tetapkan v_nol = MV.baru_v2(0.0, 0.0)
-    cocokkan MV.normalisasi_v2(v_nol) {
-        Hasil.Sukses(_) => tegaskan(salah),
-        Hasil.Gagal(_) => tegaskan(benar)
-    }
-}
-
-fungsi uji_vektor3() {
-    tetapkan a = MV.baru_v3(1.0, 0.0, 0.0)
-    tetapkan b = MV.baru_v3(0.0, 1.0, 0.0)
-
-    // Perkalian Titik (Orthogonal -> 0.0)
-    tegaskan_sama(MV.titik_v3(a, b), 0.0)
-
-    // Perkalian Silang (i x j = k -> [0, 0, 1])
-    tetapkan k = MV.silang_v3(a, b)
-    tegaskan_sama(k.x, 0.0)
-    tegaskan_sama(k.y, 0.0)
-    tegaskan_sama(k.z, 1.0)
-}
-
-fungsi uji_matriks4x4() {
-    tetapkan identitas = MV.identitas_m4()
-    tetapkan titik = MV.baru_v3(10.0, 5.0, 2.0)
-
-    // 1. Matriks Identitas tidak merubah posisi vektor
-    tetapkan hasil_id = MV.transformasi_v3(identitas, titik)
-    tegaskan_sama(hasil_id.x, 10.0)
-    tegaskan_sama(hasil_id.y, 5.0)
-    tegaskan_sama(hasil_id.z, 2.0)
-
-    // 2. Operasi Translasi
-    tetapkan mat_translasi = MV.translasi_m4(5.0, -2.0, 3.0)
-    tetapkan hasil_translasi = MV.transformasi_v3(mat_translasi, titik)
-    tegaskan_sama(hasil_translasi.x, 15.0)
-    tegaskan_sama(hasil_translasi.y, 3.0)
-    tegaskan_sama(hasil_translasi.z, 5.0)
-
-    // 3. Komposisi Matriks (Translasi * Skala)
-    tetapkan mat_skala = MV.skala_m4(2.0, 2.0, 2.0)
-    tetapkan gabungan = MV.kali_m4(mat_translasi, mat_skala)
-    
-    // (10, 5, 2) diskala 2x jadi (20, 10, 4), lalu ditranslasi (+5, -2, +3) jadi (25, 8, 7)
-    tetapkan hasil_gabungan = MV.transformasi_v3(gabungan, titik)
-    tegaskan_sama(hasil_gabungan.x, 25.0)
-    tegaskan_sama(hasil_gabungan.y, 8.0)
-    tegaskan_sama(hasil_gabungan.z, 7.0)
-}
-
-fungsi utama() {
-    jalankan_semua([
-        ("Uji Dasar Vektor 2D", uji_vektor2),
-        ("Uji Dot dan Cross Product Vektor 3D", uji_vektor3),
-        ("Uji Transformasi Matriks 4x4", uji_matriks4x4)
+publik fungsi matriks4_identitas(): Matriks4 {
+    kembalikan Matriks4(elemen = [
+        1.0, 0.0, 0.0, 0.0,
+        0.0, 1.0, 0.0, 0.0,
+        0.0, 0.0, 1.0, 0.0,
+        0.0, 0.0, 0.0, 1.0
     ])
 }
-```
