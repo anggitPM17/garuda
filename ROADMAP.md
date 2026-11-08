@@ -9,7 +9,7 @@
 
 - **Garuda**: bahasa pemrograman (ekstensi `.grd`, compiler `grdc`, runtime **GVM**, REPL) dengan **sintaks Indonesia + model aktor** (terinspirasi BEAM/Erlang/Elixir).
 - **Prinsip kerja**: *"Pengerasan dulu, ekspansi kemudian."* Jangan membuka lapis baru sebelum gate keluar lapis sebelumnya tercapai.
-- **Aturan untuk agen**:
+- **Aturan untuk pengembang**:
   1. Kerjakan hanya item pada lapis yang sedang aktif.
   2. Jangan melompat lapis atau menambah fitur di luar roadmap tanpa persetujuan.
   3. Jangan mengklaim kemampuan sebelum terbukti (ada tes / demo nyata).
