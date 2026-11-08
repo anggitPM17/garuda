@@ -1,27 +1,43 @@
 # garuda_penyiaran_peristiwa
 
-> **Modul:** `PenyiaranPeristiwa` • **Kategori:** Pola Desain & Aktor
+> **Modul:** `PenyiaranPeristiwa` • **Kategori:** Konkurensi & Aktor • **Versi:** `0.1.0`
 
-Sistem Pub/Sub terdesentralisasi berbasis aktor penerima pesan.
+Sistem Pub/Sub terdesentralisasi berbasis aktor penerima pesan dengan urutan terjamin dan isolasi galat pelanggan.
 
-## Alasan Pengayaan Ekosistem Garuda
-Komunikasi reaktif asinkron antar komponen sistem.
+## Arsitektur & Tujuan
+Komunikasi event-driven reaktif asinkron antar komponen sistem nir-keterikatan.
 
-## Instalasi via GPM
+## Pemasangan via GPM
+Tambahkan ke berkas `grdmix.toml`:
+```toml
+[dependensi]
+garuda_penyiaran_peristiwa = "0.1.0"
+```
+
+Atau instal langsung melalui CLI:
 ```bash
 gpm pasang garuda_penyiaran_peristiwa
 ```
 
 ## Contoh Penggunaan
 ```garuda
+modul AplikasiSaya
+
 impor PenyiaranPeristiwa
 
 publik fungsi utama(): Bulat {
-    konst cfg = PenyiaranPeristiwa::inisialisasi()
-    cetak("Paket aktif: " + cfg.versi)
+    konst instansi = PenyiaranPeristiwa::inisialisasi()
     kembalikan 0
 }
 ```
 
+## Batasan yang Diketahui (Known Limitations)
+- Modul ini dirancang murni di atas runtime GVM (Garuda Virtual Machine).
+- Bergantung pada ketersediaan alokasi heap memori thread-safe.
+
+## Kebutuhan Engine C++ GVM
+- Jika modul memerlukan operasi I/O jaringan fisik langsung, modul memanggil FFI socket `garuda_socket_ffi`.
+- Kriptografi CSPRNG membutuhkan entropy source `/dev/urandom` atau WinCrypt pada level host C++.
+
 ## Lisensi
-Lisensi MIT © 2026 Pengembang Bahasa Garuda.
+Lisensi MIT © 2026 Anggit Prasetyo (@anggitPM17).
