@@ -1,8 +1,10 @@
 [paket]
 nama = "garuda_antrean_prioritas"
 versi = "0.1.0"
-penulis = ["Kontributor Garuda <kontributor@garuda-lang.org>"]
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
 edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Binary Min/Max Heap thread-safe berurutan stabil dengan dukungan penyeimbangan naik/turun otomatis."
 
 [target.pustaka]
 jalur = "src/lib.grd"
