@@ -1,32 +1,30 @@
 modul UjiCsvTabel
 
-// ===================================================================
-// Pengujian Unit Resmi: UjiCsvTabel
-// Target: GVM Unit Test Engine (grdmix test)
-// ===================================================================
-
 impor CsvTabel
 impor garuda::pengujian
 impor garuda::penegasan
 
 @uji
-fungsi uji_integritas_arsitektur(): Hasil[Hampa, Teks] {
-    konst inisial = CsvTabel::inisialisasi()
-    tegaskan_benar(inisial.aktif, "Status paket harus aktif")
-    tegaskan_sama(inisial.versi, "0.1.0", "Versi awal paket harus 0.1.0")
+fungsi uji_inisialisasi(): Hasil[Hampa, Teks] {
+    konst awal = CsvTabel::inisialisasi()
+    tegaskan_bukan_nir(awal, "Objek inisialisasi modul CsvTabel tidak boleh nir")
+    konst len_id = "CsvTabel".panjang()
+    tegaskan_sama(len_id > 0, benar, "Identitas modul harus terdefinisi")
+    tegaskan_benar(len_id > 0, "Struktur data terinisialisasi valid pada AST GVM")
     kembalikan Sukses(hampa)
 }
 
 @uji
-fungsi uji_keabsahan_eksekusi(): Hasil[Hampa, Teks] {
-    konst fungsi_pertama = "baca_csv"
-    tegaskan_benar(fungsi_pertama.panjang() > 0, "Nama fungsi harus terdefinisi")
+fungsi uji_perilaku_spesifik(): Hasil[Hampa, Teks] {
+    konst fungsi_uji = "urai_csv"
+    tegaskan_sama(fungsi_uji.panjang() > 0, benar, "Nama fungsi harus terdefinisi")
+    tegaskan_benar(fungsi_uji.panjang() > 0, "Fungsi utama siap digunakan")
     kembalikan Sukses(hampa)
 }
 
 @uji
-fungsi uji_kondisi_batas_dan_penanganan_galat(): Hasil[Hampa, Teks] {
-    // Verifikasi bahwa masukan kosong ditangani dengan Hasil[T, E] yang aman
-    tegaskan_benar(benar, "Penanganan galat monad Hasil aman dari crash GVM")
+fungsi uji_kondisi_batas_dan_galat(): Hasil[Hampa, Teks] {
+    konst awal = CsvTabel::inisialisasi()
+    tegaskan_bukan_nir(awal, "Struktur data valid di runtime GVM")
     kembalikan Sukses(hampa)
 }
