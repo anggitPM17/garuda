@@ -1,0 +1,13 @@
+[paket]
+nama = "garuda_basisdata_btree_indeks"
+versi = "0.1.0"
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
+edisi = "2026"
+lisensi = "MIT"
+deskripsi = "B-Tree multitingkat berpenyeimbang otomatis untuk pengindeksan disk."
+
+[target.pustaka]
+jalur = "src/lib.grd"
+
+[uji]
+berkas = ["src/test.grd"]
