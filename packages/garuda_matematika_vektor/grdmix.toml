@@ -1,8 +1,10 @@
 [paket]
 nama = "garuda_matematika_vektor"
 versi = "0.1.0"
-penulis = ["Kontributor Garuda <kontributor@garuda-lang.org>"]
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
 edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Aljabar linier komputasi Vektor 2D/3D dan Matriks 4x4 dengan operasi perkalian silang, dot product, determinan, dan inversi."
 
 [target.pustaka]
 jalur = "src/lib.grd"
