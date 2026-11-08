@@ -1,27 +1,43 @@
 # garuda_identitas_uuid
 
-> **Modul:** `IdentitasUuid` • **Kategori:** Utilitas Sistem
+> **Modul:** `IdentitasUuid` • **Kategori:** Utilitas Sistem • **Versi:** `0.1.0`
 
-Generator UUID versi 4 (acak kriptografis) dan versi 7 (time-ordered).
+Generator dan parser UUID versi 4 (CSPRNG) dan versi 7 (time-ordered timestamp 48-bit) dengan validasi format RFC 4122.
 
-## Alasan Pengayaan Ekosistem Garuda
-Pengidentifikasi unik global untuk entitas database dan transaksi.
+## Arsitektur & Tujuan
+Pengidentifikasi unik global berurutan untuk entitas database dan pelacakan transaksi terdistribusi.
 
-## Instalasi via GPM
+## Pemasangan via GPM
+Tambahkan ke berkas `grdmix.toml`:
+```toml
+[dependensi]
+garuda_identitas_uuid = "0.1.0"
+```
+
+Atau instal langsung melalui CLI:
 ```bash
 gpm pasang garuda_identitas_uuid
 ```
 
 ## Contoh Penggunaan
 ```garuda
+modul AplikasiSaya
+
 impor IdentitasUuid
 
 publik fungsi utama(): Bulat {
-    konst cfg = IdentitasUuid::inisialisasi()
-    cetak("Paket aktif: " + cfg.versi)
+    konst instansi = IdentitasUuid::inisialisasi()
     kembalikan 0
 }
 ```
 
+## Batasan yang Diketahui (Known Limitations)
+- Modul ini dirancang murni di atas runtime GVM (Garuda Virtual Machine).
+- Bergantung pada ketersediaan alokasi heap memori thread-safe.
+
+## Kebutuhan Engine C++ GVM
+- Jika modul memerlukan operasi I/O jaringan fisik langsung, modul memanggil FFI socket `garuda_socket_ffi`.
+- Kriptografi CSPRNG membutuhkan entropy source `/dev/urandom` atau WinCrypt pada level host C++.
+
 ## Lisensi
-Lisensi MIT © 2026 Pengembang Bahasa Garuda.
+Lisensi MIT © 2026 Anggit Prasetyo (@anggitPM17).
