@@ -1,56 +1,28 @@
 modul BasisDataKvV8
 
 // ===================================================================
-// Pustaka Resmi Garuda: garuda_basisdata_kv_v8
-// Domain: Basis Data Key-Value Immutabel dengan WAL Log
+// Pustaka Resmi Garuda: garuda_basisdata_kv_v8 (Implementasi Nyata)
+// Domain: Basis Data Key-Value thread-safe berbasis Ets
 // Penulis: Anggit Prasetyo (@anggitPM17) & Komunitas Garuda
 // ===================================================================
 
-impor garuda::dasar
-impor garuda::hasil
-impor garuda::io
-
-publik struktur CatatanWal {
-    kunci: Teks,
-    nilai: Teks,
-    waktu_stempel: Bulat
+publik fungsi buka_basisdata(jalur) {
+    Ets.baru()
 }
 
-publik struktur BasisDataKvV8 {
-    jalur_wal: Teks,
-    terkunci: Kebenaran,
-    total_entri: Bulat
-}
-
-publik fungsi buka_basisdata(jalur: Teks): Hasil[BasisDataKvV8, Teks] {
-    jika (jalur.panjang() == 0) {
-        kembalikan Gagal("Jalur penyimpanan basis data tidak boleh kosong")
+publik fungsi simpan_kunci(tid, kunci, nilai) {
+    jika (kunci == "") {
+        kembalikan "galat"
     }
-    kembalikan Sukses(BasisDataKvV8(
-        jalur_wal = jalur,
-        terkunci = salah,
-        total_entri = 0
-    ))
+    Ets.sisip(tid, kunci, nilai)
+    kembalikan tid
 }
 
-publik fungsi simpan_kunci(db: BasisDataKvV8, kunci: Teks, nilai: Teks): Hasil[BasisDataKvV8, Teks] {
-    jika (kunci.panjang() == 0) {
-        kembalikan Gagal("Kunci tidak boleh hampa")
-    }
-    konst db_baru = db.salin(total_entri = db.total_entri + 1)
-    kembalikan Sukses(db_baru)
+publik fungsi ambil_kunci(tid, kunci) {
+    Ets.cari(tid, kunci)
 }
 
-publik fungsi ambil_kunci(db: BasisDataKvV8, kunci: Teks): Hasil[Teks, Teks] {
-    jika (db.total_entri == 0) {
-        kembalikan Gagal("Basis data kosong")
-    }
-    kembalikan Sukses("nilai_untuk_" + kunci)
-}
-
-publik fungsi hapus_kunci(db: BasisDataKvV8, kunci: Teks): Hasil[BasisDataKvV8, Teks] {
-    jika (db.total_entri == 0) {
-        kembalikan Gagal("Kunci tidak ditemukan untuk dihapus")
-    }
-    kembalikan Sukses(db.salin(total_entri = db.total_entri - 1))
+publik fungsi hapus_kunci(tid, kunci) {
+    Ets.hapus(tid, kunci)
+    kembalikan tid
 }
