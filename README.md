@@ -11,7 +11,7 @@
 ## 🚦 Status Proyek
 
 > **Update terakhir:** 2025-05-18  
-> **HEAD diverifikasi:** `77c6725` — `feat(green-fase14-penyiaran-peristiwa-v7): implementasi nyata bus peristiwa berbasis Ets`  
+> **HEAD diverifikasi:** `77c6725` / `c0fcb09` — `feat(green-fase14-penyiaran-peristiwa-v7): implementasi nyata bus peristiwa berbasis Ets`  
 
 | Aspek | Status | Bukti |
 |---|---|---|
@@ -20,8 +20,8 @@
 | Fitur user-facing (Fase 12: Json, Http, Env, TodoAPI) | ✅ PASS | `docs/test-results-current.csv` |
 | Package manager & packages (Fase 13) | ✅ PASS | 72/72 packages valid & complete |
 | Logika Modul Packages (Fase 14: Ets bus, Vektor, CSV, Regex, UUID, PriQueue, AES256, JWT, KV DB) | ✅ PASS | `docs/test-results-current.csv` |
-| **Total Test Suite Output** | **76 PASS, 1 FAIL, 12 TIMEOUT** | Lihat `docs/verification-report-fase14.md` |
-| Known Issues | 13 Suites | Lihat section Known Issues |
+| **Total Test Suite Output** | **96 PASS, 2 FAIL, 8 TIMEOUT** | Lihat `docs/verification-report-fase14.md` |
+| Known Issues | 10 Suites | Lihat section Known Issues |
 
 ---
 
@@ -48,6 +48,7 @@
 - **CSV Tabel (`CsvTabel`)** — Parsing dan penulisan format CSV (`e386990`).
 - **Regex Pola (`RegexPola`)** — Pencocokan pola ekspresi reguler (`4c05e70`).
 - **Identitas UUID (`IdentitasUuid`)** — Generator & validasi UUID v4 (`b9409ff`).
+- **Http Klien (`HttpKlien`)** — Client HTTP wrapper berbasis Http BIF (`35f6fee`).
 - **Antrean Prioritas (`AntreanPrioritas`)** — Heap / priority queue berbasis ETS (`d6dfcc5`).
 - **Kripto AES-256 (`KriptoAes256`)** — Enkripsi/dekripsi AES-256 (`d73ac7b`).
 - **JWT Token (`JwtToken`)** — Generator & pembuat klaim JWT token (`a38ef84`).
@@ -83,7 +84,7 @@ cmake --build build --config Release
 ### Jalankan Test Suite
 ```powershell
 # Jalankan runner test cepat
-powershell -ExecutionPolicy Bypass -File "scratch/run_all_fast.ps1"
+powershell -ExecutionPolicy Bypass -File "scratch/run_all_tests.ps1"
 ```
 
 ---
@@ -113,8 +114,8 @@ powershell -ExecutionPolicy Bypass -File "scratch/run_all_fast.ps1"
 
 Daftar dari `docs/verification-report-fase14.md`:
 
-- **1 Test FAIL**: `garuda_https_e2e_tests.exe` (Membutuhkan konfigurasi cert SSL local / OpenSSL mock binding di runner OS).
-- **12 Test TIMEOUT**: Suites yang menjalankan loop HTTP server / socket listener terikat port (seperti `garuda_async_event_loop_tests`, `garuda_chat_server_tests`, `garuda_cluster_manager_tests`, `garuda_db_tests`, `garuda_todo_api_e2e_tests`, dll). Melebihi limit 5 detik pada eksekusi batch non-interaktif.
+- **2 Test FAIL**: `garuda_db_tests.exe` (Socket teardown / port collision), `garuda_https_e2e_tests.exe` (Membutuhkan konfigurasi cert SSL local / OpenSSL mock binding di runner OS).
+- **8 Test TIMEOUT**: Suites yang menjalankan loop HTTP server / socket listener terikat port (`garuda_async_event_loop_tests`, `garuda_chat_server_tests`, `garuda_cluster_manager_tests`, `garuda_fault_tests`, `garuda_fullstack_tests`, `garuda_http_tests`, `garuda_todo_api_e2e_tests`, `garuda_bytecode_io_tests`). Melebihi limit 10 detik pada eksekusi batch non-interaktif.
 
 ---
 
