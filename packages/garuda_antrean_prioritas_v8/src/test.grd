@@ -1,32 +1,30 @@
 modul UjiAntreanPrioritasV8
 
-// ===================================================================
-// Pengujian Unit Resmi: UjiAntreanPrioritasV8
-// Target: GVM Unit Test Engine (grdmix test)
-// ===================================================================
-
 impor AntreanPrioritasV8
 impor garuda::pengujian
 impor garuda::penegasan
 
 @uji
-fungsi uji_integritas_arsitektur(): Hasil[Hampa, Teks] {
-    konst inisial = AntreanPrioritasV8::inisialisasi()
-    tegaskan_benar(inisial.aktif, "Status paket harus aktif")
-    tegaskan_sama(inisial.versi, "0.1.0", "Versi awal paket harus 0.1.0")
+fungsi uji_sisip_dan_intip(): Hasil[Hampa, Teks] {
+    konst q = AntreanPrioritasV8.buat_antrean(10, benar)
+    konst q2 = AntreanPrioritasV8.sisip_prioritas(q, 1, "tugas_123")
+    konst p = AntreanPrioritasV8.intip_puncak(q2)
+    tegaskan_sama(p, "tugas_123", "Intip puncak harus mengembalikan tugas_123")
     kembalikan Sukses(hampa)
 }
 
 @uji
-fungsi uji_keabsahan_eksekusi(): Hasil[Hampa, Teks] {
-    konst fungsi_pertama = "sisip_prioritas"
-    tegaskan_benar(fungsi_pertama.panjang() > 0, "Nama fungsi harus terdefinisi")
+fungsi uji_antrean_kosong(): Hasil[Hampa, Teks] {
+    konst q = AntreanPrioritasV8.buat_antrean(10, benar)
+    konst p = AntreanPrioritasV8.intip_puncak(q)
+    tegaskan_sama(p, "galat", "Intip puncak antrean kosong harus galat")
     kembalikan Sukses(hampa)
 }
 
 @uji
-fungsi uji_kondisi_batas_dan_penanganan_galat(): Hasil[Hampa, Teks] {
-    // Verifikasi bahwa masukan kosong ditangani dengan Hasil[T, E] yang aman
-    tegaskan_benar(benar, "Penanganan galat monad Hasil aman dari crash GVM")
+fungsi uji_apakah_kosong(): Hasil[Hampa, Teks] {
+    konst q = AntreanPrioritasV8.buat_antrean(10, benar)
+    konst k1 = AntreanPrioritasV8.apakah_kosong(q)
+    tegaskan_sama(k1, benar, "Antrean baru harus kosong")
     kembalikan Sukses(hampa)
 }
