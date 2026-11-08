@@ -1,46 +1,58 @@
-                modul CsvTabel
-                
-                // ===================================================================
-                // Pustaka Resmi Garuda: garuda_csv_tabel
-                // Domain: I/O & Format
-                // Penulis: Anggit Prasetyo (@anggitPM17) & Komunitas Garuda
-                // ===================================================================
-                
-                impor garuda::dasar
-                impor garuda::hasil
-                impor garuda::koleksi
-                
-                publik struktur KonfigurasiCsvTabel {
-                    aktif: Kebenaran,
-                    versi: Teks,
-                    kapasitas: Bulat
-                }
-                
-                publik fungsi inisialisasi(): KonfigurasiCsvTabel {
-                    kembalikan KonfigurasiCsvTabel(
-                        aktif = benar,
-                        versi = "0.1.0",
-                        kapasitas = 1024
-                    )
-                }
-                
-                publik fungsi baca_csv(masukan: Teks): Hasil[Teks, Teks] {
-    jika (masukan.panjang() == 0) {
-        kembalikan Gagal("Masukan tidak boleh hampa pada fungsi baca_csv")
-    }
-    kembalikan Sukses("Sukses diproses oleh CsvTabel::baca_csv: " + masukan)
+modul CsvTabel
+
+impor garuda::dasar
+impor garuda::hasil
+
+publik struktur TabelCsv {
+    header: Daftar[Teks],
+    baris_data: Daftar[Daftar[Teks]],
+    jumlah_baris: Bulat
 }
 
-publik fungsi tulis_csv(masukan: Teks): Hasil[Teks, Teks] {
-    jika (masukan.panjang() == 0) {
-        kembalikan Gagal("Masukan tidak boleh hampa pada fungsi tulis_csv")
-    }
-    kembalikan Sukses("Sukses diproses oleh CsvTabel::tulis_csv: " + masukan)
+publik fungsi inisialisasi(): TabelCsv {
+    kembalikan TabelCsv(
+        header = ["id", "nama", "status"],
+        baris_data = [],
+        jumlah_baris = 0
+    )
 }
 
-publik fungsi saring_kolom(masukan: Teks): Hasil[Teks, Teks] {
-    jika (masukan.panjang() == 0) {
-        kembalikan Gagal("Masukan tidak boleh hampa pada fungsi saring_kolom")
+publik fungsi urai_csv(konten: Teks, gunakan_header: Kebenaran): Hasil[TabelCsv, Teks] {
+    jika (konten.panjang() == 0) {
+        kembalikan Sukses(TabelCsv(header = [], baris_data = [], jumlah_baris = 0))
     }
-    kembalikan Sukses("Sukses diproses oleh CsvTabel::saring_kolom: " + masukan)
+    konst baris = konten.pisah("\n")
+    jika (baris.panjang() == 0) {
+        kembalikan Sukses(TabelCsv(header = [], baris_data = [], jumlah_baris = 0))
+    }
+
+    variabel hdr: Daftar[Teks] = []
+    variabel data: Daftar[Daftar[Teks]] = []
+
+    variabel indeks_mulai = 0
+    jika (gunakan_header) {
+        hdr = baris.ambil(0).pisah(",")
+        indeks_mulai = 1
+    }
+
+    untuk i di indeks_mulai..(baris.panjang() - 1) {
+        konst b = baris.ambil(i).pangkas()
+        jika (b.panjang() > 0) {
+            data = data + [b.pisah(",")]
+        }
+    }
+
+    kembalikan Sukses(TabelCsv(
+        header = hdr,
+        baris_data = data,
+        jumlah_baris = data.panjang()
+    ))
+}
+
+publik fungsi tulis_csv(tabel: TabelCsv): Teks {
+    variabel sb = tabel.header.gabung(",") + "\n"
+    untuk baris di tabel.baris_data {
+        sb = sb + baris.gabung(",") + "\n"
+    }
+    kembalikan sb
 }
