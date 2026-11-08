@@ -1,8 +1,10 @@
 [paket]
 nama = "garuda_regex_pola"
 versi = "0.1.0"
-penulis = ["Kontributor Garuda <kontributor@garuda-lang.org>"]
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
 edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Mesin ekspresi reguler deterministik (Thompson NFA) waktu linier O(n), mendukung kelas karakter, kuantifier, dan anchor."
 
 [target.pustaka]
 jalur = "src/lib.grd"
