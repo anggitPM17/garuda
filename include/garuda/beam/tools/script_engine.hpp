@@ -15,6 +15,8 @@
 #include <array>
 #include <atomic>
 #include <chrono>
+#include <cstdlib>
+#include <fstream>
 #include <httplib.h>
 
 #include "mbedtls/sha1.h"
@@ -376,6 +378,7 @@ static std::mutex g_engine_mutex;
 static std::shared_ptr<httplib::Server> g_http_server;
 static std::thread g_http_server_thread;
 static std::atomic<bool> g_http_server_running{false};
+static std::map<std::string, std::string> g_env_config;
 
 class ScriptEngine {
 public:
@@ -3173,6 +3176,55 @@ private:
                 } catch (...) {
                     x_regs[0] = Term(Atom{"salah"});
                 }
+                last_result = x_regs[0];
+                return true;
+            }
+
+            // === Fase 12.3: Env.baca / Env.muat_config ===
+            if (is_mod_fn(fn_name, "Env", "baca") || is_mod_fn(fn_name, "Env", "get")) {
+                std::string var_name = clean_str(x_regs[0]);
+                auto* def_str = x_regs[1].get_if<std::string>();
+                bool has_default = (def_str != nullptr);
+                std::string default_val = has_default ? *def_str : "";
+
+                auto it = g_env_config.find(var_name);
+                if (it != g_env_config.end()) {
+                    x_regs[0] = Term(it->second);
+                } else {
+                    const char* env_val = std::getenv(var_name.c_str());
+                    if (env_val) {
+                        x_regs[0] = Term(std::string(env_val));
+                    } else if (has_default) {
+                        x_regs[0] = Term(default_val);
+                    } else {
+                        x_regs[0] = Term(Atom{"nil"});
+                    }
+                }
+                last_result = x_regs[0];
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "Env", "muat_config") || is_mod_fn(fn_name, "Env", "load_config")) {
+                std::string path = clean_str(x_regs[0]);
+                std::ifstream f(path);
+                if (!f.is_open()) {
+                    x_regs[0] = Term(Atom{"salah"});
+                    last_result = x_regs[0];
+                    return true;
+                }
+                std::string line;
+                while (std::getline(f, line)) {
+                    if (line.empty() || line[0] == '#') continue;
+                    size_t eq = line.find('=');
+                    if (eq == std::string::npos) continue;
+                    std::string k = line.substr(0, eq);
+                    std::string v = line.substr(eq + 1);
+                    while (!k.empty() && std::isspace((unsigned char)k.back())) k.pop_back();
+                    while (!v.empty() && std::isspace((unsigned char)v.front())) v.erase(0, 1);
+                    while (!v.empty() && (v.back() == '\r' || std::isspace((unsigned char)v.back()))) v.pop_back();
+                    g_env_config[k] = v;
+                }
+                x_regs[0] = Term(Atom{"benar"});
                 last_result = x_regs[0];
                 return true;
             }
