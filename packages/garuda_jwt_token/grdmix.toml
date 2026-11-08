@@ -1,8 +1,10 @@
 [paket]
 nama = "garuda_jwt_token"
 versi = "0.1.0"
-penulis = ["Kontributor Garuda <kontributor@garuda-lang.org>"]
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
 edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Pembuat dan pemverifikasi RFC 7519 JSON Web Token (JWT) standar HS256, base64url tanpa padding, serta validasi exp/nbf/iat."
 
 [target.pustaka]
 jalur = "src/lib.grd"
