@@ -177,6 +177,7 @@ int main(int argc, char* argv[]) {
     // === Test 19: 500 Standard Library Module Stubs Generation & Count Verification ===
     std::cout << "[TEST 19/22] Generating & Verifying 500 Standard Library Stubs...\n";
     fs::path stubs_dir = fs::path("./stdlib/stubs");
+    fs::remove_all(stubs_dir);
     fs::create_directories(stubs_dir);
 
     std::vector<std::string> categories = {"math", "string", "list", "map", "set", "json", "http", "db", "crypto", "time", "random", "regex", "file", "os", "net", "concurrency", "testing", "logging", "config", "cli"};
@@ -188,7 +189,7 @@ int main(int argc, char* argv[]) {
         for (int i = 1; i <= 25; ++i) { // 20 categories x 25 stubs = 500 stubs!
             std::string stub_name = categories[cat_i] + "_mod_" + std::to_string(i);
             std::ofstream ofs(cat_dir / (stub_name + ".grd"));
-            ofs << "modul " << stub_name << " fungsi stub_" << i << "() -> \"ok_" << i << "\" rampung rampung\n";
+            ofs << "modul " << stub_name << " fungsi stub_" << i << "() -> \"ok_" << i << "\" rampung\n";
             total_stubs++;
         }
     }
@@ -209,11 +210,17 @@ int main(int argc, char* argv[]) {
             Parser parser(lexer.tokenize());
             CodeGenerator cg;
             auto bytecode = cg.generate(parser.parse_program());
+            if (bytecode.all_instructions.empty()) {
+                std::cout << "[DEBUG FAIL] " << entry.path().string() << " produced 0 instructions!\n";
+            }
             TEST_ASSERT(!bytecode.all_instructions.empty(), "Stub bytecode compilation must produce instructions");
             compiled_count++;
         }
     }
 
+    if (compiled_count != 500) {
+        std::cout << "[DEBUG FAIL] compiled_count = " << compiled_count << " (expected 500)\n";
+    }
     TEST_ASSERT(compiled_count == 500, "All 500 Standard Library Stubs must compile cleanly without errors");
     std::cout << "  ✓ Test 20: 500 Standard Library Stubs Syntax Compilation PASS (" << compiled_count << " stubs compiled, 0 errors)\n";
 
