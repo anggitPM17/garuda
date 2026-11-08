@@ -1,32 +1,26 @@
 modul UjiRegexPolaV8
 
-// ===================================================================
-// Pengujian Unit Resmi: UjiRegexPolaV8
-// Target: GVM Unit Test Engine (grdmix test)
-// ===================================================================
-
 impor RegexPolaV8
 impor garuda::pengujian
 impor garuda::penegasan
 
 @uji
-fungsi uji_integritas_arsitektur(): Hasil[Hampa, Teks] {
-    konst inisial = RegexPolaV8::inisialisasi()
-    tegaskan_benar(inisial.aktif, "Status paket harus aktif")
-    tegaskan_sama(inisial.versi, "0.1.0", "Versi awal paket harus 0.1.0")
+fungsi uji_kompilasi_pola(): Hasil[Hampa, Teks] {
+    konst p = RegexPolaV8.kompilasi_pola("^[a-z]+$")
+    tegaskan_sama(p, "pola_^[a-z]+$", "Kompilasi pola harus mengembalikan pola_^[a-z]+$")
     kembalikan Sukses(hampa)
 }
 
 @uji
-fungsi uji_keabsahan_eksekusi(): Hasil[Hampa, Teks] {
-    konst fungsi_pertama = "kompilasi_pola"
-    tegaskan_benar(fungsi_pertama.panjang() > 0, "Nama fungsi harus terdefinisi")
+fungsi uji_cocokkan_teks_valid(): Hasil[Hampa, Teks] {
+    konst m = RegexPolaV8.cocokkan_teks("halo")
+    tegaskan_sama(m, benar, "Cocokkan teks valid harus mengembalikan benar")
     kembalikan Sukses(hampa)
 }
 
 @uji
-fungsi uji_kondisi_batas_dan_penanganan_galat(): Hasil[Hampa, Teks] {
-    // Verifikasi bahwa masukan kosong ditangani dengan Hasil[T, E] yang aman
-    tegaskan_benar(benar, "Penanganan galat monad Hasil aman dari crash GVM")
+fungsi uji_cocokkan_teks_kosong(): Hasil[Hampa, Teks] {
+    konst m = RegexPolaV8.cocokkan_teks("")
+    tegaskan_sama(m, salah, "Cocokkan teks kosong harus mengembalikan salah")
     kembalikan Sukses(hampa)
 }
