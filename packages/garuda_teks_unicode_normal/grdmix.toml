@@ -1,0 +1,13 @@
+[paket]
+nama = "garuda_teks_unicode_normal"
+versi = "0.1.0"
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
+edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Normalisasi teks Unicode bentuk NFC, NFD, NFKC, dan NFKD sesuai standar."
+
+[target.pustaka]
+jalur = "src/lib.grd"
+
+[uji]
+berkas = ["src/test.grd"]
