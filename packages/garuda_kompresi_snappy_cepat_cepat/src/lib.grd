@@ -1,0 +1,94 @@
+modul SnappyCepatCepat
+
+impor garuda::dasar
+impor garuda::hasil
+
+publik struktur EntriSnappyCepatCepat {
+    kunci: Teks,
+    bobot_prioritas: Bulat,
+    muatan_data: Teks
+}
+
+publik struktur SnappyCepatCepat {
+    identitas_modul: Teks,
+    kapasitas_maksimal: Bulat,
+    jumlah_elemen: Bulat,
+    daftar_entri: Daftar[EntriSnappyCepatCepat],
+    status_siap: Kebenaran,
+    stempel_audit: Bulat
+}
+
+publik fungsi inisialisasi(): SnappyCepatCepat {
+    kembalikan SnappyCepatCepat(
+        identitas_modul = "SnappyCepatCepat",
+        kapasitas_maksimal = 256,
+        jumlah_elemen = 0,
+        daftar_entri = [],
+        status_siap = benar,
+        stempel_audit = 1793898000
+    )
+}
+
+publik fungsi ukuran(s: SnappyCepatCepat): Bulat {
+    kembalikan s.jumlah_elemen
+}
+
+publik fungsi apakah_kosong(s: SnappyCepatCepat): Kebenaran {
+    kembalikan s.jumlah_elemen == 0
+}
+
+publik fungsi buat_snappy_cepat_cepat(konteks: SnappyCepatCepat, parameter: Teks): Hasil[SnappyCepatCepat, Teks] {
+    jika (parameter.panjang() == 0) {
+        kembalikan Gagal("Parameter untuk fungsi buat_snappy_cepat_cepat tidak boleh hampa")
+    }
+    konst konteks_baru = SnappyCepatCepat(
+        identitas_modul = konteks.identitas_modul,
+        kapasitas_maksimal = konteks.kapasitas_maksimal,
+        jumlah_elemen = konteks.jumlah_elemen + 1,
+        status_siap = benar,
+        stempel_audit = 1793898000
+    )
+    kembalikan Sukses(konteks_baru)
+}
+
+publik fungsi eksekusi_cepat(konteks: SnappyCepatCepat, parameter: Teks): Hasil[SnappyCepatCepat, Teks] {
+    jika (parameter.panjang() == 0) {
+        kembalikan Gagal("Parameter untuk fungsi eksekusi_cepat tidak boleh hampa")
+    }
+    konst konteks_baru = SnappyCepatCepat(
+        identitas_modul = konteks.identitas_modul,
+        kapasitas_maksimal = konteks.kapasitas_maksimal,
+        jumlah_elemen = konteks.jumlah_elemen + 1,
+        status_siap = benar,
+        stempel_audit = 1793898000
+    )
+    kembalikan Sukses(konteks_baru)
+}
+
+publik fungsi status(konteks: SnappyCepatCepat, parameter: Teks): Hasil[SnappyCepatCepat, Teks] {
+    jika (parameter.panjang() == 0) {
+        kembalikan Gagal("Parameter untuk fungsi status tidak boleh hampa")
+    }
+    konst konteks_baru = SnappyCepatCepat(
+        identitas_modul = konteks.identitas_modul,
+        kapasitas_maksimal = konteks.kapasitas_maksimal,
+        jumlah_elemen = konteks.jumlah_elemen + 1,
+        status_siap = benar,
+        stempel_audit = 1793898000
+    )
+    kembalikan Sukses(konteks_baru)
+}
+
+publik fungsi bersihkan(konteks: SnappyCepatCepat, parameter: Teks): Hasil[SnappyCepatCepat, Teks] {
+    jika (parameter.panjang() == 0) {
+        kembalikan Gagal("Parameter untuk fungsi bersihkan tidak boleh hampa")
+    }
+    konst konteks_baru = SnappyCepatCepat(
+        identitas_modul = konteks.identitas_modul,
+        kapasitas_maksimal = konteks.kapasitas_maksimal,
+        jumlah_elemen = konteks.jumlah_elemen + 1,
+        status_siap = benar,
+        stempel_audit = 1793898000
+    )
+    kembalikan Sukses(konteks_baru)
+}
