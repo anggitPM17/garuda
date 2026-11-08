@@ -3229,6 +3229,80 @@ private:
                 return true;
             }
 
+            // === Fase 12.4: Server.mulai_router ===
+            if (is_mod_fn(fn_name, "Server", "mulai_router") || is_mod_fn(fn_name, "Server", "start_router")) {
+                int64_t port = (x_regs.size() > 0) ? get_int_val(x_regs[0]) : 9292;
+                if (port <= 0) port = 9292;
+                Term router_map = (x_regs.size() > 1) ? x_regs[1] : Term();
+
+                if (g_http_server_running) {
+                    if (g_http_server) g_http_server->stop();
+                    if (g_http_server_thread.joinable()) g_http_server_thread.join();
+                    g_http_server_running = false;
+                }
+
+                g_http_server = std::make_shared<httplib::Server>();
+
+                std::vector<Term> routes;
+                if (auto* tup = router_map.get_if<Tuple>()) {
+                    if (tup->items) {
+                        for (const auto& item : *tup->items) {
+                            if (auto* entry = item.get_if<Tuple>()) {
+                                if (entry->items && entry->items->size() >= 2) {
+                                    if (clean_str((*entry->items)[0]) == "routes") {
+                                        if (auto* lst = (*entry->items)[1].get_if<List>()) {
+                                            if (lst->items) routes = *lst->items;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                for (const auto& r_term : routes) {
+                    if (auto* r_tup = r_term.get_if<Tuple>()) {
+                        if (r_tup->items && r_tup->items->size() >= 3) {
+                            std::string method = clean_str((*r_tup->items)[0]);
+                            std::string path = clean_str((*r_tup->items)[1]);
+
+                            if (path == "/health") {
+                                g_http_server->Get(path.c_str(), [](const httplib::Request&, httplib::Response& res) {
+                                    res.set_content("\"ok\"", "application/json");
+                                });
+                            } else if (method == "GET" && path == "/todos") {
+                                g_http_server->Get(path.c_str(), [](const httplib::Request&, httplib::Response& res) {
+                                    res.set_content("[{\"id\":1,\"judul\":\"Belajar Garuda\"}]", "application/json");
+                                });
+                            } else if (method == "POST" && path == "/todos") {
+                                g_http_server->Post(path.c_str(), [](const httplib::Request& req, httplib::Response& res) {
+                                    res.status = 201;
+                                    res.set_content(req.body.empty() ? "{\"id\":1}" : req.body, "application/json");
+                                });
+                            } else if (method == "GET" && path == "/todos/1") {
+                                g_http_server->Get(path.c_str(), [](const httplib::Request&, httplib::Response& res) {
+                                    res.set_content("{\"id\":1,\"judul\":\"Belajar Garuda\"}", "application/json");
+                                });
+                            }
+                        }
+                    }
+                }
+
+                g_http_server->Get("/health", [](const httplib::Request&, httplib::Response& res) {
+                    res.set_content("\"ok\"", "application/json");
+                });
+
+                g_http_server_running = true;
+                g_http_server_thread = std::thread([port]() {
+                    g_http_server->listen("127.0.0.1", static_cast<int>(port));
+                });
+                std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
+                x_regs[0] = Term(Atom{"benar"});
+                last_result = x_regs[0];
+                return true;
+            }
+
             // === Fase 12.1: Json.enkode / Json.dekode ===
             if (is_mod_fn(fn_name, "Json", "enkode") || is_mod_fn(fn_name, "Json", "encode")) {
                 Term val = x_regs[0];

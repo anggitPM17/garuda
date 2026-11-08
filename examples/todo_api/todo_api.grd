@@ -1,4 +1,12 @@
 modul TodoAPI
+
 fungsi utama() ->
-    benar
+    Env.muat_config("examples/todo_api/app.config")
+    P = Env.baca("TODO_PORT", "9292")
+    R = Router.baru()
+    R1 = Router.get(R, "/health", "ok")
+    R2 = Router.get(R1, "/todos", "list")
+    R3 = Router.post(R2, "/todos", "create")
+    R4 = Router.get(R3, "/todos/1", "single")
+    Server.mulai_router(P, R4)
 rampung
