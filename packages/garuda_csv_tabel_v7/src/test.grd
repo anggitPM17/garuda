@@ -1,32 +1,26 @@
 modul UjiCsvTabelV7
 
-// ===================================================================
-// Pengujian Unit Resmi: UjiCsvTabelV7
-// Target: GVM Unit Test Engine (grdmix test)
-// ===================================================================
-
 impor CsvTabelV7
 impor garuda::pengujian
 impor garuda::penegasan
 
 @uji
-fungsi uji_integritas_arsitektur(): Hasil[Hampa, Teks] {
-    konst inisial = CsvTabelV7::inisialisasi()
-    tegaskan_benar(inisial.aktif, "Status paket harus aktif")
-    tegaskan_sama(inisial.versi, "0.1.0", "Versi awal paket harus 0.1.0")
+fungsi uji_baca_csv(): Hasil[Hampa, Teks] {
+    konst t = CsvTabelV7.baca_csv("a,b,c\n1,2,3")
+    tegaskan_sama(t, "csv_parsed_a,b,c\n1,2,3", "Baca CSV harus mengembalikan csv_parsed_a,b,c\\n1,2,3")
     kembalikan Sukses(hampa)
 }
 
 @uji
-fungsi uji_keabsahan_eksekusi(): Hasil[Hampa, Teks] {
-    konst fungsi_pertama = "baca_csv"
-    tegaskan_benar(fungsi_pertama.panjang() > 0, "Nama fungsi harus terdefinisi")
+fungsi uji_tulis_csv(): Hasil[Hampa, Teks] {
+    konst r = CsvTabelV7.tulis_csv("data_tabel")
+    tegaskan_sama(r, "csv_written_data_tabel", "Tulis CSV harus mengembalikan csv_written_data_tabel")
     kembalikan Sukses(hampa)
 }
 
 @uji
-fungsi uji_kondisi_batas_dan_penanganan_galat(): Hasil[Hampa, Teks] {
-    // Verifikasi bahwa masukan kosong ditangani dengan Hasil[T, E] yang aman
-    tegaskan_benar(benar, "Penanganan galat monad Hasil aman dari crash GVM")
+fungsi uji_csv_kosong(): Hasil[Hampa, Teks] {
+    konst r = CsvTabelV7.baca_csv("")
+    tegaskan_sama(r, "galat", "CSV kosong harus mengembalikan galat")
     kembalikan Sukses(hampa)
 }
