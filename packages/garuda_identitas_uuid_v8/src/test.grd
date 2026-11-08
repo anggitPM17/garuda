@@ -1,32 +1,26 @@
 modul UjiIdentitasUuidV8
 
-// ===================================================================
-// Pengujian Unit Resmi: UjiIdentitasUuidV8
-// Target: GVM Unit Test Engine (grdmix test)
-// ===================================================================
-
 impor IdentitasUuidV8
 impor garuda::pengujian
 impor garuda::penegasan
 
 @uji
-fungsi uji_integritas_arsitektur(): Hasil[Hampa, Teks] {
-    konst inisial = IdentitasUuidV8::inisialisasi()
-    tegaskan_benar(inisial.aktif, "Status paket harus aktif")
-    tegaskan_sama(inisial.versi, "0.1.0", "Versi awal paket harus 0.1.0")
+fungsi uji_buat_uuid_v4(): Hasil[Hampa, Teks] {
+    konst id = IdentitasUuidV8.buat_uuid_v4("seed123")
+    tegaskan_sama(id, "uuid4_seed123", "Buat UUID v4 harus mengembalikan format uuid4_seed123")
     kembalikan Sukses(hampa)
 }
 
 @uji
-fungsi uji_keabsahan_eksekusi(): Hasil[Hampa, Teks] {
-    konst fungsi_pertama = "buat_uuid_v4"
-    tegaskan_benar(fungsi_pertama.panjang() > 0, "Nama fungsi harus terdefinisi")
+fungsi uji_validasi_uuid_valid(): Hasil[Hampa, Teks] {
+    konst val = IdentitasUuidV8.validasi_uuid("uuid4_seed123")
+    tegaskan_sama(val, benar, "Validasi UUID valid harus mengembalikan benar")
     kembalikan Sukses(hampa)
 }
 
 @uji
-fungsi uji_kondisi_batas_dan_penanganan_galat(): Hasil[Hampa, Teks] {
-    // Verifikasi bahwa masukan kosong ditangani dengan Hasil[T, E] yang aman
-    tegaskan_benar(benar, "Penanganan galat monad Hasil aman dari crash GVM")
+fungsi uji_validasi_uuid_invalid(): Hasil[Hampa, Teks] {
+    konst val = IdentitasUuidV8.validasi_uuid("invalid_uuid")
+    tegaskan_sama(val, salah, "Validasi UUID invalid harus mengembalikan salah")
     kembalikan Sukses(hampa)
 }
