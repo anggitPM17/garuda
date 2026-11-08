@@ -1,56 +1,112 @@
 modul BasisDataKv
 
-// ===================================================================
-// Pustaka Resmi Garuda: garuda_basisdata_kv
-// Domain: Basis Data Key-Value Immutabel dengan WAL Log
-// Penulis: Anggit Prasetyo (@anggitPM17) & Komunitas Garuda
-// ===================================================================
-
 impor garuda::dasar
 impor garuda::hasil
-impor garuda::io
 
 publik struktur CatatanWal {
+    operasi: Teks,
     kunci: Teks,
     nilai: Teks,
-    waktu_stempel: Bulat
+    stempel_waktu: Bulat
 }
 
 publik struktur BasisDataKv {
-    jalur_wal: Teks,
-    terkunci: Kebenaran,
-    total_entri: Bulat
+    jalur_berkas: Teks,
+    tabel_memori: Kamus[Teks, Teks],
+    jurnal_wal: Daftar[CatatanWal],
+    apakah_terkompaksi: Kebenaran
 }
 
-publik fungsi buka_basisdata(jalur: Teks): Hasil[BasisDataKv, Teks] {
-    jika (jalur.panjang() == 0) {
-        kembalikan Gagal("Jalur penyimpanan basis data tidak boleh kosong")
+publik fungsi inisialisasi(): BasisDataKv {
+    kembalikan buka_database("data/kv_default.wal")
+}
+
+publik fungsi buka_database(jalur: Teks): BasisDataKv {
+    kembalikan BasisDataKv(
+        jalur_berkas = jalur,
+        tabel_memori = {},
+        jurnal_wal = [],
+        apakah_terkompaksi = benar
+    )
+}
+
+publik fungsi simpan(db: BasisDataKv, kunci: Teks, nilai: Teks): Hasil[BasisDataKv, Teks] {
+    jika (kunci.panjang() == 0) {
+        kembalikan Gagal("Kunci database tidak boleh hampa")
     }
+    konst catatan = CatatanWal(operasi = "SET", kunci = kunci, nilai = nilai, stempel_waktu = 1793898000)
+    konst peta_baru = db.tabel_memori.tambah(kunci, nilai)
+    konst wal_baru = db.jurnal_wal + [catatan]
     kembalikan Sukses(BasisDataKv(
-        jalur_wal = jalur,
-        terkunci = salah,
-        total_entri = 0
+        jalur_berkas = db.jalur_berkas,
+        tabel_memori = peta_baru,
+        jurnal_wal = wal_baru,
+        apakah_terkompaksi = salah
     ))
 }
 
-publik fungsi simpan_kunci(db: BasisDataKv, kunci: Teks, nilai: Teks): Hasil[BasisDataKv, Teks] {
-    jika (kunci.panjang() == 0) {
-        kembalikan Gagal("Kunci tidak boleh hampa")
+publik fungsi ambil(db: BasisDataKv, kunci: Teks): Hasil[Teks, Teks] {
+    jika (db.tabel_memori.memiliki_kunci(kunci)) {
+        kembalikan Sukses(db.tabel_memori.ambil(kunci))
     }
-    konst db_baru = db.salin(total_entri = db.total_entri + 1)
-    kembalikan Sukses(db_baru)
+    kembalikan Gagal("Kunci '" + kunci + "' tidak ditemukan dalam basisdata")
 }
 
-publik fungsi ambil_kunci(db: BasisDataKv, kunci: Teks): Hasil[Teks, Teks] {
-    jika (db.total_entri == 0) {
-        kembalikan Gagal("Basis data kosong")
-    }
-    kembalikan Sukses("nilai_untuk_" + kunci)
+publik fungsi ada(db: BasisDataKv, kunci: Teks): Kebenaran {
+    kembalikan db.tabel_memori.memiliki_kunci(kunci)
 }
 
-publik fungsi hapus_kunci(db: BasisDataKv, kunci: Teks): Hasil[BasisDataKv, Teks] {
-    jika (db.total_entri == 0) {
-        kembalikan Gagal("Kunci tidak ditemukan untuk dihapus")
+publik fungsi hapus(db: BasisDataKv, kunci: Teks): Hasil[BasisDataKv, Teks] {
+    jika (!db.tabel_memori.memiliki_kunci(kunci)) {
+        kembalikan Gagal("Kunci '" + kunci + "' tidak ada untuk dihapus")
     }
-    kembalikan Sukses(db.salin(total_entri = db.total_entri - 1))
+    konst catatan = CatatanWal(operasi = "DEL", kunci = kunci, nilai = "", stempel_waktu = 1793898000)
+    konst peta_baru = db.tabel_memori.hapus_kunci(kunci)
+    konst wal_baru = db.jurnal_wal + [catatan]
+    kembalikan Sukses(BasisDataKv(
+        jalur_berkas = db.jalur_berkas,
+        tabel_memori = peta_baru,
+        jurnal_wal = wal_baru,
+        apakah_terkompaksi = salah
+    ))
+}
+
+publik fungsi daftar_kunci(db: BasisDataKv): Daftar[Teks] {
+    kembalikan db.tabel_memori.kunci_kunci()
+}
+
+publik fungsi pulihkan_dari_wal(jalur: Teks, rekaman_wal: Daftar[CatatanWal]): BasisDataKv {
+    variabel db = buka_database(jalur)
+    untuk catatan di rekaman_wal {
+        jika (catatan.operasi == "SET") {
+            db = BasisDataKv(
+                jalur_berkas = db.jalur_berkas,
+                tabel_memori = db.tabel_memori.tambah(catatan.kunci, catatan.nilai),
+                jurnal_wal = db.jurnal_wal + [catatan],
+                apakah_terkompaksi = db.apakah_terkompaksi
+            )
+        } lainnya jika (catatan.operasi == "DEL") {
+            db = BasisDataKv(
+                jalur_berkas = db.jalur_berkas,
+                tabel_memori = db.tabel_memori.hapus_kunci(catatan.kunci),
+                jurnal_wal = db.jurnal_wal + [catatan],
+                apakah_terkompaksi = db.apakah_terkompaksi
+            )
+        }
+    }
+    kembalikan db
+}
+
+publik fungsi kompaksi(db: BasisDataKv): BasisDataKv {
+    variabel wal_bersih: Daftar[CatatanWal] = []
+    untuk kunci di db.tabel_memori.kunci_kunci() {
+        konst val = db.tabel_memori.ambil(kunci)
+        wal_bersih = wal_bersih + [CatatanWal(operasi = "SET", kunci = kunci, nilai = val, stempel_waktu = 1793898000)]
+    }
+    kembalikan BasisDataKv(
+        jalur_berkas = db.jalur_berkas,
+        tabel_memori = db.tabel_memori,
+        jurnal_wal = wal_bersih,
+        apakah_terkompaksi = benar
+    )
 }
