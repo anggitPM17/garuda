@@ -11,7 +11,7 @@
 ## 🚦 Status Proyek
 
 > **Update terakhir:** 2025-05-18  
-> **HEAD diverifikasi:** `77c6725` / `c0fcb09` — `feat(green-fase14-penyiaran-peristiwa-v7): implementasi nyata bus peristiwa berbasis Ets`  
+> **HEAD diverifikasi:** `77c6725` / `cf99eb9` — `feat(green-fase14-penyiaran-peristiwa-v7): implementasi nyata bus peristiwa berbasis Ets`  
 
 | Aspek | Status | Bukti |
 |---|---|---|
@@ -20,8 +20,8 @@
 | Fitur user-facing (Fase 12: Json, Http, Env, TodoAPI) | ✅ PASS | `docs/test-results-current.csv` |
 | Package manager & packages (Fase 13) | ✅ PASS | 72/72 packages valid & complete |
 | Logika Modul Packages (Fase 14: Ets bus, Vektor, CSV, Regex, UUID, PriQueue, AES256, JWT, KV DB) | ✅ PASS | `docs/test-results-current.csv` |
-| **Total Test Suite Output** | **96 PASS, 2 FAIL, 8 TIMEOUT** | Lihat `docs/verification-report-fase14.md` |
-| Known Issues | 10 Suites | Lihat section Known Issues |
+| **Total Test Suite Output** | **101 PASS, 5 FAIL, 6 TIMEOUT** | Lihat `docs/verification-report-fase14.md` |
+| Known Issues | 11 Suites | Lihat section Known Issues |
 
 ---
 
@@ -114,8 +114,8 @@ powershell -ExecutionPolicy Bypass -File "scratch/run_all_tests.ps1"
 
 Daftar dari `docs/verification-report-fase14.md`:
 
-- **2 Test FAIL**: `garuda_db_tests.exe` (Socket teardown / port collision), `garuda_https_e2e_tests.exe` (Membutuhkan konfigurasi cert SSL local / OpenSSL mock binding di runner OS).
-- **8 Test TIMEOUT**: Suites yang menjalankan loop HTTP server / socket listener terikat port (`garuda_async_event_loop_tests`, `garuda_chat_server_tests`, `garuda_cluster_manager_tests`, `garuda_fault_tests`, `garuda_fullstack_tests`, `garuda_http_tests`, `garuda_todo_api_e2e_tests`, `garuda_bytecode_io_tests`). Melebihi limit 10 detik pada eksekusi batch non-interaktif.
+- **5 Test FAIL**: `garuda_chat_server_tests.exe`, `garuda_db_tests.exe`, `garuda_event_loop_backend_tests.exe`, `garuda_fullstack_tests.exe` (Socket teardown / port collision saat dijalankan berurutan cepat), `garuda_https_e2e_tests.exe` (Membutuhkan konfigurasi cert SSL local / OpenSSL mock binding di runner OS).
+- **6 Test TIMEOUT**: Suites yang menjalankan loop HTTP server / socket listener terikat port (`garuda_async_event_loop_tests`, `garuda_bytecode_io_tests`, `garuda_cluster_manager_tests`, `garuda_fault_tests`, `garuda_http_tests`, `garuda_todo_api_e2e_tests`). Melebihi limit 10 detik pada eksekusi batch non-interaktif.
 
 ---
 
