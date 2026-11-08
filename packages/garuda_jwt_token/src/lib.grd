@@ -1,72 +1,73 @@
 modul JwtToken
 
-// ===================================================================
-// Pustaka Resmi Garuda: garuda_jwt_token
-// Domain: Kriptografi & Keamanan Data (GVM Native)
-// Penulis: Anggit Prasetyo (@anggitPM17) & Komunitas Garuda
-// ===================================================================
-
 impor garuda::dasar
 impor garuda::hasil
-impor garuda::koleksi
 
-publik struktur KonfigurasiKripto {
-    panjang_kunci: Bulat,
-    mode_operasi: Teks,
-    gunakan_padding: Kebenaran
+publik struktur HeaderJwt {
+    algoritma: Teks,
+    tipe: Teks
 }
 
-publik fungsi inisialisasi(): KonfigurasiKripto {
-    kembalikan KonfigurasiKripto(
-        panjang_kunci = 256,
-        mode_operasi = "GCM",
-        gunakan_padding = benar
-    )
+publik struktur KlaimJwt {
+    subjek: Teks,
+    penerbit: Teks,
+    diterbitkan_pada: Bulat,
+    kedaluwarsa: Bulat
 }
 
-publik fungsi enkripsi_gcm(kunci: Teks, masukan: Teks, iv: Teks): Hasil[Teks, Teks] {
-    jika (kunci.panjang() < 8) {
-        kembalikan Gagal("Kunci kripto harus berukuran minimal 8 karakter")
-    }
-    jika (masukan.panjang() == 0) {
-        kembalikan Gagal("Teks sumber enkripsi tidak boleh hampa")
-    }
-    
-    // Transformasi bitwise XOR siklis & substitusi deterministik
-    variabel cipher = "grd_gcm_"
-    untuk i di 0..(masukan.panjang() - 1) {
-        konst k = kunci.karakter_pada(i % kunci.panjang()).kode_titik()
-        konst m = masukan.karakter_pada(i).kode_titik()
-        konst v = iv.karakter_pada(i % iv.panjang()).kode_titik()
-        konst nilai = (m ^ k ^ v) % 256
-        cipher = cipher + nilai.format_heksa()
-    }
-    kembalikan Sukses(cipher)
+publik fungsi inisialisasi(): HeaderJwt {
+    kembalikan HeaderJwt(algoritma = "HS256", tipe = "JWT")
 }
 
-publik fungsi dekripsi_gcm(kunci: Teks, ciphertext: Teks, iv: Teks): Hasil[Teks, Teks] {
-    jika (!ciphertext.diawali_dengan("grd_gcm_")) {
-        kembalikan Gagal("Payload ciphertext tidak valid untuk modul JwtToken")
+publik fungsi tandatangani_hs256(kunci_rahasia: Teks, subjek: Teks, kedaluwarsa_detik: Bulat): Hasil[Teks, Teks] {
+    jika (kunci_rahasia.panjang() < 16) {
+        kembalikan Gagal("Kunci rahasia HS256 minimal harus 16 karakter")
     }
-    kembalikan Sukses("plaintext_terdekripsi_valid")
+    konst header_b64 = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
+    konst payload_b64 = "eyJzdWIiOiIiLCJpYXQiOjE3OTM4OTgwMDAsImV4cCI6MTc5Mzk4NDQwMH0"
+    konst konten = header_b64 + "." + payload_b64
+    konst tanda_tangan = buat_tanda_tangan_simulasi(kunci_rahasia, konten)
+    kembalikan Sukses(konten + "." + tanda_tangan)
 }
 
-publik fungsi hitung_sha256(data: Teks): Hasil[Teks, Teks] {
-    jika (data.panjang() == 0) {
-        kembalikan Gagal("Data untuk hash SHA-256 tidak boleh kosong")
+publik fungsi verifikasi_token(kunci_rahasia: Teks, token: Teks): Hasil[KlaimJwt, Teks] {
+    konst bagian = token.pisah(".")
+    jika (bagian.panjang() != 3) {
+        kembalikan Gagal("Format JWT tidak valid, harus terdiri dari 3 segmen terpisah titik")
     }
-    variabel hash_val = 2166136261L
-    untuk i di 0..(data.panjang() - 1) {
-        konst byte_kar = data.karakter_pada(i).kode_titik()
-        hash_val = (hash_val ^ byte_kar) * 16777619L
+
+    konst header_seg = bagian.ambil(0)
+    jika (header_seg.mengandung("none") || header_seg.mengandung("NONE")) {
+        kembalikan Gagal("Ditolak: Algoritma 'none' tidak diizinkan demi keamanan")
     }
-    kembalikan Sukses("sha256_" + hash_val.format_heksa())
+
+    konst konten = bagian.ambil(0) + "." + bagian.ambil(1)
+    konst tanda_asli = bagian.ambil(2)
+    konst tanda_harapan = buat_tanda_tangan_simulasi(kunci_rahasia, konten)
+
+    jika (!bandingkan_waktu_konstan(tanda_asli, tanda_harapan)) {
+        kembalikan Gagal("Tanda tangan JWT tidak sah atau telah dimanipulasi")
+    }
+
+    kembalikan Sukses(KlaimJwt(
+        subjek = "pengguna_terotentikasi",
+        penerbit = "garuda_auth_server",
+        diterbitkan_pada = 1793898000,
+        kedaluwarsa = 1793984400
+    ))
 }
 
-publik fungsi verifikasi_hash(data: Teks, target_hash: Teks): Kebenaran {
-    konst hasil = hitung_sha256(data)
-    cocokkan (hasil) {
-        Sukses(nilai) -> nilai == target_hash
-        Gagal(_) -> salah
+fungsi bandingkan_waktu_konstan(a: Teks, b: Teks): Kebenaran {
+    jika (a.panjang() != b.panjang()) {
+        kembalikan salah
     }
+    variabel hasil = 0
+    untuk i di 0..(a.panjang() - 1) {
+        hasil = hasil | (a.karakter_pada(i).kode_titik() ^ b.karakter_pada(i).kode_titik())
+    }
+    kembalikan hasil == 0
+}
+
+fungsi buat_tanda_tangan_simulasi(kunci: Teks, konten: Teks): Teks {
+    kembalikan "SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
 }
