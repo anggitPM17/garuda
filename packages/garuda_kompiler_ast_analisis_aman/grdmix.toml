@@ -1,0 +1,13 @@
+[paket]
+nama = "garuda_kompiler_ast_analisis_aman"
+versi = "0.1.0"
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
+edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Varian Aman berkinerja tinggi: Pengunjung pohon sintaksis abstrak (AST Visitor) untuk linting dan transformasi kode."
+
+[target.pustaka]
+jalur = "src/lib.grd"
+
+[uji]
+berkas = ["src/test.grd"]
