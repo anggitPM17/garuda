@@ -1,0 +1,13 @@
+[paket]
+nama = "garuda_jaringan_aliran_sse_ringan"
+versi = "0.1.0"
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
+edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Varian Ringan berkinerja tinggi: Server-Sent Events event-stream parser untuk pembaruan data waktu-nyata."
+
+[target.pustaka]
+jalur = "src/lib.grd"
+
+[uji]
+berkas = ["src/test.grd"]
