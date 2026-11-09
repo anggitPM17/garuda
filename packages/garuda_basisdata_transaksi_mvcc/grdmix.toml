@@ -1,0 +1,13 @@
+[paket]
+nama = "garuda_basisdata_transaksi_mvcc"
+versi = "0.1.0"
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
+edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Multi-Version Concurrency Control untuk isolasi transaksi nir-kunci Snapshot Isolation."
+
+[target.pustaka]
+jalur = "src/lib.grd"
+
+[uji]
+berkas = ["src/test.grd"]
