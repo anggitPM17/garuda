@@ -4399,18 +4399,23 @@ private:
             }
 
             if (is_mod_fn(fn_name, "Map", "ambil") || is_mod_fn(fn_name, "Map", "get")) {
-                std::string target_key = (x_regs.size() > 1) ? clean_str(x_regs[1]) : "";
+                auto unq = [](const std::string& s) { if (s.length()>=2 && s.front()=='"' && s.back()=='"') return s.substr(1, s.length()-2); return s; };
+                std::string target_key = (x_regs.size() > 1) ? unq(clean_str(x_regs[1])) : "";
                 Term found_val(Atom{"nil"});
-                if (auto* lst = x_regs[0].get_if<List>()) {
-                    if (lst->items) {
-                        for (const auto& item : *lst->items) {
-                            if (auto* pair = item.get_if<Tuple>()) {
-                                if (pair->items && pair->items->size() == 2) {
-                                    if (clean_str((*pair->items)[0]) == target_key) {
-                                        found_val = (*pair->items)[1];
-                                        break;
-                                    }
-                                }
+                const std::vector<Term>* items = nullptr;
+                if (auto* lst = x_regs[0].get_if<List>()) { if (lst->items) items = lst->items.get(); }
+                else if (auto* tup = x_regs[0].get_if<Tuple>()) { if (tup->items) items = tup->items.get(); }
+
+                if (items) {
+                    for (const auto& item : *items) {
+                        const std::vector<Term>* p = nullptr;
+                        if (auto* pair_tup = item.get_if<Tuple>()) { if (pair_tup->items) p = pair_tup->items.get(); }
+                        else if (auto* pair_lst = item.get_if<List>()) { if (pair_lst->items) p = pair_lst->items.get(); }
+                        if (p && p->size() >= 2) {
+                            std::string k_str = unq(clean_str((*p)[0]));
+                            if (k_str == target_key || clean_str((*p)[0]) == target_key) {
+                                found_val = (*p)[1];
+                                break;
                             }
                         }
                     }
@@ -4421,28 +4426,33 @@ private:
             }
 
             if (is_mod_fn(fn_name, "Map", "taruh") || is_mod_fn(fn_name, "Map", "put")) {
-                std::string key = (x_regs.size() > 1) ? clean_str(x_regs[1]) : "";
+                auto unq = [](const std::string& s) { if (s.length()>=2 && s.front()=='"' && s.back()=='"') return s.substr(1, s.length()-2); return s; };
+                std::string key = (x_regs.size() > 1) ? unq(clean_str(x_regs[1])) : "";
                 Term val = (x_regs.size() > 2) ? x_regs[2] : Term(Atom{"nil"});
                 std::vector<Term> pairs;
                 bool updated = false;
-                if (auto* lst = x_regs[0].get_if<List>()) {
-                    if (lst->items) {
-                        for (const auto& item : *lst->items) {
-                            if (auto* pair = item.get_if<Tuple>()) {
-                                if (pair->items && pair->items->size() == 2 && clean_str((*pair->items)[0]) == key) {
-                                    std::vector<Term> p = {Term(key), val};
-                                    pairs.push_back(Term(Tuple{std::make_shared<const std::vector<Term>>(std::move(p))}));
-                                    updated = true;
-                                    continue;
-                                }
-                            }
-                            pairs.push_back(item);
+
+                const std::vector<Term>* items = nullptr;
+                if (auto* lst = x_regs[0].get_if<List>()) { if (lst->items) items = lst->items.get(); }
+                else if (auto* tup = x_regs[0].get_if<Tuple>()) { if (tup->items) items = tup->items.get(); }
+
+                if (items) {
+                    for (const auto& item : *items) {
+                        const std::vector<Term>* p = nullptr;
+                        if (auto* pair_tup = item.get_if<Tuple>()) { if (pair_tup->items) p = pair_tup->items.get(); }
+                        else if (auto* pair_lst = item.get_if<List>()) { if (pair_lst->items) p = pair_lst->items.get(); }
+                        if (p && p->size() >= 2 && unq(clean_str((*p)[0])) == key) {
+                            std::vector<Term> new_p = {Term(key), val};
+                            pairs.push_back(Term(Tuple{std::make_shared<const std::vector<Term>>(std::move(new_p))}));
+                            updated = true;
+                            continue;
                         }
+                        pairs.push_back(item);
                     }
                 }
                 if (!updated) {
-                    std::vector<Term> p = {Term(key), val};
-                    pairs.push_back(Term(Tuple{std::make_shared<const std::vector<Term>>(std::move(p))}));
+                    std::vector<Term> new_p = {Term(key), val};
+                    pairs.push_back(Term(Tuple{std::make_shared<const std::vector<Term>>(std::move(new_p))}));
                 }
                 x_regs[0] = Term(List{std::make_shared<const std::vector<Term>>(std::move(pairs))});
                 last_result = x_regs[0];
@@ -4451,15 +4461,15 @@ private:
 
             if (is_mod_fn(fn_name, "Map", "kunci") || is_mod_fn(fn_name, "Map", "keys")) {
                 std::vector<Term> keys;
-                if (auto* lst = x_regs[0].get_if<List>()) {
-                    if (lst->items) {
-                        for (const auto& item : *lst->items) {
-                            if (auto* pair = item.get_if<Tuple>()) {
-                                if (pair->items && pair->items->size() >= 1) {
-                                    keys.push_back((*pair->items)[0]);
-                                }
-                            }
-                        }
+                const std::vector<Term>* items = nullptr;
+                if (auto* lst = x_regs[0].get_if<List>()) { if (lst->items) items = lst->items.get(); }
+                else if (auto* tup = x_regs[0].get_if<Tuple>()) { if (tup->items) items = tup->items.get(); }
+                if (items) {
+                    for (const auto& item : *items) {
+                        const std::vector<Term>* p = nullptr;
+                        if (auto* pair_tup = item.get_if<Tuple>()) { if (pair_tup->items) p = pair_tup->items.get(); }
+                        else if (auto* pair_lst = item.get_if<List>()) { if (pair_lst->items) p = pair_lst->items.get(); }
+                        if (p && p->size() >= 1) keys.push_back((*p)[0]);
                     }
                 }
                 x_regs[0] = Term(List{std::make_shared<const std::vector<Term>>(std::move(keys))});
@@ -4469,15 +4479,15 @@ private:
 
             if (is_mod_fn(fn_name, "Map", "nilai") || is_mod_fn(fn_name, "Map", "values")) {
                 std::vector<Term> values;
-                if (auto* lst = x_regs[0].get_if<List>()) {
-                    if (lst->items) {
-                        for (const auto& item : *lst->items) {
-                            if (auto* pair = item.get_if<Tuple>()) {
-                                if (pair->items && pair->items->size() >= 2) {
-                                    values.push_back((*pair->items)[1]);
-                                }
-                            }
-                        }
+                const std::vector<Term>* items = nullptr;
+                if (auto* lst = x_regs[0].get_if<List>()) { if (lst->items) items = lst->items.get(); }
+                else if (auto* tup = x_regs[0].get_if<Tuple>()) { if (tup->items) items = tup->items.get(); }
+                if (items) {
+                    for (const auto& item : *items) {
+                        const std::vector<Term>* p = nullptr;
+                        if (auto* pair_tup = item.get_if<Tuple>()) { if (pair_tup->items) p = pair_tup->items.get(); }
+                        else if (auto* pair_lst = item.get_if<List>()) { if (pair_lst->items) p = pair_lst->items.get(); }
+                        if (p && p->size() >= 2) values.push_back((*p)[1]);
                     }
                 }
                 x_regs[0] = Term(List{std::make_shared<const std::vector<Term>>(std::move(values))});
@@ -4492,18 +4502,19 @@ private:
             }
 
             if (is_mod_fn(fn_name, "Map", "hapus") || is_mod_fn(fn_name, "Map", "delete")) {
-                std::string key = (x_regs.size() > 1) ? clean_str(x_regs[1]) : "";
+                auto unq = [](const std::string& s) { if (s.length()>=2 && s.front()=='"' && s.back()=='"') return s.substr(1, s.length()-2); return s; };
+                std::string key = (x_regs.size() > 1) ? unq(clean_str(x_regs[1])) : "";
                 std::vector<Term> pairs;
-                if (auto* lst = x_regs[0].get_if<List>()) {
-                    if (lst->items) {
-                        for (const auto& item : *lst->items) {
-                            if (auto* pair = item.get_if<Tuple>()) {
-                                if (pair->items && pair->items->size() >= 1 && clean_str((*pair->items)[0]) == key) {
-                                    continue;
-                                }
-                            }
-                            pairs.push_back(item);
-                        }
+                const std::vector<Term>* items = nullptr;
+                if (auto* lst = x_regs[0].get_if<List>()) { if (lst->items) items = lst->items.get(); }
+                else if (auto* tup = x_regs[0].get_if<Tuple>()) { if (tup->items) items = tup->items.get(); }
+                if (items) {
+                    for (const auto& item : *items) {
+                        const std::vector<Term>* p = nullptr;
+                        if (auto* pair_tup = item.get_if<Tuple>()) { if (pair_tup->items) p = pair_tup->items.get(); }
+                        else if (auto* pair_lst = item.get_if<List>()) { if (pair_lst->items) p = pair_lst->items.get(); }
+                        if (p && p->size() >= 1 && unq(clean_str((*p)[0])) == key) continue;
+                        pairs.push_back(item);
                     }
                 }
                 x_regs[0] = Term(List{std::make_shared<const std::vector<Term>>(std::move(pairs))});
@@ -4512,17 +4523,20 @@ private:
             }
 
             if (is_mod_fn(fn_name, "Map", "berisi") || is_mod_fn(fn_name, "Map", "contains")) {
-                std::string target_key = (x_regs.size() > 1) ? clean_str(x_regs[1]) : "";
+                auto unq = [](const std::string& s) { if (s.length()>=2 && s.front()=='"' && s.back()=='"') return s.substr(1, s.length()-2); return s; };
+                std::string target_key = (x_regs.size() > 1) ? unq(clean_str(x_regs[1])) : "";
                 bool found = false;
-                if (auto* lst = x_regs[0].get_if<List>()) {
-                    if (lst->items) {
-                        for (const auto& item : *lst->items) {
-                            if (auto* pair = item.get_if<Tuple>()) {
-                                if (pair->items && pair->items->size() >= 1 && clean_str((*pair->items)[0]) == target_key) {
-                                    found = true;
-                                    break;
-                                }
-                            }
+                const std::vector<Term>* items = nullptr;
+                if (auto* lst = x_regs[0].get_if<List>()) { if (lst->items) items = lst->items.get(); }
+                else if (auto* tup = x_regs[0].get_if<Tuple>()) { if (tup->items) items = tup->items.get(); }
+                if (items) {
+                    for (const auto& item : *items) {
+                        const std::vector<Term>* p = nullptr;
+                        if (auto* pair_tup = item.get_if<Tuple>()) { if (pair_tup->items) p = pair_tup->items.get(); }
+                        else if (auto* pair_lst = item.get_if<List>()) { if (pair_lst->items) p = pair_lst->items.get(); }
+                        if (p && p->size() >= 1 && unq(clean_str((*p)[0])) == target_key) {
+                            found = true;
+                            break;
                         }
                     }
                 }
