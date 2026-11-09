@@ -1,0 +1,13 @@
+[paket]
+nama = "garuda_kompresi_gzip_kompresor"
+versi = "0.1.0"
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
+edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Kompresi dan dekompresi format berkas GZIP RFC 1952 dengan checksum CRC32."
+
+[target.pustaka]
+jalur = "src/lib.grd"
+
+[uji]
+berkas = ["src/test.grd"]
