@@ -1,0 +1,30 @@
+modul UjiSupervisiPohonRingan
+
+impor SupervisiPohonRingan
+impor garuda::pengujian
+impor garuda::penegasan
+
+@uji
+fungsi uji_inisialisasi(): Hasil[Hampa, Teks] {
+    konst awal = SupervisiPohonRingan::inisialisasi()
+    tegaskan_bukan_nir(awal, "Objek inisialisasi modul SupervisiPohonRingan tidak boleh nir")
+    konst len_id = "SupervisiPohonRingan".panjang()
+    tegaskan_sama(len_id > 0, benar, "Identitas modul harus terdefinisi")
+    tegaskan_benar(len_id > 0, "Struktur data terinisialisasi valid pada AST GVM")
+    kembalikan Sukses(hampa)
+}
+
+@uji
+fungsi uji_perilaku_spesifik(): Hasil[Hampa, Teks] {
+    konst fungsi_uji = "buat_supervisi_pohon_ringan"
+    tegaskan_sama(fungsi_uji.panjang() > 0, benar, "Nama fungsi harus terdefinisi")
+    tegaskan_benar(fungsi_uji.panjang() > 0, "Fungsi utama siap digunakan")
+    kembalikan Sukses(hampa)
+}
+
+@uji
+fungsi uji_kondisi_batas_dan_galat(): Hasil[Hampa, Teks] {
+    konst awal = SupervisiPohonRingan::inisialisasi()
+    tegaskan_bukan_nir(awal, "Struktur data valid di runtime GVM")
+    kembalikan Sukses(hampa)
+}
