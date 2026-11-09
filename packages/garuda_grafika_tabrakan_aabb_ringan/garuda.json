@@ -1,0 +1,25 @@
+{
+  "nama": "garuda_grafika_tabrakan_aabb_ringan",
+  "modul": "TabrakanAabbRingan",
+  "versi": "0.1.0",
+  "penulis": "Anggit Prasetyo (@anggitPM17)",
+  "deskripsi": "Varian Ringan berkinerja tinggi: Deteksi tabrakan Axis-Aligned Bounding Box dan Oriented Bounding Box 2D/3D.",
+  "lisensi": "MIT",
+  "kategori": "Matematika & Grafika",
+  "status": "stabil",
+  "titik_masuk": "src/lib.grd",
+  "gpm": {
+    "versi_kompatibel": ">=0.4.0",
+    "arsitektur": "gvm-universal",
+    "registri": "https://gpm.garuda-lang.org/v1"
+  },
+  "dependensi": {
+    "garuda_dasar": "^1.0.0",
+    "garuda_hasil": "^1.0.0"
+  },
+  "naskah": {
+    "bangun": "grdmix bangun --rilis",
+    "uji": "grdmix uji --semua",
+    "format": "grdmix format ."
+  }
+}
