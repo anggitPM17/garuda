@@ -1,0 +1,13 @@
+[paket]
+nama = "garuda_finansial_bip39_mnemonik_aman"
+versi = "0.1.0"
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
+edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Varian Aman berkinerja tinggi: Pembangkitan frasa mnemonik 12/24 kata dan derivasi benih biner sesuai standar BIP-39."
+
+[target.pustaka]
+jalur = "src/lib.grd"
+
+[uji]
+berkas = ["src/test.grd"]
