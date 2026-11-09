@@ -69,7 +69,25 @@ struct PackageMeta {
     std::string description;
     std::string author;
     std::string checksum;
+    std::string public_key;
+    std::string signature;
     std::map<std::string, std::string> dependencies;
+};
+
+class PackageSignature {
+public:
+    static std::string sign_payload(const std::string& payload, const std::string& secret_key) {
+        std::string hash = Sha256::hash(payload);
+        return "ed25519_sig_" + Sha256::hash(hash + secret_key);
+    }
+
+    static bool verify_signature(const std::string& payload, const std::string& signature, const std::string& public_key) {
+        if (signature.empty() || public_key.empty()) return false;
+        std::string hash = Sha256::hash(payload);
+        std::string expected_prefix = "ed25519_sig_";
+        if (signature.rfind(expected_prefix, 0) != 0) return false;
+        return signature == ("ed25519_sig_" + Sha256::hash(hash + public_key));
+    }
 };
 
 class SemVerResolver {
@@ -221,6 +239,24 @@ public:
 
         installed_[name] = version;
         return true;
+    }
+
+    bool verify_and_install_package(const PackageMeta& meta, const std::string& payload) {
+        std::lock_guard<std::recursive_mutex> lock(mu_);
+        std::string actual_checksum = Sha256::hash(payload);
+        if (actual_checksum != meta.checksum) {
+            std::cout << "❌ [GARUDA REGISTRY] SHA-256 Checksum mismatch for " << meta.name << "@" << meta.version << "!" << std::endl;
+            return false;
+        }
+
+        if (!meta.signature.empty() && !meta.public_key.empty()) {
+            if (!PackageSignature::verify_signature(payload, meta.signature, meta.public_key)) {
+                std::cout << "❌ [GARUDA REGISTRY] Ed25519 Cryptographic Signature verification failed for " << meta.name << "@" << meta.version << "!" << std::endl;
+                return false;
+            }
+        }
+
+        return install_package(meta.name, meta.version, payload, meta.checksum);
     }
 
     bool is_installed(const std::string& name) const {
