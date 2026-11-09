@@ -1,6 +1,6 @@
 # Garuda Compiler (G-BEAM) 🇮🇩
 
-**Garuda** adalah bahasa pemrograman terdistribusi modern yang ditulis 100% oleh anak Indonesia, terinspirasi Erlang/OTP. Dilengkapi pattern matching, actor model, list/map comprehension, native HTTP server, fitur user-facing **Json/Http/Env**, aplikasi referensi **TodoAPI**, (Fase 14) **event bus Ets**, **vektor**, **CSV**, **regex**, **UUID**, **AES-256**, **JWT**, serta (Fase 15) **Standard Library Lengkap** (`List`, `Map`, `String`, `File`, `Math`, `Time`, `Path`).
+**Garuda** adalah bahasa pemrograman terdistribusi modern yang ditulis 100% oleh anak Indonesia, terinspirasi Erlang/OTP. Dilengkapi pattern matching, actor model, list/map comprehension, native HTTP server, fitur user-facing **Json/Http/Env**, aplikasi referensi **TodoAPI**, (Fase 14) **event bus Ets**, **vektor**, **CSV**, **regex**, **UUID**, **AES-256**, **JWT**, (Fase 15 Part 1) **Standard Library Lengkap** (`List`, `Map`, `String`, `File`, `Math`, `Time`, `Path`), serta (Fase 15 Part 2) **Package Registry & Distribution (`grdmix`)** dengan verifikasi tanda tangan kriptografi **Ed25519** & **SHA-256**.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Made in Indonesia](https://img.shields.io/badge/Made%20in-Indonesia-red)](https://richat.my.id)
@@ -11,17 +11,18 @@
 ## 🚦 Status Proyek
 
 > **Update terakhir:** 2025-05-18  
-> **HEAD diverifikasi:** `bf2c6f0` — `feat(fase15): implement Path stdlib module with tests`  
+> **HEAD diverifikasi:** `784d619` — `chore(repo): remove non-Garuda project files from Git tracking`  
 
 | Aspek | Status | Bukti |
 |---|---|---|
 | Build | ✅ PASS | MSVC / CMake Release Build |
 | Test suite bahasa inti (Fase 6–11) | ✅ PASS | `docs/test-results-current.csv` |
 | Fitur user-facing (Fase 12: Json, Http, Env, TodoAPI) | ✅ PASS | `docs/test-results-current.csv` |
-| Package manager & packages (Fase 13) | ✅ PASS | 72/72 packages valid & complete |
+| Package manager & packages (Fase 13) | ✅ PASS | 213 packages valid & complete |
 | Logika Modul Packages (Fase 14: Ets bus, Vektor, CSV, Regex, UUID, PriQueue, AES256, JWT, KV DB) | ✅ PASS | `docs/test-results-current.csv` |
-| **Standard Library (Fase 15: List, Map, String, File, Math, Time, Path)** | ✅ PASS | `docs/test-results-current.csv` (7/7 suites PASS) |
-| **Total Test Suite Output** | **165 PASS, 9 FAIL, 8 TIMEOUT** | Lihat `docs/verification-report-fase15.md` |
+| Standard Library (Fase 15 Part 1: List, Map, String, File, Math, Time, Path) | ✅ PASS | `docs/test-results-current.csv` (7/7 suites PASS) |
+| **Package Registry & Distribution (Fase 15 Part 2: Semver, Ed25519 Signature, SHA-256 Checksum)** | ✅ PASS | `docs/test-results-current.csv` (2/2 suites PASS) |
+| **Total Test Suite Output** | **167 PASS, 8 FAIL, 9 TIMEOUT** | Lihat `docs/verification-report-fase15-part2.md` |
 | Known Issues | 17 Suites | Lihat section Known Issues |
 
 ---
@@ -43,7 +44,7 @@
 - **`Env.baca(key, default)`** / **`Env.muat_config(path)`** — Environment variables & config loader.
 - **TodoAPI** — Aplikasi referensi `.grd` murni di `examples/todo_api/`.
 
-### Standard Library Lengkap (Fase 15)
+### Standard Library Lengkap (Fase 15 Part 1)
 - **`List`** — `panjang`, `peta`, `saring`, `ambil`, `buang`, `gabung`, `balik`, `urutkan`
 - **`Map`** — `baru`, `ambil`, `taruh`, `kunci`, `nilai`, `gabung`, `hapus`, `berisi`
 - **`String`** — `pisah`, `gabung`, `ganti`, `pangkas`, `besar`, `kecil`, `mulai_dengan`, `berakhir_dengan`, `cari`
@@ -52,10 +53,11 @@
 - **`Time`** — `sekarang`, `format`, `parse`, `tidur`, `milik_detik`, `tambah_detik`
 - **`Path`** — `gabung`, `direktori`, `nama_file`, `ekstensi`, `mutlak`, `normalisasi`
 
-### Package Ecosystem (Fase 13)
-- **72 Paket Resmi** di direktori `packages/`.
-- **Package Manager (`grdmix`)** — Semver resolution, verifikasi checksum SHA-256, dan generator stub pustaka standar.
-- Setiap paket 100% lengkap dengan: `garuda.json`, `grdmix.toml`, `README.md`, `src/lib.grd`, `src/test.grd`.
+### Package Registry & Distribution (`grdmix` — Fase 15 Part 2)
+- **`grdmix publish`** — Menerbitkan paket & mengompresi payload dengan tanda tangan digital Ed25519.
+- **`grdmix search <query>`** — Pencarian katalog paket lokal/remote berdasarkan nama & deskripsi.
+- **`grdmix install <pkg>@<ver>`** — Pemasangan paket terverifikasi (penolakan otomatis payload yang terpengaruh tampering).
+- **Package Signature Verification** — Otentikasi kriptografi Ed25519 & SHA-256 checksum verification.
 
 ---
 
@@ -67,7 +69,6 @@ git clone https://github.com/anggitPM17/garuda.git
 cd garuda/garuda_v67_0_production/garuda_v67.0.0
 cmake -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build -j$(nproc)
-./build/garuda_richat_server 9002
 ```
 
 ### Windows (PowerShell & CMake)
@@ -76,7 +77,6 @@ git clone https://github.com/anggitPM17/garuda.git
 cd garuda\garuda_v67_0_production\garuda_v67.0.0
 cmake -B build
 cmake --build build --config Release
-.\build\Release\garuda_richat_server.exe 9002
 ```
 
 ### Jalankan Test Suite
@@ -102,7 +102,8 @@ powershell -ExecutionPolicy Bypass -File "scratch/run_all_tests.ps1"
 
 ## 📚 Dokumentasi
 
-- **[Laporan Verifikasi Fase 15](docs/verification-report-fase15.md)** — Bukti eksekusi 182 test & status 7 modul stdlib.
+- **[Laporan Verifikasi Fase 15 Part 2 (Registry & Signature)](docs/verification-report-fase15-part2.md)** — Bukti eksekusi test `garuda_grdmix_registry_tests` & `garuda_package_signature_tests`.
+- **[Laporan Verifikasi Fase 15 Part 1 (Stdlib)](docs/verification-report-fase15.md)** — Bukti eksekusi 7 modul stdlib native.
 - **[Roadmap Pengembangan Lanjutan Fase 15–19](docs/ROADMAP_FASE15_19.md)** — Peta jalan fitur Stdlib, Registry, Concurrency, & FFI.
 - **[Panduan Self-Hosting Bootstrap](docs/bootstrap.md)** — Arsitektur 3-Stage self-hosting compiler & verifikasi `garuda_bootstrap_grd_tests.exe` (PASS 15/15).
 - **[Catatan Rilis & CHANGELOG](CHANGELOG.md)** — Riwayat perubahan rilis.
@@ -112,19 +113,10 @@ powershell -ExecutionPolicy Bypass -File "scratch/run_all_tests.ps1"
 
 ## ⚠️ Known Issues (Transparan)
 
-Daftar dari `docs/verification-report-fase15.md`:
+Daftar dari `docs/verification-report-fase15-part2.md`:
 
-- **9 Test FAIL**: `garuda_db_tests.exe`, `garuda_fullstack_tests.exe`, `garuda_https_e2e_tests.exe`, `garuda_http_tests.exe`, `garuda_multi_phase_integration_tests.exe`, `garuda_orm_tests.exe`, `garuda_router_e2e_tests.exe`, `garuda_router_middleware_tests.exe`, `garuda_todo_api_e2e_tests.exe` (Socket teardown / port collision saat dijalankan berurutan cepat atau cert SSL mock OS runner).
-- **8 Test TIMEOUT**: Suites yang menjalankan loop HTTP server / socket listener terikat port (`garuda_async_event_loop_tests`, `garuda_bytecode_io_tests`, `garuda_chat_server_tests`, `garuda_cluster_manager_tests`, `garuda_fault_tests`, `garuda_grdmix_e2e_tests`, `garuda_grdrun_grd_tests`, `garuda_million_tests`). Melebihi limit 10 detik pada eksekusi batch non-interaktif.
-
----
-
-## 🌐 Ekosistem Live
-
-- **[richat.my.id](https://richat.my.id)** — Portal resmi & demo live.
-- **[Stadion Garuda](https://richat.my.id/stadion)** — Interactive Web Playground.
-- **[WASM Client](https://richat.my.id/wasm)** — Eksekusi WebAssembly di browser.
-- **[Dashboard GVM](https://richat.my.id/dashboard)** — Monitoring Prometheus metrics & RAM real-time.
+- **8 Test FAIL**: `garuda_db_tests.exe`, `garuda_fullstack_tests.exe`, `garuda_https_e2e_tests.exe`, `garuda_http_tests.exe`, `garuda_multi_phase_integration_tests.exe`, `garuda_orm_tests.exe`, `garuda_router_e2e_tests.exe`, `garuda_router_middleware_tests.exe` (Socket teardown / port collision saat dijalankan berurutan cepat atau cert SSL mock OS runner).
+- **9 Test TIMEOUT**: Suites yang menjalankan loop HTTP server / socket listener terikat port (`garuda_async_event_loop_tests`, `garuda_bytecode_io_tests`, `garuda_chat_server_tests`, `garuda_cluster_manager_tests`, `garuda_default_max_reqs_tests`, `garuda_event_loop_backend_tests`, `garuda_fault_tests`, `garuda_million_tests`, `garuda_todo_api_e2e_tests`). Melebihi limit 10 detik pada eksekusi batch non-interaktif.
 
 ---
 
