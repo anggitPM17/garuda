@@ -21,7 +21,7 @@ garuda_bytecode_tests.exe,PASS,0
 garuda_captcha_pow_tests.exe,PASS,0
 garuda_chat_server_tests.exe,FAIL,-1073740791
 garuda_cli_example_tests.exe,PASS,0
-garuda_cluster_manager_tests.exe,PASS,0
+garuda_cluster_manager_tests.exe,TIMEOUT,-1
 garuda_codegen_grd_tests.exe,PASS,0
 garuda_codegen_tests.exe,PASS,0
 garuda_compiler_api_tests.exe,PASS,0
@@ -50,7 +50,7 @@ garuda_error_tests.exe,PASS,0
 garuda_ets_tests.exe,PASS,0
 garuda_event_loop_backend_tests.exe,PASS,0
 garuda_fase_g_audit_tests.exe,PASS,0
-garuda_fault_tests.exe,TIMEOUT,-1
+garuda_fault_tests.exe,PASS,0
 garuda_feature_tests.exe,PASS,0
 garuda_ffi_registry_tests.exe,PASS,0
 garuda_ffi_tests.exe,PASS,0
@@ -86,15 +86,13 @@ garuda_http_parser_tests.exe,PASS,0
 garuda_http_response_tests.exe,PASS,0
 garuda_http_server_e2e_tests.exe,PASS,0
 garuda_http_server_tests.exe,PASS,0
-garuda_http_tests.exe,FAIL,-1073740791
+garuda_http_tests.exe,TIMEOUT,-1
 garuda_import_grd_tests.exe,PASS,0
 garuda_industrial_tests.exe,PASS,0
 garuda_interp_tests.exe,PASS,0
 garuda_iot_framework_tests.exe,PASS,0
 garuda_isolate_binop_tests.exe,PASS,0
 garuda_isolation_tests.exe,PASS,0
-garuda_jalur_langit_bridge_tests.exe,PASS,0
-garuda_jalur_langit_tests.exe,PASS,0
 garuda_jit_compiler_tests.exe,PASS,0
 garuda_jni_bridge_tests.exe,PASS,0
 garuda_json_bif_tests.exe,PASS,0
@@ -155,11 +153,6 @@ garuda_read_receipt_tests.exe,PASS,0
 garuda_registry_tests.exe,PASS,0
 garuda_repl_tests.exe,PASS,0
 garuda_result_grd_tests.exe,PASS,0
-garuda_richat_backend_tests.exe,PASS,0
-garuda_richat_chat_api_tests.exe,PASS,0
-garuda_richat_group_api_tests.exe,PASS,0
-garuda_richat_offline_queue_tests.exe,PASS,0
-garuda_richat_realtime_tests.exe,PASS,0
 garuda_router_e2e_tests.exe,FAIL,1
 garuda_router_general_pattern_tests.exe,PASS,0
 garuda_router_middleware_tests.exe,FAIL,1
