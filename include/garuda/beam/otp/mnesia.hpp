@@ -65,6 +65,17 @@ public:
         }
     }
 
+    std::vector<Term> keys() const {
+        std::lock_guard<std::mutex> lock(mu_);
+        std::vector<Term> out;
+        if (config_.type == TableType::Set) {
+            for (const auto& [k, v] : set_data_) out.push_back(k);
+        } else {
+            for (const auto& [k, v] : bag_data_) out.push_back(k);
+        }
+        return out;
+    }
+
     std::vector<Term> read_all(const Term& key) {
         std::lock_guard<std::mutex> lock(mu_);
         std::vector<Term> out;
