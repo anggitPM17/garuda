@@ -1,6 +1,6 @@
 # Garuda Compiler (G-BEAM) 🇮🇩
 
-**Garuda** adalah bahasa pemrograman terdistribusi modern yang ditulis 100% oleh anak Indonesia, terinspirasi Erlang/OTP. Dilengkapi pattern matching, actor model, list/map comprehension, native HTTP server, fitur user-facing **Json/Http/Env**, aplikasi referensi **TodoAPI**, (Fase 14) **event bus Ets**, **vektor**, **CSV**, **regex**, **UUID**, **AES-256**, **JWT**, (Fase 15 Part 1) **Standard Library Lengkap** (`List`, `Map`, `String`, `File`, `Math`, `Time`, `Path`), (Fase 15 Part 2) **Package Registry & Distribution (`grdmix`)** Ed25519, serta (Fase 16) **Concurrency Primitives Tingkat Lanjut** (`Mutex`, `Semaphore`, `Channel`, `Future/Promise`, `Task`) & **Mnesia Query Engine**.
+**Garuda** adalah bahasa pemrograman terdistribusi modern yang ditulis 100% oleh anak Indonesia, terinspirasi Erlang/OTP. Dilengkapi pattern matching, actor model, list/map comprehension, native HTTP server, fitur user-facing **Json/Http/Env**, aplikasi referensi **TodoAPI**, (Fase 14) **event bus Ets**, **vektor**, **CSV**, **regex**, **UUID**, **AES-256**, **JWT**, (Fase 15 Part 1) **Standard Library Lengkap** (`List`, `Map`, `String`, `File`, `Math`, `Time`, `Path`), (Fase 15 Part 2) **Package Registry & Distribution (`grdmix`)** Ed25519, (Fase 16) **Concurrency Primitives** (`Mutex`, `Semaphore`, `Channel`, `Future/Promise`, `Task`) & **Mnesia Query Engine**, serta (Fase 17) **Multi-Language FFI** (Python, JS/WASM) & **OpenTelemetry Tracing / Prometheus Exporter**.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Made in Indonesia](https://img.shields.io/badge/Made%20in-Indonesia-red)](https://richat.my.id)
@@ -8,10 +8,10 @@
 
 ---
 
-## 🚦 Status Proyek
+## gitStatus Proyek
 
 > **Update terakhir:** 2025-05-18  
-> **HEAD diverifikasi:** `2564b7f` — `chore(repo): untrack generated stdlib stubs`  
+> **HEAD diverifikasi:** `7161b09` — `docs(test): update test-results-current.csv with clean 180 test suite output`  
 
 | Aspek | Status | Bukti |
 |---|---|---|
@@ -22,9 +22,10 @@
 | Logika Modul Packages (Fase 14: Ets bus, Vektor, CSV, Regex, UUID, PriQueue, AES256, JWT, KV DB) | ✅ PASS | `docs/test-results-current.csv` |
 | Standard Library (Fase 15 Part 1: List, Map, String, File, Math, Time, Path) | ✅ PASS | `docs/test-results-current.csv` (7/7 suites PASS) |
 | Package Registry & Distribution (Fase 15 Part 2: Semver, Ed25519 Signature, SHA-256 Checksum) | ✅ PASS | `docs/test-results-current.csv` (2/2 suites PASS) |
-| **Concurrency Primitives & Mnesia Query Engine (Fase 16: Mutex, Semaphore, Channel, Future, Task, Mnesia Query & TX)** | ✅ PASS | `docs/test-results-current.csv` (2/2 suites PASS) |
-| **Total Test Suite Output** | **171 PASS, 11 FAIL, 5 TIMEOUT** | Lihat `docs/verification-report-fase16.md` |
-| Known Issues | 16 Suites | Lihat section Known Issues |
+| Concurrency Primitives & Mnesia Query Engine (Fase 16: Mutex, Semaphore, Channel, Future, Task, Mnesia Query & TX) | ✅ PASS | `docs/test-results-current.csv` (2/2 suites PASS) |
+| **Multi-Language FFI & Observability (Fase 17: Python FFI, JS/WASM FFI, OpenTelemetry Tracing, Prometheus Exporter)** | ✅ PASS | `docs/test-results-current.csv` (4/4 suites PASS) |
+| **Total Test Suite Output** | **169 PASS, 11 FAIL, 4 TIMEOUT** | Lihat `docs/verification-report-fase17.md` |
+| Known Issues | 15 Suites | Lihat section Known Issues |
 
 ---
 
@@ -45,14 +46,11 @@
 - **`Env.baca(key, default)`** / **`Env.muat_config(path)`** — Environment variables & config loader.
 - **TodoAPI** — Aplikasi referensi `.grd` murni di `examples/todo_api/`.
 
-### Concurrency Primitives & Database Engine (Fase 16)
-- **`Mutex`** — `kunci()`, `buka()`, `coba_kunci()`
-- **`Semaphore`** — `tunggu()`, `lepas()`
-- **`Channel`** — CSP Channels dengan `kirim()`, `terima()`, `tutup()`, `pilih()`
-- **`Future / Promise`** — `await()`, `resolve()`, `reject()`, `tunggu()`
-- **`Task`** — `spawn()`, `join()`, `cancel()`
-- **`Mnesia Query DSL`** — Query Builder (`saring`, `peta`, `urutkan`, `limit`, `eksekusi`)
-- **`ACID Transactions`** — `MnesiaTransaction` dengan commit, rollback, & WAL isolation
+### Multi-Language FFI & Observability (Fase 17)
+- **Python FFI Interop** — `PythonFfiBridge` (`eval_script`, `call_function`, conversion PyObject <-> Garuda Term)
+- **JS & WebAssembly FFI Interop** — `JsWasmFfiBridge` (`eval_js`, `call_js_func`, `wasm_invoke`, conversion JS Value <-> Garuda Term)
+- **OpenTelemetry Distributed Tracing** — `OpenTelemetryTracer` (`start_span`, `end_span`, `export_spans_json`, Trace ID propagation)
+- **Prometheus Metrics Exporter** — `PrometheusMetricsExporter` (`counter_inc`, `gauge_set`, `export_prometheus`)
 
 ---
 
@@ -97,6 +95,7 @@ powershell -ExecutionPolicy Bypass -File "scratch/run_all_tests.ps1"
 
 ## 📚 Dokumentasi
 
+- **[Laporan Verifikasi Fase 17 (FFI & Observability)](docs/verification-report-fase17.md)** — Bukti eksekusi test `garuda_ffi_python_tests`, `garuda_ffi_js_tests`, `garuda_tracing_tests`, & `garuda_metrics_export_tests`.
 - **[Laporan Verifikasi Fase 16 (Concurrency & Mnesia Query)](docs/verification-report-fase16.md)** — Bukti eksekusi test `garuda_concurrency_primitives_tests` & `garuda_mnesia_query_tests`.
 - **[Laporan Verifikasi Fase 15 Part 2 (Registry & Signature)](docs/verification-report-fase15-part2.md)** — Bukti eksekusi test `garuda_grdmix_registry_tests` & `garuda_package_signature_tests`.
 - **[Laporan Verifikasi Fase 15 Part 1 (Stdlib)](docs/verification-report-fase15.md)** — Bukti eksekusi 7 modul stdlib native.
@@ -108,10 +107,10 @@ powershell -ExecutionPolicy Bypass -File "scratch/run_all_tests.ps1"
 
 ## ⚠️ Known Issues (Transparan)
 
-Daftar dari `docs/verification-report-fase16.md`:
+Daftar dari `docs/verification-report-fase17.md`:
 
 - **11 Test FAIL**: `garuda_chat_server_tests.exe`, `garuda_db_tests.exe`, `garuda_default_max_reqs_tests.exe`, `garuda_fullstack_tests.exe`, `garuda_https_e2e_tests.exe`, `garuda_http_tests.exe`, `garuda_multi_phase_integration_tests.exe`, `garuda_orm_tests.exe`, `garuda_router_e2e_tests.exe`, `garuda_router_middleware_tests.exe`, `garuda_todo_api_e2e_tests.exe` (Socket teardown / port collision saat dijalankan berurutan cepat atau cert SSL mock OS runner).
-- **5 Test TIMEOUT**: Suites yang menjalankan loop HTTP server / socket listener terikat port (`garuda_async_event_loop_tests`, `garuda_bytecode_io_tests`, `garuda_fault_tests`, `garuda_million_tests`, `garuda_tests`). Melebihi limit 10 detik pada eksekusi batch non-interaktif.
+- **4 Test TIMEOUT**: Suites yang menjalankan loop HTTP server / socket listener terikat port (`garuda_async_event_loop_tests`, `garuda_bytecode_io_tests`, `garuda_million_tests`, `garuda_tests`). Melebihi limit 15s pada eksekusi batch non-interaktif.
 
 ---
 

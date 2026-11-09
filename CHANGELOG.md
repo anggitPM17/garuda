@@ -7,6 +7,13 @@ Format pencatatan mematuhi [Keep a Changelog](https://keepachangelog.com/en/1.0.
 
 ## [v67.0.0] - 2025-05-18
 
+### 📡 Added — Fase 17: Multi-Language FFI & Observability (Tag: `v67-fase17-ffi-observability-stable`)
+* **Python FFI Interop**: `PythonFfiBridge` (`eval_script`, `call_function`, conversion PyObject <-> Garuda Term) (`garuda_ffi_python_tests.exe` — PASS).
+* **JS & WebAssembly FFI Interop**: `JsWasmFfiBridge` (`eval_js`, `call_js_func`, `wasm_invoke`, conversion JS Value <-> Garuda Term) (`garuda_ffi_js_tests.exe` — PASS).
+* **OpenTelemetry Distributed Tracing**: `OpenTelemetryTracer` (`start_span`, `end_span`, `export_spans_json`, Trace ID propagation) (`garuda_tracing_tests.exe` — PASS).
+* **Prometheus Metrics Export**: `PrometheusMetricsExporter` (`counter_inc`, `gauge_set`, `export_prometheus`) (`garuda_metrics_export_tests.exe` — PASS).
+* **4 Test Suite Baru**: `garuda_ffi_python_tests.exe`, `garuda_ffi_js_tests.exe`, `garuda_tracing_tests.exe`, `garuda_metrics_export_tests.exe`.
+
 ### ⚡ Added — Fase 16: Concurrency Primitives & Database Layer Engine (Tag: `v67-fase16-concurrency-db-stable`)
 * **Advanced Concurrency Primitives**: Implementasi C++ native `Mutex`, `Semaphore`, CSP `Channel` (select/pilih), `Future`/`Promise` (await), dan async `Task` (`garuda_concurrency_primitives_tests.exe` — PASS).
 * **Mnesia Query DSL & ACID Engine**: Query Builder DSL (`saring`, `peta`, `urutkan`, `limit`, `eksekusi`) & Mnesia Transaction Engine dengan commit/rollback isolation (`garuda_mnesia_query_tests.exe` — PASS).

@@ -52,6 +52,8 @@ garuda_event_loop_backend_tests.exe,PASS,0
 garuda_fase_g_audit_tests.exe,PASS,0
 garuda_fault_tests.exe,PASS,0
 garuda_feature_tests.exe,PASS,0
+garuda_ffi_js_tests.exe,PASS,0
+garuda_ffi_python_tests.exe,PASS,0
 garuda_ffi_registry_tests.exe,PASS,0
 garuda_ffi_tests.exe,PASS,0
 garuda_file_grd_tests.exe,PASS,0
@@ -112,6 +114,7 @@ garuda_map_comprehension_tests.exe,PASS,0
 garuda_map_grd_tests.exe,PASS,0
 garuda_matematika_tests.exe,PASS,0
 garuda_memory_tests.exe,PASS,0
+garuda_metrics_export_tests.exe,PASS,0
 garuda_metrics_tests.exe,PASS,0
 garuda_million_tests.exe,TIMEOUT,-1
 garuda_mnesia_cluster_tests.exe,PASS,0
@@ -179,3 +182,4 @@ garuda_stdlib_string_tests.exe,PASS,0
 garuda_stdlib_time_tests.exe,PASS,0
 garuda_tests.exe,TIMEOUT,-1
 garuda_todo_api_e2e_tests.exe,FAIL,-1073740791
+garuda_tracing_tests.exe,PASS,0
