@@ -1,0 +1,13 @@
+[paket]
+nama = "garuda_kripto_chacha20_poly1305"
+versi = "0.1.0"
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
+edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Enkripsi terotentikasi AEAD berkecepatan tinggi nir-akselerasi perangkat keras."
+
+[target.pustaka]
+jalur = "src/lib.grd"
+
+[uji]
+berkas = ["src/test.grd"]
