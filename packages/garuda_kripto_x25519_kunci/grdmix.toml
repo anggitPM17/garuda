@@ -1,0 +1,13 @@
+[paket]
+nama = "garuda_kripto_x25519_kunci"
+versi = "0.1.0"
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
+edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Protokol pertukaran kunci Diffie-Hellman efisien berbasis Curve25519."
+
+[target.pustaka]
+jalur = "src/lib.grd"
+
+[uji]
+berkas = ["src/test.grd"]
