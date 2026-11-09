@@ -1,9 +1,0 @@
-modul test_driver
-  fungsi main() ->
-    i2c.init(21, 22, 400000)
-    i2c.write(0x76, [0xF4, 0x27])
-    pwm.init(12, 5000, 8)
-    pwm.set_duty(50)
-    "driver_ok"
-  rampung
-rampung

@@ -1,9 +1,0 @@
-modul test_ota_driver
-  fungsi main() ->
-    ota.check("https://firmware.garuda.io/v1.1.0.bin")
-    ota.download("https://firmware.garuda.io/v1.1.0.bin")
-    ota.verify("valid_ed25519_sig")
-    ota.apply()
-    "ota_update_applied_bank_b"
-  rampung
-rampung
