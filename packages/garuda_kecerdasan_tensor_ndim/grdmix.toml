@@ -1,0 +1,13 @@
+[paket]
+nama = "garuda_kecerdasan_tensor_ndim"
+versi = "0.1.0"
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
+edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Operasi array multidimensi dengan penyiaran bentuk (broadcasting) dan slicing."
+
+[target.pustaka]
+jalur = "src/lib.grd"
+
+[uji]
+berkas = ["src/test.grd"]
