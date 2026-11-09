@@ -1,0 +1,13 @@
+[paket]
+nama = "garuda_sains_probabilitas_distribusi_terdistribusi"
+versi = "0.1.0"
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
+edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Varian Terdistribusi berkinerja tinggi: Fungsi kepadatan probabilitas distribusi Normal, Poisson, dan Binomial."
+
+[target.pustaka]
+jalur = "src/lib.grd"
+
+[uji]
+berkas = ["src/test.grd"]
