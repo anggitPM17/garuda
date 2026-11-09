@@ -1,0 +1,13 @@
+[paket]
+nama = "garuda_media_midi_sintesis"
+versi = "0.1.0"
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
+edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Parser berkas Standard MIDI File (.mid) dan penjadwal perintah nada."
+
+[target.pustaka]
+jalur = "src/lib.grd"
+
+[uji]
+berkas = ["src/test.grd"]
