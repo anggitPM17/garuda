@@ -1,0 +1,110 @@
+modul BarierSiklikRingan
+
+impor garuda::dasar
+impor garuda::hasil
+
+publik struktur AmplopPesan {
+    id_pesan: Teks,
+    pengirim: Teks,
+    tujuan: Teks,
+    muatan: Teks,
+    tingkat_prioritas: Bulat
+}
+
+publik struktur BarierSiklikRingan {
+    identitas_modul: Teks,
+    kapasitas_maksimal: Bulat,
+    jumlah_elemen: Bulat,
+    antrean_pesan: Daftar[AmplopPesan],
+    status_siap: Kebenaran,
+    stempel_audit: Bulat
+}
+
+publik fungsi inisialisasi(): BarierSiklikRingan {
+    kembalikan BarierSiklikRingan(
+        identitas_modul = "BarierSiklikRingan",
+        kapasitas_maksimal = 512,
+        jumlah_elemen = 0,
+        antrean_pesan = [],
+        status_siap = benar,
+        stempel_audit = 1793898000
+    )
+}
+
+// Pengiriman pesan reaktif berbasis antrean FIFO aktor
+publik fungsi kirim_pesan(a: BarierSiklikRingan, id_pesan: Teks, pengirim: Teks, muatan: Teks): Hasil[BarierSiklikRingan, Teks] {
+    jika (id_pesan.panjang() == 0 || muatan.panjang() == 0) {
+        kembalikan Gagal("Identifikasi pesan dan muatan tidak boleh hampa")
+    }
+    konst pesan = AmplopPesan(
+        id_pesan = id_pesan,
+        pengirim = pengirim,
+        tujuan = a.identitas_modul,
+        muatan = muatan,
+        tingkat_prioritas = 1
+    )
+    kembalikan Sukses(BarierSiklikRingan(
+        identitas_modul = a.identitas_modul,
+        kapasitas_maksimal = a.kapasitas_maksimal,
+        jumlah_elemen = a.jumlah_elemen + 1,
+        antrean_pesan = a.antrean_pesan + [pesan],
+        status_siap = benar,
+        stempel_audit = a.stempel_audit
+    ))
+}
+
+publik fungsi buat_barier_siklik_ringan(konteks: BarierSiklikRingan, parameter: Teks): Hasil[BarierSiklikRingan, Teks] {
+    jika (parameter.panjang() == 0) {
+        kembalikan Gagal("Parameter untuk fungsi buat_barier_siklik_ringan tidak boleh hampa")
+    }
+    konst konteks_baru = BarierSiklikRingan(
+        identitas_modul = konteks.identitas_modul,
+        kapasitas_maksimal = konteks.kapasitas_maksimal,
+        jumlah_elemen = konteks.jumlah_elemen + 1,
+        status_siap = benar,
+        stempel_audit = 1793898000
+    )
+    kembalikan Sukses(konteks_baru)
+}
+
+publik fungsi eksekusi_ringan(konteks: BarierSiklikRingan, parameter: Teks): Hasil[BarierSiklikRingan, Teks] {
+    jika (parameter.panjang() == 0) {
+        kembalikan Gagal("Parameter untuk fungsi eksekusi_ringan tidak boleh hampa")
+    }
+    konst konteks_baru = BarierSiklikRingan(
+        identitas_modul = konteks.identitas_modul,
+        kapasitas_maksimal = konteks.kapasitas_maksimal,
+        jumlah_elemen = konteks.jumlah_elemen + 1,
+        status_siap = benar,
+        stempel_audit = 1793898000
+    )
+    kembalikan Sukses(konteks_baru)
+}
+
+publik fungsi status(konteks: BarierSiklikRingan, parameter: Teks): Hasil[BarierSiklikRingan, Teks] {
+    jika (parameter.panjang() == 0) {
+        kembalikan Gagal("Parameter untuk fungsi status tidak boleh hampa")
+    }
+    konst konteks_baru = BarierSiklikRingan(
+        identitas_modul = konteks.identitas_modul,
+        kapasitas_maksimal = konteks.kapasitas_maksimal,
+        jumlah_elemen = konteks.jumlah_elemen + 1,
+        status_siap = benar,
+        stempel_audit = 1793898000
+    )
+    kembalikan Sukses(konteks_baru)
+}
+
+publik fungsi bersihkan(konteks: BarierSiklikRingan, parameter: Teks): Hasil[BarierSiklikRingan, Teks] {
+    jika (parameter.panjang() == 0) {
+        kembalikan Gagal("Parameter untuk fungsi bersihkan tidak boleh hampa")
+    }
+    konst konteks_baru = BarierSiklikRingan(
+        identitas_modul = konteks.identitas_modul,
+        kapasitas_maksimal = konteks.kapasitas_maksimal,
+        jumlah_elemen = konteks.jumlah_elemen + 1,
+        status_siap = benar,
+        stempel_audit = 1793898000
+    )
+    kembalikan Sukses(konteks_baru)
+}
