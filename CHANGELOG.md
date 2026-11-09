@@ -7,6 +7,11 @@ Format pencatatan mematuhi [Keep a Changelog](https://keepachangelog.com/en/1.0.
 
 ## [v67.0.0] - 2025-05-18
 
+### ⚡ Added — Fase 16: Concurrency Primitives & Database Layer Engine (Tag: `v67-fase16-concurrency-db-stable`)
+* **Advanced Concurrency Primitives**: Implementasi C++ native `Mutex`, `Semaphore`, CSP `Channel` (select/pilih), `Future`/`Promise` (await), dan async `Task` (`garuda_concurrency_primitives_tests.exe` — PASS).
+* **Mnesia Query DSL & ACID Engine**: Query Builder DSL (`saring`, `peta`, `urutkan`, `limit`, `eksekusi`) & Mnesia Transaction Engine dengan commit/rollback isolation (`garuda_mnesia_query_tests.exe` — PASS).
+* **2 Test Suite Baru**: `garuda_concurrency_primitives_tests.exe` & `garuda_mnesia_query_tests.exe`.
+
 ### 📦 Added — Fase 15 Part 2: Package Registry & Distribution (`grdmix`) (Tag: `v67-fase15-registry-stable`)
 * **Semver Resolution Engine**: Support `^1.0.0`, `~1.0.0`, `>=1.0.0 <2.0.0`, `1.0.*` range resolution (`garuda_grdmix_registry_tests.exe` — PASS).
 * **Package Signature Verification**: Keamanan autentikasi kriptografi **Ed25519** & **SHA-256** Checksum (`garuda_package_signature_tests.exe` — PASS).
