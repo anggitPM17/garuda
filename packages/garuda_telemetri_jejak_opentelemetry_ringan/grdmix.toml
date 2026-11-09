@@ -1,0 +1,13 @@
+[paket]
+nama = "garuda_telemetri_jejak_opentelemetry_ringan"
+versi = "0.1.0"
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
+edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Varian Ringan berkinerja tinggi: Pelacakan jejak terdistribusi (Distributed Tracing) kompatibel W3C TraceContext."
+
+[target.pustaka]
+jalur = "src/lib.grd"
+
+[uji]
+berkas = ["src/test.grd"]
