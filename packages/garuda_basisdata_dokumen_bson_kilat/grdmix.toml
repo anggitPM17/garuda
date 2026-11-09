@@ -1,0 +1,13 @@
+[paket]
+nama = "garuda_basisdata_dokumen_bson_kilat"
+versi = "0.1.0"
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
+edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Varian Kilat berkinerja tinggi: Parser dan enkoder format Binary JSON untuk database dokumen."
+
+[target.pustaka]
+jalur = "src/lib.grd"
+
+[uji]
+berkas = ["src/test.grd"]
