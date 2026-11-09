@@ -16,6 +16,10 @@ obj/
 *.a
 *.lib
 *.dylib
+*.gvm
+landing-page
+landing-page/
+test_garuda_media/
 CMakeCache.txt
 CMakeFiles/
 cmake_install.cmake
@@ -86,6 +90,7 @@ test_results/
 *.test.log
 *.junit.xml
 coverage/
+stdlib/stubs/
 
 # OS Specific
 .DS_Store
