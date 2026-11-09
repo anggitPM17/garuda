@@ -4623,18 +4623,20 @@ private:
             }
 
             if (is_mod_fn(fn_name, "String", "mulai_dengan") || is_mod_fn(fn_name, "String", "starts_with")) {
-                std::string str = clean_str(x_regs[0]);
-                std::string prefix = (x_regs.size() > 1) ? clean_str(x_regs[1]) : "";
-                bool ok = (str.rfind(prefix, 0) == 0);
+                auto unq = [](const std::string& s) { if (s.length()>=2 && s.front()=='"' && s.back()=='"') return s.substr(1, s.length()-2); return s; };
+                std::string str = unq(clean_str(x_regs[0]));
+                std::string prefix = (x_regs.size() > 1) ? unq(clean_str(x_regs[1])) : "";
+                bool ok = (!prefix.empty() && str.find(prefix) == 0);
                 x_regs[0] = Term(Atom{ok ? "benar" : "salah"});
                 last_result = x_regs[0];
                 return true;
             }
 
             if (is_mod_fn(fn_name, "String", "berakhir_dengan") || is_mod_fn(fn_name, "String", "ends_with")) {
-                std::string str = clean_str(x_regs[0]);
-                std::string suffix = (x_regs.size() > 1) ? clean_str(x_regs[1]) : "";
-                bool ok = (str.length() >= suffix.length() && str.compare(str.length() - suffix.length(), suffix.length(), suffix) == 0);
+                auto unq = [](const std::string& s) { if (s.length()>=2 && s.front()=='"' && s.back()=='"') return s.substr(1, s.length()-2); return s; };
+                std::string str = unq(clean_str(x_regs[0]));
+                std::string suffix = (x_regs.size() > 1) ? unq(clean_str(x_regs[1])) : "";
+                bool ok = (str.length() >= suffix.length() && str.rfind(suffix) == (str.length() - suffix.length()));
                 x_regs[0] = Term(Atom{ok ? "benar" : "salah"});
                 last_result = x_regs[0];
                 return true;
