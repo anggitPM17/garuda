@@ -7,6 +7,16 @@ Format pencatatan mematuhi [Keep a Changelog](https://keepachangelog.com/en/1.0.
 
 ## [v67.0.0] - 2025-05-18
 
+### 📚 Added — Fase 15: Standard Library Lengkap (Tag: `v67-fase15-stdlib-stable`)
+* **`List` Modul**: `panjang`, `peta`, `saring`, `ambil`, `buang`, `gabung`, `balik`, `urutkan` (`garuda_stdlib_list_tests.exe` — PASS).
+* **`Map` Modul**: `baru`, `ambil`, `taruh`, `kunci`, `nilai`, `gabung`, `hapus`, `berisi` (`garuda_stdlib_map_tests.exe` — PASS).
+* **`String` Modul**: `pisah`, `gabung`, `ganti`, `pangkas`, `besar`, `kecil`, `mulai_dengan`, `berakhir_dengan`, `cari` (`garuda_stdlib_string_tests.exe` — PASS).
+* **`File` Modul**: `baca`, `tulis`, `tambah`, `ada`, `hapus`, `daftar`, `ukuran` (`garuda_stdlib_file_tests.exe` — PASS).
+* **`Math` Modul**: `akar`, `pangkat`, `sin`, `cos`, `tan`, `log`, `log10`, `abs`, `bulat`, `langit`, `lantai`, `pi` (`garuda_stdlib_math_tests.exe` — PASS).
+* **`Time` Modul**: `sekarang`, `format`, `parse`, `tidur`, `milik_detik`, `tambah_detik` (`garuda_stdlib_time_tests.exe` — PASS).
+* **`Path` Modul**: `gabung`, `direktori`, `nama_file`, `ekstensi`, `mutlak`, `normalisasi` (`garuda_stdlib_path_tests.exe` — PASS).
+* **7 Test Suite Baru**: 182 total test executables dengan **165 PASS (90.7%)**.
+
 ### 🚀 Added — Fase 14: Logika Modul Packages (Tag: `v67-fase14-packages-logic-stable`)
 * **Event Bus Ets (`PenyiaranPeristiwa`)**: Implementasi nyata bus peristiwa berbasis ETS (`77c6725`).
 * **Matematika Vektor (`MatematikaVektor`)**: Operasi aljabar & geometri vektor (`6fd30d3`).
