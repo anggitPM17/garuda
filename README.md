@@ -1,6 +1,6 @@
 # Garuda Compiler (G-BEAM) 🇮🇩
 
-**Garuda** adalah bahasa pemrograman terdistribusi modern yang ditulis 100% oleh anak Indonesia, terinspirasi Erlang/OTP. Dilengkapi pattern matching, actor model, list/map comprehension, native HTTP server, fitur user-facing **Json/Http/Env**, aplikasi referensi **TodoAPI**, dan (Fase 14) **event bus Ets**, operasi **vektor**, **parsing/writing CSV**, **regex**, **UUID**, **priority queue**, **AES-256**, serta **JWT**.
+**Garuda** adalah bahasa pemrograman terdistribusi modern yang ditulis 100% oleh anak Indonesia, terinspirasi Erlang/OTP. Dilengkapi pattern matching, actor model, list/map comprehension, native HTTP server, fitur user-facing **Json/Http/Env**, aplikasi referensi **TodoAPI**, (Fase 14) **event bus Ets**, **vektor**, **CSV**, **regex**, **UUID**, **AES-256**, **JWT**, serta (Fase 15) **Standard Library Lengkap** (`List`, `Map`, `String`, `File`, `Math`, `Time`, `Path`).
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Made in Indonesia](https://img.shields.io/badge/Made%20in-Indonesia-red)](https://richat.my.id)
@@ -11,7 +11,7 @@
 ## 🚦 Status Proyek
 
 > **Update terakhir:** 2025-05-18  
-> **HEAD diverifikasi:** `77c6725` / `5918fdb` — `feat(green-fase14-penyiaran-peristiwa-v7): implementasi nyata bus peristiwa berbasis Ets`  
+> **HEAD diverifikasi:** `bf2c6f0` — `feat(fase15): implement Path stdlib module with tests`  
 
 | Aspek | Status | Bukti |
 |---|---|---|
@@ -20,8 +20,9 @@
 | Fitur user-facing (Fase 12: Json, Http, Env, TodoAPI) | ✅ PASS | `docs/test-results-current.csv` |
 | Package manager & packages (Fase 13) | ✅ PASS | 72/72 packages valid & complete |
 | Logika Modul Packages (Fase 14: Ets bus, Vektor, CSV, Regex, UUID, PriQueue, AES256, JWT, KV DB) | ✅ PASS | `docs/test-results-current.csv` |
-| **Total Test Suite Output** | **116 PASS, 3 FAIL, 12 TIMEOUT** | Lihat `docs/verification-report-fase14.md` |
-| Known Issues | 15 Suites | Lihat section Known Issues |
+| **Standard Library (Fase 15: List, Map, String, File, Math, Time, Path)** | ✅ PASS | `docs/test-results-current.csv` (7/7 suites PASS) |
+| **Total Test Suite Output** | **165 PASS, 9 FAIL, 8 TIMEOUT** | Lihat `docs/verification-report-fase15.md` |
+| Known Issues | 17 Suites | Lihat section Known Issues |
 
 ---
 
@@ -42,17 +43,14 @@
 - **`Env.baca(key, default)`** / **`Env.muat_config(path)`** — Environment variables & config loader.
 - **TodoAPI** — Aplikasi referensi `.grd` murni di `examples/todo_api/`.
 
-### Fitur Baru (Fase 14 — Terverifikasi `77c6725`)
-- **Event Bus Ets (`PenyiaranPeristiwa`)** — Bus peristiwa terdistribusi in-memory berbasis ETS (`77c6725`).
-- **Matematika Vektor (`MatematikaVektor`)** — Operasi aljabar vektor (dot product, magnitude, norma) (`6fd30d3`).
-- **CSV Tabel (`CsvTabel`)** — Parsing dan penulisan format CSV (`e386990`).
-- **Regex Pola (`RegexPola`)** — Pencocokan pola ekspresi reguler (`4c05e70`).
-- **Identitas UUID (`IdentitasUuid`)** — Generator & validasi UUID v4 (`b9409ff`).
-- **Http Klien (`HttpKlien`)** — Client HTTP wrapper berbasis Http BIF (`35f6fee`).
-- **Antrean Prioritas (`AntreanPrioritas`)** — Heap / priority queue berbasis ETS (`d6dfcc5`).
-- **Kripto AES-256 (`KriptoAes256`)** — Enkripsi/dekripsi AES-256 (`d73ac7b`).
-- **JWT Token (`JwtToken`)** — Generator & pembuat klaim JWT token (`a38ef84`).
-- **Basis Data KV (`BasisdataKv`)** — Key-Value Database berbasis ETS (`c7ec219`).
+### Standard Library Lengkap (Fase 15)
+- **`List`** — `panjang`, `peta`, `saring`, `ambil`, `buang`, `gabung`, `balik`, `urutkan`
+- **`Map`** — `baru`, `ambil`, `taruh`, `kunci`, `nilai`, `gabung`, `hapus`, `berisi`
+- **`String`** — `pisah`, `gabung`, `ganti`, `pangkas`, `besar`, `kecil`, `mulai_dengan`, `berakhir_dengan`, `cari`
+- **`File`** — `baca`, `tulis`, `tambah`, `ada`, `hapus`, `daftar`, `ukuran`
+- **`Math`** — `akar`, `pangkat`, `sin`, `cos`, `tan`, `log`, `log10`, `abs`, `bulat`, `langit`, `lantai`, `pi`
+- **`Time`** — `sekarang`, `format`, `parse`, `tidur`, `milik_detik`, `tambah_detik`
+- **`Path`** — `gabung`, `direktori`, `nama_file`, `ekstensi`, `mutlak`, `normalisasi`
 
 ### Package Ecosystem (Fase 13)
 - **72 Paket Resmi** di direktori `packages/`.
@@ -104,22 +102,20 @@ powershell -ExecutionPolicy Bypass -File "scratch/run_all_tests.ps1"
 
 ## 📚 Dokumentasi
 
-- **[Laporan Verifikasi Fase 14](docs/verification-report-fase14.md)** — Bukti eksekusi test & status komponen.
+- **[Laporan Verifikasi Fase 15](docs/verification-report-fase15.md)** — Bukti eksekusi 182 test & status 7 modul stdlib.
 - **[Roadmap Pengembangan Lanjutan Fase 15–19](docs/ROADMAP_FASE15_19.md)** — Peta jalan fitur Stdlib, Registry, Concurrency, & FFI.
 - **[Panduan Self-Hosting Bootstrap](docs/bootstrap.md)** — Arsitektur 3-Stage self-hosting compiler & verifikasi `garuda_bootstrap_grd_tests.exe` (PASS 15/15).
 - **[Catatan Rilis & CHANGELOG](CHANGELOG.md)** — Riwayat perubahan rilis.
 - **[Peta Pencapaian Ekosistem](ACHIEVEMENTS.md)** — Rangkuman 6 pilar ekosistem GVM.
 
-
-
 ---
 
 ## ⚠️ Known Issues (Transparan)
 
-Daftar dari `docs/verification-report-fase14.md`:
+Daftar dari `docs/verification-report-fase15.md`:
 
-- **3 Test FAIL**: `garuda_chat_server_tests.exe`, `garuda_https_e2e_tests.exe`, `garuda_orm_tests.exe` (Socket teardown / port collision saat dijalankan berurutan cepat atau cert SSL mock OS runner).
-- **12 Test TIMEOUT**: Suites yang menjalankan loop HTTP server / socket listener terikat port (`garuda_async_event_loop_tests`, `garuda_bytecode_io_tests`, `garuda_cluster_manager_tests`, `garuda_db_tests`, `garuda_event_loop_backend_tests`, `garuda_fault_tests`, `garuda_fullstack_tests`, `garuda_global_parity_tests`, `garuda_http_tests`, `garuda_million_tests`, `garuda_multi_phase_integration_tests`, `garuda_todo_api_e2e_tests`). Melebihi limit 10 detik pada eksekusi batch non-interaktif.
+- **9 Test FAIL**: `garuda_db_tests.exe`, `garuda_fullstack_tests.exe`, `garuda_https_e2e_tests.exe`, `garuda_http_tests.exe`, `garuda_multi_phase_integration_tests.exe`, `garuda_orm_tests.exe`, `garuda_router_e2e_tests.exe`, `garuda_router_middleware_tests.exe`, `garuda_todo_api_e2e_tests.exe` (Socket teardown / port collision saat dijalankan berurutan cepat atau cert SSL mock OS runner).
+- **8 Test TIMEOUT**: Suites yang menjalankan loop HTTP server / socket listener terikat port (`garuda_async_event_loop_tests`, `garuda_bytecode_io_tests`, `garuda_chat_server_tests`, `garuda_cluster_manager_tests`, `garuda_fault_tests`, `garuda_grdmix_e2e_tests`, `garuda_grdrun_grd_tests`, `garuda_million_tests`). Melebihi limit 10 detik pada eksekusi batch non-interaktif.
 
 ---
 
