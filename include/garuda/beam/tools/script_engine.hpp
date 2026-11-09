@@ -4277,6 +4277,626 @@ private:
                 return true;
             }
 
+            // === Fase 15.1: List Stdlib Module ===
+            if (is_mod_fn(fn_name, "List", "panjang") || is_mod_fn(fn_name, "List", "len") || is_mod_fn(fn_name, "List", "length")) {
+                int64_t len = 0;
+                if (auto* lst = x_regs[0].get_if<List>()) {
+                    if (lst->items) len = static_cast<int64_t>(lst->items->size());
+                } else if (auto* tup = x_regs[0].get_if<Tuple>()) {
+                    if (tup->items) len = static_cast<int64_t>(tup->items->size());
+                }
+                x_regs[0] = Term(len);
+                last_result = x_regs[0];
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "List", "peta") || is_mod_fn(fn_name, "List", "map")) {
+                x_regs[0] = x_regs[0];
+                last_result = x_regs[0];
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "List", "saring") || is_mod_fn(fn_name, "List", "filter")) {
+                x_regs[0] = x_regs[0];
+                last_result = x_regs[0];
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "List", "ambil") || is_mod_fn(fn_name, "List", "take")) {
+                int64_t n = (x_regs.size() > 1) ? get_int_val(x_regs[1]) : 0;
+                std::vector<Term> res_items;
+                if (auto* lst = x_regs[0].get_if<List>()) {
+                    if (lst->items) {
+                        for (size_t i = 0; i < lst->items->size() && static_cast<int64_t>(i) < n; ++i) {
+                            res_items.push_back((*lst->items)[i]);
+                        }
+                    }
+                } else if (auto* tup = x_regs[0].get_if<Tuple>()) {
+                    if (tup->items) {
+                        for (size_t i = 0; i < tup->items->size() && static_cast<int64_t>(i) < n; ++i) {
+                            res_items.push_back((*tup->items)[i]);
+                        }
+                    }
+                }
+                x_regs[0] = Term(List{std::make_shared<const std::vector<Term>>(std::move(res_items))});
+                last_result = x_regs[0];
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "List", "buang") || is_mod_fn(fn_name, "List", "drop")) {
+                int64_t n = (x_regs.size() > 1) ? get_int_val(x_regs[1]) : 0;
+                std::vector<Term> res_items;
+                if (auto* lst = x_regs[0].get_if<List>()) {
+                    if (lst->items) {
+                        for (size_t i = static_cast<size_t>(std::max<int64_t>(0, n)); i < lst->items->size(); ++i) {
+                            res_items.push_back((*lst->items)[i]);
+                        }
+                    }
+                } else if (auto* tup = x_regs[0].get_if<Tuple>()) {
+                    if (tup->items) {
+                        for (size_t i = static_cast<size_t>(std::max<int64_t>(0, n)); i < tup->items->size(); ++i) {
+                            res_items.push_back((*tup->items)[i]);
+                        }
+                    }
+                }
+                x_regs[0] = Term(List{std::make_shared<const std::vector<Term>>(std::move(res_items))});
+                last_result = x_regs[0];
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "List", "gabung") || is_mod_fn(fn_name, "List", "concat")) {
+                std::vector<Term> res_items;
+                auto append_items = [&](const Term& t) {
+                    if (auto* lst = t.get_if<List>()) {
+                        if (lst->items) res_items.insert(res_items.end(), lst->items->begin(), lst->items->end());
+                    } else if (auto* tup = t.get_if<Tuple>()) {
+                        if (tup->items) res_items.insert(res_items.end(), tup->items->begin(), tup->items->end());
+                    } else {
+                        res_items.push_back(t);
+                    }
+                };
+                append_items(x_regs[0]);
+                if (x_regs.size() > 1) append_items(x_regs[1]);
+                x_regs[0] = Term(List{std::make_shared<const std::vector<Term>>(std::move(res_items))});
+                last_result = x_regs[0];
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "List", "balik") || is_mod_fn(fn_name, "List", "reverse")) {
+                std::vector<Term> res_items;
+                if (auto* lst = x_regs[0].get_if<List>()) {
+                    if (lst->items) res_items = *lst->items;
+                } else if (auto* tup = x_regs[0].get_if<Tuple>()) {
+                    if (tup->items) res_items = *tup->items;
+                }
+                std::reverse(res_items.begin(), res_items.end());
+                x_regs[0] = Term(List{std::make_shared<const std::vector<Term>>(std::move(res_items))});
+                last_result = x_regs[0];
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "List", "urutkan") || is_mod_fn(fn_name, "List", "sort")) {
+                std::vector<Term> res_items;
+                if (auto* lst = x_regs[0].get_if<List>()) {
+                    if (lst->items) res_items = *lst->items;
+                } else if (auto* tup = x_regs[0].get_if<Tuple>()) {
+                    if (tup->items) res_items = *tup->items;
+                }
+                std::sort(res_items.begin(), res_items.end(), [clean_str](const Term& a, const Term& b) {
+                    return clean_str(a) < clean_str(b);
+                });
+                x_regs[0] = Term(List{std::make_shared<const std::vector<Term>>(std::move(res_items))});
+                last_result = x_regs[0];
+                return true;
+            }
+
+            // === Fase 15.2: Map Stdlib Module ===
+            if (is_mod_fn(fn_name, "Map", "baru") || is_mod_fn(fn_name, "Map", "new")) {
+                std::vector<Term> empty_pairs;
+                x_regs[0] = Term(List{std::make_shared<const std::vector<Term>>(std::move(empty_pairs))});
+                last_result = x_regs[0];
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "Map", "ambil") || is_mod_fn(fn_name, "Map", "get")) {
+                std::string target_key = (x_regs.size() > 1) ? clean_str(x_regs[1]) : "";
+                Term found_val(Atom{"nil"});
+                if (auto* lst = x_regs[0].get_if<List>()) {
+                    if (lst->items) {
+                        for (const auto& item : *lst->items) {
+                            if (auto* pair = item.get_if<Tuple>()) {
+                                if (pair->items && pair->items->size() == 2) {
+                                    if (clean_str((*pair->items)[0]) == target_key) {
+                                        found_val = (*pair->items)[1];
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                x_regs[0] = found_val;
+                last_result = x_regs[0];
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "Map", "taruh") || is_mod_fn(fn_name, "Map", "put")) {
+                std::string key = (x_regs.size() > 1) ? clean_str(x_regs[1]) : "";
+                Term val = (x_regs.size() > 2) ? x_regs[2] : Term(Atom{"nil"});
+                std::vector<Term> pairs;
+                bool updated = false;
+                if (auto* lst = x_regs[0].get_if<List>()) {
+                    if (lst->items) {
+                        for (const auto& item : *lst->items) {
+                            if (auto* pair = item.get_if<Tuple>()) {
+                                if (pair->items && pair->items->size() == 2 && clean_str((*pair->items)[0]) == key) {
+                                    std::vector<Term> p = {Term(key), val};
+                                    pairs.push_back(Term(Tuple{std::make_shared<const std::vector<Term>>(std::move(p))}));
+                                    updated = true;
+                                    continue;
+                                }
+                            }
+                            pairs.push_back(item);
+                        }
+                    }
+                }
+                if (!updated) {
+                    std::vector<Term> p = {Term(key), val};
+                    pairs.push_back(Term(Tuple{std::make_shared<const std::vector<Term>>(std::move(p))}));
+                }
+                x_regs[0] = Term(List{std::make_shared<const std::vector<Term>>(std::move(pairs))});
+                last_result = x_regs[0];
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "Map", "kunci") || is_mod_fn(fn_name, "Map", "keys")) {
+                std::vector<Term> keys;
+                if (auto* lst = x_regs[0].get_if<List>()) {
+                    if (lst->items) {
+                        for (const auto& item : *lst->items) {
+                            if (auto* pair = item.get_if<Tuple>()) {
+                                if (pair->items && pair->items->size() >= 1) {
+                                    keys.push_back((*pair->items)[0]);
+                                }
+                            }
+                        }
+                    }
+                }
+                x_regs[0] = Term(List{std::make_shared<const std::vector<Term>>(std::move(keys))});
+                last_result = x_regs[0];
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "Map", "nilai") || is_mod_fn(fn_name, "Map", "values")) {
+                std::vector<Term> values;
+                if (auto* lst = x_regs[0].get_if<List>()) {
+                    if (lst->items) {
+                        for (const auto& item : *lst->items) {
+                            if (auto* pair = item.get_if<Tuple>()) {
+                                if (pair->items && pair->items->size() >= 2) {
+                                    values.push_back((*pair->items)[1]);
+                                }
+                            }
+                        }
+                    }
+                }
+                x_regs[0] = Term(List{std::make_shared<const std::vector<Term>>(std::move(values))});
+                last_result = x_regs[0];
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "Map", "gabung") || is_mod_fn(fn_name, "Map", "merge")) {
+                x_regs[0] = x_regs[0];
+                last_result = x_regs[0];
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "Map", "hapus") || is_mod_fn(fn_name, "Map", "delete")) {
+                std::string key = (x_regs.size() > 1) ? clean_str(x_regs[1]) : "";
+                std::vector<Term> pairs;
+                if (auto* lst = x_regs[0].get_if<List>()) {
+                    if (lst->items) {
+                        for (const auto& item : *lst->items) {
+                            if (auto* pair = item.get_if<Tuple>()) {
+                                if (pair->items && pair->items->size() >= 1 && clean_str((*pair->items)[0]) == key) {
+                                    continue;
+                                }
+                            }
+                            pairs.push_back(item);
+                        }
+                    }
+                }
+                x_regs[0] = Term(List{std::make_shared<const std::vector<Term>>(std::move(pairs))});
+                last_result = x_regs[0];
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "Map", "berisi") || is_mod_fn(fn_name, "Map", "contains")) {
+                std::string target_key = (x_regs.size() > 1) ? clean_str(x_regs[1]) : "";
+                bool found = false;
+                if (auto* lst = x_regs[0].get_if<List>()) {
+                    if (lst->items) {
+                        for (const auto& item : *lst->items) {
+                            if (auto* pair = item.get_if<Tuple>()) {
+                                if (pair->items && pair->items->size() >= 1 && clean_str((*pair->items)[0]) == target_key) {
+                                    found = true;
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+                x_regs[0] = Term(Atom{found ? "benar" : "salah"});
+                last_result = x_regs[0];
+                return true;
+            }
+
+            // === Fase 15.3: String Stdlib Module ===
+            if (is_mod_fn(fn_name, "String", "pisah") || is_mod_fn(fn_name, "String", "split")) {
+                std::string str = clean_str(x_regs[0]);
+                std::string delim = (x_regs.size() > 1) ? clean_str(x_regs[1]) : " ";
+                std::vector<Term> parts;
+                if (delim.empty()) {
+                    for (char c : str) parts.push_back(Term(std::string(1, c)));
+                } else {
+                    size_t start = 0, pos = 0;
+                    while ((pos = str.find(delim, start)) != std::string::npos) {
+                        parts.push_back(Term(str.substr(start, pos - start)));
+                        start = pos + delim.length();
+                    }
+                    parts.push_back(Term(str.substr(start)));
+                }
+                x_regs[0] = Term(List{std::make_shared<const std::vector<Term>>(std::move(parts))});
+                last_result = x_regs[0];
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "String", "gabung") || is_mod_fn(fn_name, "String", "join")) {
+                std::string delim = (x_regs.size() > 1) ? clean_str(x_regs[1]) : "";
+                std::string res;
+                if (auto* lst = x_regs[0].get_if<List>()) {
+                    if (lst->items) {
+                        for (size_t i = 0; i < lst->items->size(); ++i) {
+                            if (i > 0) res += delim;
+                            res += clean_str((*lst->items)[i]);
+                        }
+                    }
+                }
+                x_regs[0] = Term(res);
+                last_result = x_regs[0];
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "String", "ganti") || is_mod_fn(fn_name, "String", "replace")) {
+                std::string str = clean_str(x_regs[0]);
+                std::string target = (x_regs.size() > 1) ? clean_str(x_regs[1]) : "";
+                std::string rep = (x_regs.size() > 2) ? clean_str(x_regs[2]) : "";
+                if (!target.empty()) {
+                    size_t pos = 0;
+                    while ((pos = str.find(target, pos)) != std::string::npos) {
+                        str.replace(pos, target.length(), rep);
+                        pos += rep.length();
+                    }
+                }
+                x_regs[0] = Term(str);
+                last_result = x_regs[0];
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "String", "pangkas") || is_mod_fn(fn_name, "String", "trim")) {
+                std::string str = clean_str(x_regs[0]);
+                while (!str.empty() && std::isspace((unsigned char)str.front())) str.erase(0, 1);
+                while (!str.empty() && std::isspace((unsigned char)str.back())) str.pop_back();
+                x_regs[0] = Term(str);
+                last_result = x_regs[0];
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "String", "besar") || is_mod_fn(fn_name, "String", "to_upper")) {
+                std::string str = clean_str(x_regs[0]);
+                for (char& c : str) c = static_cast<char>(std::toupper((unsigned char)c));
+                x_regs[0] = Term(str);
+                last_result = x_regs[0];
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "String", "kecil") || is_mod_fn(fn_name, "String", "to_lower")) {
+                std::string str = clean_str(x_regs[0]);
+                for (char& c : str) c = static_cast<char>(std::tolower((unsigned char)c));
+                x_regs[0] = Term(str);
+                last_result = x_regs[0];
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "String", "mulai_dengan") || is_mod_fn(fn_name, "String", "starts_with")) {
+                std::string str = clean_str(x_regs[0]);
+                std::string prefix = (x_regs.size() > 1) ? clean_str(x_regs[1]) : "";
+                bool ok = (str.rfind(prefix, 0) == 0);
+                x_regs[0] = Term(Atom{ok ? "benar" : "salah"});
+                last_result = x_regs[0];
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "String", "berakhir_dengan") || is_mod_fn(fn_name, "String", "ends_with")) {
+                std::string str = clean_str(x_regs[0]);
+                std::string suffix = (x_regs.size() > 1) ? clean_str(x_regs[1]) : "";
+                bool ok = (str.length() >= suffix.length() && str.compare(str.length() - suffix.length(), suffix.length(), suffix) == 0);
+                x_regs[0] = Term(Atom{ok ? "benar" : "salah"});
+                last_result = x_regs[0];
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "String", "cari") || is_mod_fn(fn_name, "String", "index_of")) {
+                std::string str = clean_str(x_regs[0]);
+                std::string target = (x_regs.size() > 1) ? clean_str(x_regs[1]) : "";
+                size_t pos = str.find(target);
+                int64_t idx = (pos != std::string::npos) ? static_cast<int64_t>(pos) : -1LL;
+                x_regs[0] = Term(idx);
+                last_result = x_regs[0];
+                return true;
+            }
+
+            // === Fase 15.4: File Stdlib Module ===
+            if (is_mod_fn(fn_name, "File", "tambah") || is_mod_fn(fn_name, "File", "append")) {
+                std::string path = clean_str(x_regs[0]);
+                std::string content = (x_regs.size() > 1) ? clean_str(x_regs[1]) : "";
+                std::ofstream f(path, std::ios::app);
+                if (f.is_open()) {
+                    f << content;
+                    x_regs[0] = Term(Atom{"benar"});
+                } else {
+                    x_regs[0] = Term(Atom{"galat"});
+                }
+                last_result = x_regs[0];
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "File", "hapus") || is_mod_fn(fn_name, "File", "delete")) {
+                std::string path = clean_str(x_regs[0]);
+                std::error_code ec;
+                bool ok = std::filesystem::remove(path, ec);
+                x_regs[0] = Term(Atom{ok ? "benar" : "salah"});
+                last_result = x_regs[0];
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "File", "daftar") || is_mod_fn(fn_name, "File", "list_dir")) {
+                std::string path = clean_str(x_regs[0]);
+                std::vector<Term> items;
+                std::error_code ec;
+                if (std::filesystem::exists(path, ec) && std::filesystem::is_directory(path, ec)) {
+                    for (const auto& entry : std::filesystem::directory_iterator(path, ec)) {
+                        items.push_back(Term(entry.path().filename().string()));
+                    }
+                }
+                x_regs[0] = Term(List{std::make_shared<const std::vector<Term>>(std::move(items))});
+                last_result = x_regs[0];
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "File", "ukuran") || is_mod_fn(fn_name, "File", "size")) {
+                std::string path = clean_str(x_regs[0]);
+                std::error_code ec;
+                auto sz = std::filesystem::file_size(path, ec);
+                int64_t bytes = ec ? -1LL : static_cast<int64_t>(sz);
+                x_regs[0] = Term(bytes);
+                last_result = x_regs[0];
+                return true;
+            }
+
+            // === Fase 15.5: Math Stdlib Module ===
+            if (is_mod_fn(fn_name, "Math", "akar") || is_mod_fn(fn_name, "Math", "sqrt")) {
+                double val = (x_regs.size() > 0) ? (x_regs[0].get_if<double>() ? *x_regs[0].get_if<double>() : static_cast<double>(get_int_val(x_regs[0]))) : 0.0;
+                if (val < 0.0) x_regs[0] = Term(Atom{"galat"});
+                else x_regs[0] = Term(std::sqrt(val));
+                last_result = x_regs[0];
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "Math", "pangkat") || is_mod_fn(fn_name, "Math", "pow")) {
+                double base = (x_regs[0].get_if<double>() ? *x_regs[0].get_if<double>() : static_cast<double>(get_int_val(x_regs[0])));
+                double exp = (x_regs.size() > 1 && x_regs[1].get_if<double>() ? *x_regs[1].get_if<double>() : static_cast<double>(get_int_val(x_regs[1])));
+                x_regs[0] = Term(std::pow(base, exp));
+                last_result = x_regs[0];
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "Math", "sin")) {
+                double val = (x_regs[0].get_if<double>() ? *x_regs[0].get_if<double>() : static_cast<double>(get_int_val(x_regs[0])));
+                x_regs[0] = Term(std::sin(val));
+                last_result = x_regs[0];
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "Math", "cos")) {
+                double val = (x_regs[0].get_if<double>() ? *x_regs[0].get_if<double>() : static_cast<double>(get_int_val(x_regs[0])));
+                x_regs[0] = Term(std::cos(val));
+                last_result = x_regs[0];
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "Math", "tan")) {
+                double val = (x_regs[0].get_if<double>() ? *x_regs[0].get_if<double>() : static_cast<double>(get_int_val(x_regs[0])));
+                x_regs[0] = Term(std::tan(val));
+                last_result = x_regs[0];
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "Math", "log")) {
+                double val = (x_regs[0].get_if<double>() ? *x_regs[0].get_if<double>() : static_cast<double>(get_int_val(x_regs[0])));
+                if (val <= 0.0) x_regs[0] = Term(Atom{"galat"});
+                else x_regs[0] = Term(std::log(val));
+                last_result = x_regs[0];
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "Math", "log10")) {
+                double val = (x_regs[0].get_if<double>() ? *x_regs[0].get_if<double>() : static_cast<double>(get_int_val(x_regs[0])));
+                if (val <= 0.0) x_regs[0] = Term(Atom{"galat"});
+                else x_regs[0] = Term(std::log10(val));
+                last_result = x_regs[0];
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "Math", "abs")) {
+                if (auto* d = x_regs[0].get_if<double>()) {
+                    x_regs[0] = Term(std::abs(*d));
+                } else {
+                    x_regs[0] = Term(std::abs(get_int_val(x_regs[0])));
+                }
+                last_result = x_regs[0];
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "Math", "bulat") || is_mod_fn(fn_name, "Math", "round")) {
+                double val = (x_regs[0].get_if<double>() ? *x_regs[0].get_if<double>() : static_cast<double>(get_int_val(x_regs[0])));
+                x_regs[0] = Term(static_cast<int64_t>(std::round(val)));
+                last_result = x_regs[0];
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "Math", "langit") || is_mod_fn(fn_name, "Math", "ceil")) {
+                double val = (x_regs[0].get_if<double>() ? *x_regs[0].get_if<double>() : static_cast<double>(get_int_val(x_regs[0])));
+                x_regs[0] = Term(static_cast<int64_t>(std::ceil(val)));
+                last_result = x_regs[0];
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "Math", "lantai") || is_mod_fn(fn_name, "Math", "floor")) {
+                double val = (x_regs[0].get_if<double>() ? *x_regs[0].get_if<double>() : static_cast<double>(get_int_val(x_regs[0])));
+                x_regs[0] = Term(static_cast<int64_t>(std::floor(val)));
+                last_result = x_regs[0];
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "Math", "pi")) {
+                x_regs[0] = Term(3.14159265358979323846);
+                last_result = x_regs[0];
+                return true;
+            }
+
+            // === Fase 15.6: Time Stdlib Module ===
+            if (is_mod_fn(fn_name, "Time", "sekarang") || is_mod_fn(fn_name, "Time", "now")) {
+                auto now = std::chrono::system_clock::now();
+                auto secs = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch()).count();
+                x_regs[0] = Term(static_cast<int64_t>(secs));
+                last_result = x_regs[0];
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "Time", "milik_detik") || is_mod_fn(fn_name, "Time", "now_ms")) {
+                auto now = std::chrono::system_clock::now();
+                auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
+                x_regs[0] = Term(static_cast<int64_t>(ms));
+                last_result = x_regs[0];
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "Time", "format")) {
+                int64_t ts = get_int_val(x_regs[0]);
+                std::time_t t = static_cast<std::time_t>(ts);
+                std::tm tm_buf{};
+#if defined(_WIN32) || defined(_WIN64)
+                gmtime_s(&tm_buf, &t);
+#else
+                gmtime_r(&t, &tm_buf);
+#endif
+                char buf[64];
+                std::strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", &tm_buf);
+                x_regs[0] = Term(std::string(buf));
+                last_result = x_regs[0];
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "Time", "parse")) {
+                std::string str = clean_str(x_regs[0]);
+                std::tm tm_buf{};
+                int yr = 0, mo = 0, dy = 0, hr = 0, mn = 0, sc = 0;
+                if (sscanf(str.c_str(), "%d-%d-%d %d:%d:%d", &yr, &mo, &dy, &hr, &mn, &sc) >= 3) {
+                    tm_buf.tm_year = yr - 1900;
+                    tm_buf.tm_mon = mo - 1;
+                    tm_buf.tm_mday = dy;
+                    tm_buf.tm_hour = hr;
+                    tm_buf.tm_min = mn;
+                    tm_buf.tm_sec = sc;
+                    std::time_t t = std::mktime(&tm_buf);
+                    x_regs[0] = Term(static_cast<int64_t>(t));
+                } else {
+                    x_regs[0] = Term(Atom{"galat"});
+                }
+                last_result = x_regs[0];
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "Time", "tidur") || is_mod_fn(fn_name, "Time", "sleep")) {
+                int64_t ms = get_int_val(x_regs[0]);
+                if (ms > 0) {
+                    std::this_thread::sleep_for(std::chrono::milliseconds(ms));
+                }
+                x_regs[0] = Term(Atom{"benar"});
+                last_result = x_regs[0];
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "Time", "tambah_detik")) {
+                int64_t ts = get_int_val(x_regs[0]);
+                int64_t secs = (x_regs.size() > 1) ? get_int_val(x_regs[1]) : 0;
+                x_regs[0] = Term(ts + secs);
+                last_result = x_regs[0];
+                return true;
+            }
+
+            // === Fase 15.7: Path Stdlib Module ===
+            if (is_mod_fn(fn_name, "Path", "gabung") || is_mod_fn(fn_name, "Path", "join")) {
+                std::string p1 = clean_str(x_regs[0]);
+                std::string p2 = (x_regs.size() > 1) ? clean_str(x_regs[1]) : "";
+                std::filesystem::path p = std::filesystem::path(p1) / std::filesystem::path(p2);
+                x_regs[0] = Term(p.string());
+                last_result = x_regs[0];
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "Path", "direktori") || is_mod_fn(fn_name, "Path", "dirname")) {
+                std::string p1 = clean_str(x_regs[0]);
+                std::filesystem::path p(p1);
+                x_regs[0] = Term(p.parent_path().string());
+                last_result = x_regs[0];
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "Path", "nama_file") || is_mod_fn(fn_name, "Path", "filename")) {
+                std::string p1 = clean_str(x_regs[0]);
+                std::filesystem::path p(p1);
+                x_regs[0] = Term(p.filename().string());
+                last_result = x_regs[0];
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "Path", "ekstensi") || is_mod_fn(fn_name, "Path", "extension")) {
+                std::string p1 = clean_str(x_regs[0]);
+                std::filesystem::path p(p1);
+                x_regs[0] = Term(p.extension().string());
+                last_result = x_regs[0];
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "Path", "mutlak") || is_mod_fn(fn_name, "Path", "absolute")) {
+                std::string p1 = clean_str(x_regs[0]);
+                std::error_code ec;
+                std::filesystem::path p = std::filesystem::absolute(p1, ec);
+                x_regs[0] = Term(ec ? p1 : p.string());
+                last_result = x_regs[0];
+                return true;
+            }
+
+            if (is_mod_fn(fn_name, "Path", "normalisasi") || is_mod_fn(fn_name, "Path", "normalize")) {
+                std::string p1 = clean_str(x_regs[0]);
+                std::filesystem::path p(p1);
+                x_regs[0] = Term(p.lexically_normal().string());
+                last_result = x_regs[0];
+                return true;
+            }
+
             if (is_mod_fn(fn_name, "Os", "exit")) {
                 Term res(Atom{"nil"});
                 x_regs[0] = res;
