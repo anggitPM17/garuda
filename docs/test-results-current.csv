@@ -48,9 +48,9 @@ garuda_error_handling_tests.exe,PASS,0
 garuda_error_reporting_tests.exe,PASS,0
 garuda_error_tests.exe,PASS,0
 garuda_ets_tests.exe,PASS,0
-garuda_event_loop_backend_tests.exe,FAIL,-1073740940
+garuda_event_loop_backend_tests.exe,PASS,0
 garuda_fase_g_audit_tests.exe,PASS,0
-garuda_fault_tests.exe,TIMEOUT,-1
+garuda_fault_tests.exe,PASS,0
 garuda_feature_tests.exe,PASS,0
 garuda_ffi_registry_tests.exe,PASS,0
 garuda_ffi_tests.exe,PASS,0
