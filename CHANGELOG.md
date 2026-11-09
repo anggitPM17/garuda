@@ -7,7 +7,13 @@ Format pencatatan mematuhi [Keep a Changelog](https://keepachangelog.com/en/1.0.
 
 ## [v67.0.0] - 2025-05-18
 
-### 📚 Added — Fase 15: Standard Library Lengkap (Tag: `v67-fase15-stdlib-stable`)
+### 📦 Added — Fase 15 Part 2: Package Registry & Distribution (`grdmix`) (Tag: `v67-fase15-registry-stable`)
+* **Semver Resolution Engine**: Support `^1.0.0`, `~1.0.0`, `>=1.0.0 <2.0.0`, `1.0.*` range resolution (`garuda_grdmix_registry_tests.exe` — PASS).
+* **Package Signature Verification**: Keamanan autentikasi kriptografi **Ed25519** & **SHA-256** Checksum (`garuda_package_signature_tests.exe` — PASS).
+* **Catalog Search & Publish Engine**: Terbit & cari paket terverifikasi (`verify_and_install_package`).
+* **2 Test Suite Baru**: `garuda_grdmix_registry_tests.exe` & `garuda_package_signature_tests.exe`.
+
+### 📚 Added — Fase 15 Part 1: Standard Library Lengkap (Tag: `v67-fase15-stdlib-stable`)
 * **`List` Modul**: `panjang`, `peta`, `saring`, `ambil`, `buang`, `gabung`, `balik`, `urutkan` (`garuda_stdlib_list_tests.exe` — PASS).
 * **`Map` Modul**: `baru`, `ambil`, `taruh`, `kunci`, `nilai`, `gabung`, `hapus`, `berisi` (`garuda_stdlib_map_tests.exe` — PASS).
 * **`String` Modul**: `pisah`, `gabung`, `ganti`, `pangkas`, `besar`, `kecil`, `mulai_dengan`, `berakhir_dengan`, `cari` (`garuda_stdlib_string_tests.exe` — PASS).
