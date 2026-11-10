@@ -378,6 +378,24 @@ static std::mutex g_engine_mutex;
 static std::shared_ptr<httplib::Server> g_http_server;
 static std::thread g_http_server_thread;
 static std::atomic<bool> g_http_server_running{false};
+
+inline void stop_global_http_server() {
+    if (g_http_server_running.exchange(false)) {
+        if (g_http_server) {
+            try { g_http_server->stop(); } catch (...) {}
+        }
+        if (g_http_server_thread.joinable()) {
+            try { g_http_server_thread.join(); } catch (...) {}
+        }
+    }
+}
+
+struct GlobalHttpServerCleanupGuard {
+    ~GlobalHttpServerCleanupGuard() {
+        stop_global_http_server();
+    }
+};
+static GlobalHttpServerCleanupGuard g_http_cleanup_guard;
 static std::map<std::string, std::string> g_env_config;
 
 class ScriptEngine {
@@ -3538,8 +3556,8 @@ private:
                 std::string host_port = (scheme_pos != std::string::npos) ? url.substr(0, url.find('/', scheme_pos + 3)) : url;
                 std::string path = (scheme_pos != std::string::npos && url.find('/', scheme_pos + 3) != std::string::npos) ? url.substr(url.find('/', scheme_pos + 3)) : "/";
                 httplib::Client cli(host_port);
-                cli.set_connection_timeout(5, 0);
-                cli.set_read_timeout(5, 0);
+                cli.set_connection_timeout(1, 0);
+                cli.set_read_timeout(1, 0);
                 auto res = cli.Get(path.c_str());
                 if (res && res->status == 200) {
                     Term result(res->body);

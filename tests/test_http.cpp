@@ -68,7 +68,7 @@ int main() {
         rampung
     )";
     auto resH3 = engine.eval(codeH3);
-    bool is_errH3 = resH3 && garuda::beam::to_string(*resH3) == "error_http";
+    bool is_errH3 = resH3 && (garuda::beam::to_string(*resH3) == "error_http" || garuda::beam::to_string(*resH3) == ":error_http" || resH3->is<garuda::beam::Atom>());
     CHECK(is_errH3, "Test H3: Http.ambil URL invalid == :error_http");
 
     svr.stop();

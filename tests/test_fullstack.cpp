@@ -14,8 +14,8 @@ int main() {
     std::cout << "GARUDA FULLSTACK — SPRINT C.5 INTEGRATED WEB APP TEST SUITE (5 TESTS)\n";
     std::cout << "=======================================================\n\n";
 
-    fs::path test_db_path = fs::temp_directory_path() / "garuda_fullstack_test.db";
-    fs::remove(test_db_path);
+    fs::path test_db_path = fs::temp_directory_path() / "garuda_fullstack_test_dir";
+    fs::remove_all(test_db_path);
 
     int port = 8085;
     FullStackApp app(test_db_path.string());
@@ -68,7 +68,7 @@ int main() {
     // Stop App and Cleanup
     app.stop();
     assert(!app.is_running());
-    fs::remove(test_db_path);
+    fs::remove_all(test_db_path);
 
     std::cout << "\n🎉 ALL 5 FULLSTACK INTEGRATED APP TESTS PASSED PERFECTLY!\n";
     return 0;

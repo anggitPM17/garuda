@@ -107,6 +107,10 @@ public:
         recv_cb_ = std::move(recv_cb);
     }
 
+    void set_function_table(std::unordered_map<std::string, std::size_t> fn_table) {
+        fn_table_ = std::move(fn_table);
+    }
+
     // Eksekusi Virtual Machine dengan preemption reduction counter (2000 reductions per slice)
     Status execute_slice(Process& proc, GvmProcessState& vm) {
         vm.reductions = 2000;
@@ -141,20 +145,13 @@ public:
                     vm.ip++;
                     break;
                 }
-                case Opcode::OpSend: {
-                    Term to = vm.x_regs[0];
-                    Term msg = vm.x_regs[1];
-                    if (auto* pid = to.get_if<Pid>()) {
-                        proc.send(*pid, msg);
-                    }
-                    vm.ip++;
-                    break;
-                }
+                case Opcode::OpSend:
                 case Opcode::OpSendMsg: {
-                    Term target_term = read_operand(vm, inst.args[0]);
-                    Term msg_term = read_operand(vm, inst.args[1]);
+                    Term target_term = inst.args.empty() ? vm.x_regs[0] : read_operand(vm, inst.args[0]);
+                    Term msg_term = inst.args.size() < 2 ? vm.x_regs[1] : read_operand(vm, inst.args[1]);
                     if (auto* target_pid = target_term.get_if<Pid>()) {
                         if (send_cb_) send_cb_(*target_pid, msg_term);
+                        else proc.send(*target_pid, msg_term);
                     }
                     vm.ip++;
                     break;
@@ -163,6 +160,19 @@ public:
                     std::size_t start_ip = 0;
                     if (auto* ip_val = inst.args[0].literal.get_if<std::int64_t>()) {
                         start_ip = static_cast<std::size_t>(*ip_val);
+                    } else if (auto* atom_val = inst.args[0].literal.get_if<Atom>()) {
+                        std::string target_name = atom_val->name;
+                        for (const auto& [k, v] : fn_table_) {
+                            std::string k_base = k;
+                            auto slash_pos = k.find('/');
+                            if (slash_pos != std::string::npos) k_base = k.substr(0, slash_pos);
+                            auto dot_pos = k_base.find('.');
+                            std::string k_fn = (dot_pos != std::string::npos) ? k_base.substr(dot_pos + 1) : k_base;
+                            if (k_base == target_name || k_fn == target_name) {
+                                start_ip = v;
+                                break;
+                            }
+                        }
                     }
                     if (spawn_cb_) {
                         Pid child_pid = spawn_cb_(start_ip);
@@ -413,6 +423,7 @@ private:
     SpawnIpCallback spawn_cb_;
     SendMsgCallback send_cb_;
     ReceiveMsgCallback recv_cb_;
+    std::unordered_map<std::string, std::size_t> fn_table_;
 };
 
 } // namespace garuda::beam

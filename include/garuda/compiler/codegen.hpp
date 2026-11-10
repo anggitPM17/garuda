@@ -167,7 +167,8 @@ public:
                                 std::string k_base = k;
                                 auto slash_pos = k.find('/');
                                 if (slash_pos != std::string::npos) k_base = k.substr(0, slash_pos);
-                                if (k_base == target_name) {
+                                if (k_base == target_name || k_base == module_name_ + "." + target_name ||
+                                    (k_base.find('.') != std::string::npos && k_base.substr(k_base.find('.') + 1) == target_name)) {
                                     target_ip = v;
                                     break;
                                 }

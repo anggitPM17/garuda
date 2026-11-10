@@ -551,7 +551,35 @@ private:
             while (!check(TokenType::End) && !check(TokenType::After) && !is_at_end()) {
                 auto pattern = parse_pattern();
                 expect(TokenType::Arrow, "Expected '->' after receive pattern");
-                std::vector<std::shared_ptr<AstNode>> body = {parse_expr()};
+                std::vector<std::shared_ptr<AstNode>> body;
+                while (!check(TokenType::End) && !check(TokenType::After) && !is_at_end()) {
+                    body.push_back(parse_expr());
+                    if (check(TokenType::End) || check(TokenType::After)) break;
+                    if (tokens_[pos_].type == TokenType::LBrace || tokens_[pos_].type == TokenType::LBracket ||
+                        tokens_[pos_].type == TokenType::Atom || tokens_[pos_].type == TokenType::Identifier) {
+                        std::size_t scan = pos_;
+                        bool has_arrow = false;
+                        int nest = 0;
+                        while (scan < tokens_.size()) {
+                            if (tokens_[scan].type == TokenType::End || tokens_[scan].type == TokenType::After) {
+                                if (nest == 0) break;
+                                nest--;
+                            }
+                            if (tokens_[scan].type == TokenType::Receive || tokens_[scan].type == TokenType::Case ||
+                                tokens_[scan].type == TokenType::If || tokens_[scan].type == TokenType::DefFunc) {
+                                nest++;
+                            }
+                            if (tokens_[scan].type == TokenType::Arrow && nest == 0) {
+                                has_arrow = true;
+                                break;
+                            }
+                            scan++;
+                        }
+                        if (has_arrow && scan > pos_) {
+                            break;
+                        }
+                    }
+                }
                 clauses.push_back({pattern, nullptr, body});
             }
             expect(TokenType::End, "Expected 'rampung'/'end' to close receive");

@@ -99,8 +99,8 @@ int main(int argc, char* argv[]) {
     std::string pwd_hash = auth.hash_password("secret_pass");
     TEST_ASSERT(auth.verify_password("secret_pass", pwd_hash), "Password hashing and verification must pass");
 
-    fs::path tmp_orm_db = fs::temp_directory_path() / "garuda_flow_d.db";
-    fs::remove(tmp_orm_db);
+    fs::path tmp_orm_db = fs::temp_directory_path() / "garuda_flow_d_dir";
+    fs::remove_all(tmp_orm_db);
     Database db(tmp_orm_db.string());
     OrmEngine orm(db);
     orm.define_model("User", {{"nama", "string"}, {"email", "string"}}, "", "", "");

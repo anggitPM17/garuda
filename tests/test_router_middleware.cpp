@@ -64,7 +64,7 @@ int main() {
     std::string code4 = R"(
         modul TestRTR4
         fungsi utama() ->
-            R = Router.baru()
+            R = Router.baru() |> Router.get("/api/users", "handler_users")
             Req = %{"path" => "/api/users"}
             Router.dispatch(R, Req)
         rampung

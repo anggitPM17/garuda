@@ -75,6 +75,8 @@ static bool make_socketpair(socket_t& out_a, socket_t& out_b) {
 }
 
 int main() {
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
+
     std::cout << "=======================================================\n";
     std::cout << "GARUDA COMPILER — FASE 11.3 EVENT-LOOP BACKEND SUITE (6 TESTS)\n";
     std::cout << "=======================================================\n\n";

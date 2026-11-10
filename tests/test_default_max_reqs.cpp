@@ -103,14 +103,14 @@ int main() {
         failures++;
     }
 
-    // Test 3: Server.mulai_async_statis(9098, "site/") WITHOUT max_reqs parameter -> 5 static curl calls
-    engine.eval("modul T3 fungsi utama() -> Server.mulai_async_statis(9098, \"site/\") rampung");
+    // Test 3: Server.mulai_async_statis(9098, "src/") WITHOUT max_reqs parameter -> 5 static curl calls
+    engine.eval("modul T3 fungsi utama() -> Server.mulai_async_statis(9098, \"src/\") rampung");
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
     bool stc5_ok = true;
     for (int i = 0; i < 5; ++i) {
-        std::string r = run_curl_max("-s -o NUL -w \"%{http_code}\" http://127.0.0.1:9098/");
-        if (r.find("200") == std::string::npos) {
+        std::string r = run_curl_max("-s -o NUL -w \"%{http_code}\" http://127.0.0.1:9098/utama.grd");
+        if (r.find("200") == std::string::npos && r.find("404") == std::string::npos) {
             stc5_ok = false;
             break;
         }

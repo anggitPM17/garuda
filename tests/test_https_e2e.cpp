@@ -17,32 +17,25 @@
 } while(0)
 
 static std::string real_tls_get(int port, const std::string& path) {
+    std::string cmd = "C:\\Windows\\System32\\curl.exe -k -s -i https://127.0.0.1:" + std::to_string(port) + path + " 2>&1";
     #ifdef _WIN32
-    SOCKET cfd = socket(AF_INET, SOCK_STREAM, 0);
+    FILE* pipe = _popen(cmd.c_str(), "r");
     #else
-    int cfd = socket(AF_INET, SOCK_STREAM, 0);
+    FILE* pipe = popen(cmd.c_str(), "r");
     #endif
 
-    sockaddr_in saddr;
-    std::memset(&saddr, 0, sizeof(saddr));
-    saddr.sin_family = AF_INET;
-    saddr.sin_port = htons(static_cast<unsigned short>(port));
-    inet_pton(AF_INET, "127.0.0.1", &saddr.sin_addr);
-
-    if (connect(cfd, (struct sockaddr*)&saddr, sizeof(saddr)) < 0) {
-        CLOSE_SOCKET(cfd);
-        return "";
+    if (!pipe) return "";
+    char buffer[128];
+    std::string result = "";
+    while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {
+        result += buffer;
     }
-
-    std::string req = "GET " + path + " HTTP/1.1\r\nHost: localhost\r\nConnection: close\r\n\r\n";
-    send(cfd, req.data(), static_cast<int>(req.length()), 0);
-
-    char buf[4096] = {0};
-    int bytes = recv(cfd, buf, 4095, 0);
-
-    CLOSE_SOCKET(cfd);
-
-    return bytes > 0 ? std::string(buf, bytes) : "";
+    #ifdef _WIN32
+    _pclose(pipe);
+    #else
+    pclose(pipe);
+    #endif
+    return result;
 }
 
 int main() {

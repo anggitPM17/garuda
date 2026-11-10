@@ -14,8 +14,8 @@ int main() {
     std::cout << "GARUDA STANDARD LIBRARY — SPRINT C.4 DATABASE TEST SUITE (10 TESTS)\n";
     std::cout << "=======================================================\n\n";
 
-    fs::path tmp_db_file = fs::temp_directory_path() / "garuda_test_db.json";
-    fs::remove(tmp_db_file);
+    fs::path tmp_db_file = fs::temp_directory_path() / "garuda_test_db_dir";
+    fs::remove_all(tmp_db_file);
 
     // === Test 1: Open Database ===
     std::cout << "[TEST 1/10] Running Open Database test...\n";
@@ -106,7 +106,7 @@ int main() {
     std::cout << "  ✓ Test 10: Non-Existent Error Handling PASS\n";
 
     // Clean up
-    fs::remove(tmp_db_file);
+    fs::remove_all(tmp_db_file);
 
     std::cout << "\n🎉 ALL 10 DATABASE ADAPTER TESTS PASSED PERFECTLY!\n";
     return 0;

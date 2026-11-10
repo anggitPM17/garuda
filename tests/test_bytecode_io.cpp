@@ -64,7 +64,7 @@ int main() {
         auto& read_output = *read_opt;
         GARUDA_CHECK(read_output.module_name == orig_output.module_name, "Module names must match");
         GARUDA_CHECK(read_output.all_instructions.size() == orig_output.all_instructions.size(), "Instruction counts must match");
-        GARUDA_CHECK(read_output.function_table.size() == orig_output.function_table.size(), "Function table sizes must match");
+        GARUDA_CHECK(read_output.functions.size() == orig_output.functions.size(), "Function counts must match");
 
         std::cout << "  ✓ Test 1: Write & Read Roundtrip PASS\n";
     }, 5);

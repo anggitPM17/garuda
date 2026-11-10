@@ -13,8 +13,8 @@ int main() {
     std::cout << "GARUDA WEB FRAMEWORK — SPRINT D.4 NATIVE ORM TEST SUITE (10 TESTS)\n";
     std::cout << "=======================================================\n\n";
 
-    fs::path tmp_db_file = fs::temp_directory_path() / "garuda_orm_test.db";
-    fs::remove(tmp_db_file);
+    fs::path tmp_db_file = fs::temp_directory_path() / "garuda_orm_test_dir";
+    fs::remove_all(tmp_db_file);
 
     Database db(tmp_db_file.string());
     OrmEngine orm(db);
@@ -95,7 +95,7 @@ int main() {
     std::cout << "  ✓ Test 10: Schema Migration Versioning PASS\n";
 
     // Cleanup
-    fs::remove(tmp_db_file);
+    fs::remove_all(tmp_db_file);
 
     std::cout << "\n🎉 ALL 10 NATIVE ORM TESTS PASSED PERFECTLY!\n";
     return 0;

@@ -128,6 +128,19 @@ public:
     std::optional<Term> run_until_done(const std::string& entry_function, std::size_t max_iterations = 10000000) {
         auto it = function_table_.find(entry_function);
         if (it == function_table_.end()) {
+            for (const auto& [k, v] : function_table_) {
+                std::string k_base = k;
+                auto slash_pos = k.find('/');
+                if (slash_pos != std::string::npos) k_base = k.substr(0, slash_pos);
+                auto dot_pos = k_base.find('.');
+                std::string k_fn = (dot_pos != std::string::npos) ? k_base.substr(dot_pos + 1) : k_base;
+                if (k_base == entry_function || k_fn == entry_function) {
+                    it = function_table_.find(k);
+                    break;
+                }
+            }
+        }
+        if (it == function_table_.end()) {
             std::cout << "⚠️ [GVM ACTOR RUNTIME] Entry function '" << entry_function << "' not found!" << std::endl;
             return std::nullopt;
         }
@@ -138,6 +151,7 @@ public:
         Process* proc_ptr = dummy_rt.find(dummy_pid);
 
         GvmInterpreter interpreter(instructions_);
+        interpreter.set_function_table(function_table_);
         interpreter.set_callbacks(
             [this](std::size_t target_ip) -> Pid {
                 return spawn_actor(target_ip);
@@ -178,10 +192,12 @@ public:
                 actor->done = true;
                 actor->return_value = actor->vm_state.x_regs[0];
 
+                std::lock_guard<std::mutex> lock(mu_);
                 if (pid_id == root_pid.id) {
-                    return actor->return_value; // Root process finished! Return immediately!
+                    if (ready_queue_.empty()) {
+                        return actor->return_value;
+                    }
                 } else {
-                    std::lock_guard<std::mutex> lock(mu_);
                     actors_.erase(pid_id);
                 }
             } else if (status == Status::TailCall) {

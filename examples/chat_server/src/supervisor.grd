@@ -18,7 +18,7 @@ rampung
 
 fungsi utama() ->
     Sup = cakra(fungsi() -> loop_supervisor() rampung)
-    Sup <- {restart_client, "Budi", diri}
+    Sup <- {restart_client, "Budi", diri()}
     tampa {selesai, _} -> :ok rampung
     42
 rampung

@@ -78,8 +78,16 @@ public:
 
             CompiledFunctionInfo fn_info{fn_name, arity, start_ip, {}};
             out.functions.push_back(fn_info);
-            out.function_table[fn_name + "/" + std::to_string(arity)] = start_ip;
+
+            std::string short_name = fn_name;
+            auto dot_pos = fn_name.find('.');
+            if (dot_pos != std::string::npos) short_name = fn_name.substr(dot_pos + 1);
+
             out.function_table[fn_name] = start_ip;
+            out.function_table[fn_name + "/" + std::to_string(arity)] = start_ip;
+            out.function_table[short_name] = start_ip;
+            out.function_table[short_name + "/" + std::to_string(arity)] = start_ip;
+            out.function_table[short_name] = start_ip;
         }
 
         // 5. Code Section
