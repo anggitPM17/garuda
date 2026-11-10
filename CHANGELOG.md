@@ -7,6 +7,14 @@ Format pencatatan mematuhi [Keep a Changelog](https://keepachangelog.com/en/1.0.
 
 ## [v67.0.0] - 2025-05-18
 
+### 🛠️ Added — Fase 18: Developer Tooling & WebAssembly Target (Tag: `v67-fase18-dev-tooling-wasm-stable`)
+* **Documentation Generator**: `GrdDocGenerator` ekstraksi komentar `# @doc` & sintaks fungsi ke Markdown & HTML site (`garuda_dev_tooling_tests.exe` — PASS).
+* **Code Formatter & Linter Interop**: `GrdFormatter` (4-space AST pretty printer) & `GrdLinter` (snake_case & unused variables analyzer) (`garuda_dev_tooling_tests.exe` — PASS).
+* **Interactive REPL Engine**: `GrdReplEngine` REPL shell interaktif dengan retensi memori evaluasi antar-turn & perintah `:help`, `:vars`, `:clear` (`garuda_dev_tooling_tests.exe` — PASS).
+* **Code Profiler**: `GrdProfiler` pengukur durasi waktu eksekusi (`elapsed_ms`), instruksi CPU, & alokasi memori (`garuda_dev_tooling_tests.exe` — PASS).
+* **WebAssembly AOT & WASI Compiler**: `WasmCodeGenerator` kompilasi AOT AST/GVM Bytecode ke berkas biner `.wasm` dengan WASI `fd_write` & ekspor `_start` / `utama` (`garuda_wasm_codegen_tests.exe` — PASS).
+* **2 Test Suite Baru**: `garuda_dev_tooling_tests.exe` & `garuda_wasm_codegen_tests.exe`.
+
 ### 📡 Added — Fase 17: Multi-Language FFI & Observability (Tag: `v67-fase17-ffi-observability-stable`)
 * **Python FFI Interop**: `PythonFfiBridge` (`eval_script`, `call_function`, conversion PyObject <-> Garuda Term) (`garuda_ffi_python_tests.exe` — PASS).
 * **JS & WebAssembly FFI Interop**: `JsWasmFfiBridge` (`eval_js`, `call_js_func`, `wasm_invoke`, conversion JS Value <-> Garuda Term) (`garuda_ffi_js_tests.exe` — PASS).

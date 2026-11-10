@@ -34,6 +34,7 @@ garuda_crypto_tests.exe,PASS,0
 garuda_db_tests.exe,PASS,0
 garuda_default_max_reqs_tests.exe,PASS,0
 garuda_destructuring_tests.exe,PASS,0
+garuda_dev_tooling_tests.exe,PASS,0
 garuda_dist_node_tests.exe,PASS,0
 garuda_distributed_actor_tests.exe,PASS,0
 garuda_distributed_db_tests.exe,PASS,0
@@ -183,3 +184,4 @@ garuda_stdlib_time_tests.exe,PASS,0
 garuda_tests.exe,TIMEOUT,-1
 garuda_todo_api_e2e_tests.exe,PASS,0
 garuda_tracing_tests.exe,PASS,0
+garuda_wasm_codegen_tests.exe,PASS,0
