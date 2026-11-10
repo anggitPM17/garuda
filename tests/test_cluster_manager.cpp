@@ -4,6 +4,7 @@
 #include "../include/garuda/beam/stdlib/storage_engine.hpp"
 #include "../include/garuda/beam/stdlib/http_server.hpp"
 #include "../include/garuda/beam/stdlib/http.hpp"
+#include "helpers/timing.hpp"
 #include <chrono>
 #include <filesystem>
 #include <iostream>
@@ -91,16 +92,20 @@ int main(int argc, char* argv[]) {
 
     // === Test 5: Health Check Suspect State ===
     std::cout << "[TEST 5/22] Running Health Check Suspect State test...\n";
-    std::this_thread::sleep_for(std::chrono::milliseconds(150));
-    cm1.check_cluster_health(100, 300); // 100ms suspect, 300ms dead
-    TEST_ASSERT(cm1.get_node_health("n2") == NodeHealthState::Suspect, "n2 must be marked suspect");
+    bool became_suspect = garuda::test::helpers::wait_until([&]() {
+        cm1.check_cluster_health(100, 300);
+        return cm1.get_node_health("n2") == NodeHealthState::Suspect;
+    }, 1500, 20);
+    TEST_ASSERT(became_suspect, "n2 must be marked suspect");
     std::cout << "  ✓ Test 5: Health Check Suspect State PASS\n";
 
     // === Test 6: Health Check Dead State ===
     std::cout << "[TEST 6/22] Running Health Check Dead State test...\n";
-    std::this_thread::sleep_for(std::chrono::milliseconds(250));
-    cm1.check_cluster_health(100, 300);
-    TEST_ASSERT(cm1.get_node_health("n2") == NodeHealthState::Dead, "n2 must be marked dead after timeout");
+    bool became_dead = garuda::test::helpers::wait_until([&]() {
+        cm1.check_cluster_health(100, 300);
+        return cm1.get_node_health("n2") == NodeHealthState::Dead;
+    }, 2000, 20);
+    TEST_ASSERT(became_dead, "n2 must be marked dead after timeout");
     std::cout << "  ✓ Test 6: Health Check Dead State PASS\n";
 
     // === Test 7: Node Recovery Back to Active ===

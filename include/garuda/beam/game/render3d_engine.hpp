@@ -57,6 +57,15 @@ public:
         return (target_ - position_).normalize();
     }
 
+    bool is_visible(const Vec3& object_pos, double bounding_radius = 1.0) const {
+        Vec3 to_obj = object_pos - position_;
+        double dist = to_obj.dot(forward());
+        if (dist + bounding_radius < near_plane_ || dist - bounding_radius > far_plane_) {
+            return false; // Culled by near/far plane
+        }
+        return true;
+    }
+
 private:
     Vec3 position_;
     Vec3 target_;
@@ -87,14 +96,20 @@ public:
 
     std::size_t render_frame(const Camera3D& camera) {
         rendered_triangles_ = 0;
+        culled_meshes_ = 0;
         for (const auto& item : submitted_meshes_) {
-            rendered_triangles_ += item.mesh.indices.size() / 3;
+            if (camera.is_visible(item.position, 2.0)) {
+                rendered_triangles_ += item.mesh.indices.size() / 3;
+            } else {
+                culled_meshes_++;
+            }
         }
         submitted_meshes_.clear();
         return rendered_triangles_;
     }
 
     std::size_t rendered_triangles() const { return rendered_triangles_; }
+    std::size_t culled_meshes() const { return culled_meshes_; }
     std::size_t light_count() const { return lights_.size(); }
 
 private:
@@ -107,6 +122,7 @@ private:
     std::vector<Light3D> lights_;
     std::vector<RenderItem> submitted_meshes_;
     std::size_t rendered_triangles_ = 0;
+    std::size_t culled_meshes_ = 0;
 };
 
 } // namespace garuda::beam::game

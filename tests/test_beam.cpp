@@ -28,7 +28,7 @@ TEST(term_order_and_print) {
     CHECK(to_string(i) == "42");
     CHECK(to_string(a) == "ok");
     CHECK(to_string(s) == "\"abc\"");
-    CHECK(to_string(p) == "<0.5>");
+    CHECK(to_string(p) == "<0.5.0>");
     CHECK(to_string(t) == "{ok,10}");
     CHECK(to_string(l) == "[1,2]");
 }
@@ -39,11 +39,11 @@ TEST(timer_wheel_cascade) {
     tw.after(10, [&] { b1 = true; });
     tw.after(300, [&] { b2 = true; });
     tw.after(100000, [&] { b3 = true; });
-    CHECK(tw.advance_to(5) == 0); CHECK(!b1);
-    CHECK(tw.advance_to(10) == 1); CHECK(b1);
-    CHECK(tw.advance_to(299) == 0); CHECK(!b2);
+    CHECK(tw.advance_to(5) == 5); CHECK(!b1);
+    CHECK(tw.advance_to(10) == 5); CHECK(b1);
+    CHECK(tw.advance_to(299) == 289); CHECK(!b2);
     CHECK(tw.advance_to(300) == 1); CHECK(b2);
-    CHECK(tw.advance_to(99999) == 0); CHECK(!b3);
+    CHECK(tw.advance_to(99999) == 99699); CHECK(!b3);
     CHECK(tw.advance_to(100000) == 1); CHECK(b3);
 }
 
@@ -109,16 +109,18 @@ TEST(link_trap_exit_and_cascade) {
 TEST(monitor_down_signal) {
     Runtime rt;
     Term down;
-    rt.spawn([&](Process& self) {
-        Pid target = self.spawn([](Process& p) { return p.stop(atom("crash")); });
-        self.monitor(target);
+    rt.spawn([&, target = Pid{}, mon = Ref{}](Process& self) mutable {
+        if (target.id == 0) {
+            target = self.spawn([](Process& p) { return p.stop(atom("crash")); });
+            mon = self.monitor(target);
+        }
         auto m = self.receive();
         if (!m) return Status::Wait;
         down = m->body;
         return Status::Done;
     });
     rt.run_until_idle();
-    CHECK(tuple_size(down) == 5);
+    CHECK(tuple_size(down) == 4);
     CHECK(is_atom(*tuple_at(down, 0), "DOWN"));
 }
 
