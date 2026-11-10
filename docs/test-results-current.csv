@@ -23,6 +23,7 @@ garuda_captcha_pow_tests.exe,PASS,0
 garuda_chat_server_tests.exe,PASS,0
 garuda_cli_example_tests.exe,PASS,0
 garuda_cluster_manager_tests.exe,PASS,0
+garuda_cmake_structure_tests.exe,PASS,0
 garuda_codegen_grd_tests.exe,PASS,0
 garuda_codegen_tests.exe,PASS,0
 garuda_compiler_api_tests.exe,PASS,0
@@ -60,6 +61,7 @@ garuda_ffi_registry_tests.exe,PASS,0
 garuda_ffi_tests.exe,PASS,0
 garuda_file_grd_tests.exe,PASS,0
 garuda_formatter_linter_tests.exe,PASS,0
+garuda_frustum_culling_tests.exe,PASS,0
 garuda_fs_process_tests.exe,PASS,0
 garuda_fullstack_tests.exe,PASS,0
 garuda_fuzzing_tests.exe,PASS,0
@@ -169,6 +171,7 @@ garuda_router_middleware_tests.exe,PASS,0
 garuda_router_real_registry_tests.exe,PASS,0
 garuda_rpc_tests.exe,PASS,0
 garuda_runtime_stress_tests.exe,PASS,0
+garuda_scene_graph_tests.exe,PASS,0
 garuda_schema_migrator_jl_tests.exe,PASS,0
 garuda_schema_migrator_tests.exe,PASS,0
 garuda_sealed_sender_tests.exe,PASS,0
