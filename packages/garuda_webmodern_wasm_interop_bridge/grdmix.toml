@@ -1,0 +1,13 @@
+[paket]
+nama = "garuda_webmodern_wasm_interop_bridge"
+versi = "0.1.0"
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
+edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Jembatan kompilasi dan interop WebAssembly (Wasm) untuk komputasi berat di peramban."
+
+[target.pustaka]
+jalur = "src/lib.grd"
+
+[uji]
+berkas = ["src/test.grd"]
