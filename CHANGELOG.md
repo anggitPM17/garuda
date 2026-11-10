@@ -7,6 +7,12 @@ Format pencatatan mematuhi [Keep a Changelog](https://keepachangelog.com/en/1.0.
 
 ## [v67.0.0] - 2025-05-18
 
+### 🚀☸️ Added — Fase 20: Cloud-Native Serverless & Kubernetes Operator Core (Tag: `v67-fase20-serverless-k8s-stable`)
+* **Cloud-Native Serverless Engine**: `MicroVmContainer` (<1ms cold-start 0.38ms), isolasi memori 64KB, & `ServerlessEngine` multi-trigger routing (HTTP, Cron, Queue, Database) (`garuda_serverless_tests.exe` — PASS).
+* **Kubernetes Operator & HPA AutoScaler**: `GarudaClusterSpec` CRD parser & `HpaAutoScaler` evaluasi beban CPU/Memory & actor queue depth untuk *scale-out/scale-in* pod kluster (`garuda_k8s_operator_tests.exe` — PASS).
+* **Multi-Region CRDT Engine**: Structure data `GCounter`, `PNCounter`, & `LWWRegister` untuk sinkronisasi status terdistribusi antar-datacenter (`garuda_k8s_operator_tests.exe` — PASS).
+* **2 Test Suite Baru**: `garuda_serverless_tests.exe` & `garuda_k8s_operator_tests.exe`.
+
 ### 🎮🤖 Added — Fase 19: Machine Learning Primitives & Game Engine Framework (Tag: `v67-fase19-ml-game-ecs-stable`)
 * **Machine Learning Tensor Engine**: `Tensor` multidimensi (1D-4D), `matmul`, `transpose`, `reshape`, `relu`, `sigmoid`, `softmax`, & `NeuralNetworkEngine` dengan SGD training optimizer (`garuda_tensor_tests.exe` — PASS).
 * **Game Engine Framework & ECS Core**: `EcsRegistry` (Entities & Component Pools), `PhysicsEngine2D` (AABB Collision & Gravity), `InputEngine` (Keyboard & Mouse), & `RenderPipeline` (Sprite batching) (`garuda_ecs_tests.exe` — PASS).

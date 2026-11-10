@@ -104,6 +104,7 @@ garuda_json_grd_tests.exe,PASS,0
 garuda_json_serializer_tests.exe,PASS,0
 garuda_json_tests.exe,PASS,0
 garuda_jwt_tests.exe,PASS,0
+garuda_k8s_operator_tests.exe,PASS,0
 garuda_key_transparency_tests.exe,PASS,0
 garuda_lexer_grd_tests.exe,PASS,0
 garuda_lexer_tests.exe,PASS,0
@@ -171,6 +172,7 @@ garuda_secret_manager_tests.exe,PASS,0
 garuda_security_app_tests.exe,PASS,0
 garuda_security_tests.exe,PASS,0
 garuda_semantic_tests.exe,PASS,0
+garuda_serverless_tests.exe,PASS,0
 garuda_session_auth_tests.exe,PASS,0
 garuda_shell_tests.exe,PASS,0
 garuda_socket_tests.exe,PASS,0
