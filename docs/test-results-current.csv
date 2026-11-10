@@ -43,6 +43,7 @@ garuda_distributed_pubsub_tests.exe,PASS,0
 garuda_doc_generator_tests.exe,PASS,0
 garuda_dsl_tests.exe,PASS,0
 garuda_e2e_session_tests.exe,PASS,0
+garuda_ecs_tests.exe,PASS,0
 garuda_edge_analytics_tests.exe,PASS,0
 garuda_env_bif_tests.exe,PASS,0
 garuda_error_handling_tests.exe,PASS,0
@@ -181,6 +182,7 @@ garuda_stdlib_math_tests.exe,PASS,0
 garuda_stdlib_path_tests.exe,PASS,0
 garuda_stdlib_string_tests.exe,PASS,0
 garuda_stdlib_time_tests.exe,PASS,0
+garuda_tensor_tests.exe,PASS,0
 garuda_tests.exe,TIMEOUT,-1
 garuda_todo_api_e2e_tests.exe,PASS,0
 garuda_tracing_tests.exe,PASS,0

@@ -7,6 +7,11 @@ Format pencatatan mematuhi [Keep a Changelog](https://keepachangelog.com/en/1.0.
 
 ## [v67.0.0] - 2025-05-18
 
+### 🎮🤖 Added — Fase 19: Machine Learning Primitives & Game Engine Framework (Tag: `v67-fase19-ml-game-ecs-stable`)
+* **Machine Learning Tensor Engine**: `Tensor` multidimensi (1D-4D), `matmul`, `transpose`, `reshape`, `relu`, `sigmoid`, `softmax`, & `NeuralNetworkEngine` dengan SGD training optimizer (`garuda_tensor_tests.exe` — PASS).
+* **Game Engine Framework & ECS Core**: `EcsRegistry` (Entities & Component Pools), `PhysicsEngine2D` (AABB Collision & Gravity), `InputEngine` (Keyboard & Mouse), & `RenderPipeline` (Sprite batching) (`garuda_ecs_tests.exe` — PASS).
+* **2 Test Suite Baru**: `garuda_tensor_tests.exe` & `garuda_ecs_tests.exe`.
+
 ### 🛠️ Added — Fase 18: Developer Tooling & WebAssembly Target (Tag: `v67-fase18-dev-tooling-wasm-stable`)
 * **Documentation Generator**: `GrdDocGenerator` ekstraksi komentar `# @doc` & sintaks fungsi ke Markdown & HTML site (`garuda_dev_tooling_tests.exe` — PASS).
 * **Code Formatter & Linter Interop**: `GrdFormatter` (4-space AST pretty printer) & `GrdLinter` (snake_case & unused variables analyzer) (`garuda_dev_tooling_tests.exe` — PASS).
