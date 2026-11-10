@@ -1,0 +1,13 @@
+[paket]
+nama = "garuda_transfer_hft_pesan_mesin"
+versi = "0.1.0"
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
+edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Mesin encoding/decoding protokol kawat biner waktu-nyata untuk pertukaran data ultra-cepat."
+
+[target.pustaka]
+jalur = "src/lib.grd"
+
+[uji]
+berkas = ["src/test.grd"]
