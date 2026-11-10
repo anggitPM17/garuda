@@ -1,0 +1,13 @@
+[paket]
+nama = "garuda_webmodern_websocket_hub"
+versi = "0.1.0"
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
+edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Hub komunikasi real-time full-duplex WebSockets dan Server-Sent Events (SSE) dengan pub/sub channel."
+
+[target.pustaka]
+jalur = "src/lib.grd"
+
+[uji]
+berkas = ["src/test.grd"]
