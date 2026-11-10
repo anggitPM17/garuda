@@ -7,6 +7,11 @@ Format pencatatan mematuhi [Keep a Changelog](https://keepachangelog.com/en/1.0.
 
 ## [v67.0.0] - 2025-05-18
 
+### 🎮🔊 Added — Fase 22: High-Performance 3D Render Engine & 3D Physics/Spatial Audio (Tag: `v67-fase22-render3d-physics3d-stable`)
+* **Native 3D Render Engine**: `Mesh3D`, `Material3D` PBR, `Camera3D`, & `Render3DPipeline` deferred rendering pass dengan multi-light support (`garuda_render3d_tests.exe` — PASS).
+* **3D Physics Engine & Spatial Audio 3D**: `PhysicsEngine3D` AABB 3D collision & gravity integration, serta `SpatialAudio3D` inverse distance attenuation curve (`garuda_physics3d_tests.exe` — PASS).
+* **2 Test Suite Baru**: `garuda_render3d_tests.exe` & `garuda_physics3d_tests.exe`.
+
 ### ⚡🧠 Added — Fase 21: Deep Learning GPU Acceleration & ONNX Model Importer (Tag: `v67-fase21-gpu-onnx-stable`)
 * **GPU Accelerator Engine**: `GpuDeviceManager` (CUDA/Metal/Vulkan/ROCm/SIMD) & `GpuTensor` alokasi memori VRAM & kernel paralel `gpu_matmul`, `gpu_add`, `gpu_relu` (`garuda_gpu_accelerator_tests.exe` — PASS).
 * **ONNX & Safetensors Model Importer**: `OnnxModelLoader` graph parser & `OnnxInferenceEngine` eksekusi inferensi AI langsung pada GPU (`garuda_onnx_loader_tests.exe` — PASS).

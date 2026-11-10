@@ -143,6 +143,7 @@ garuda_parser_grd_tests.exe,PASS,0
 garuda_parser_tests.exe,PASS,0
 garuda_pattern_matching_tests.exe,PASS,0
 garuda_pg_tests.exe,PASS,0
+garuda_physics3d_tests.exe,PASS,0
 garuda_pipe_tests.exe,PASS,0
 garuda_pipeline_operator_tests.exe,PASS,0
 garuda_preemption_tests.exe,PASS,0
@@ -159,6 +160,7 @@ garuda_rca_engine_tests.exe,PASS,0
 garuda_reaction_tests.exe,PASS,0
 garuda_read_receipt_tests.exe,PASS,0
 garuda_registry_tests.exe,PASS,0
+garuda_render3d_tests.exe,PASS,0
 garuda_repl_tests.exe,PASS,0
 garuda_result_grd_tests.exe,PASS,0
 garuda_router_e2e_tests.exe,PASS,0
