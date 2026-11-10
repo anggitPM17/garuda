@@ -1,0 +1,13 @@
+[paket]
+nama = "garuda_transfer_rdma_zerocopy"
+versi = "0.1.0"
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
+edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Remote Direct Memory Access (RDMA) bypass kernel tanpa penyalinan memori (zero-copy)."
+
+[target.pustaka]
+jalur = "src/lib.grd"
+
+[uji]
+berkas = ["src/test.grd"]
