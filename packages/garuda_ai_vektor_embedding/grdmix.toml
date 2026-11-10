@@ -1,0 +1,13 @@
+[paket]
+nama = "garuda_ai_vektor_embedding"
+versi = "0.1.0"
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
+edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Penyimpanan dan pencarian kemiripan vektor kosinus berdimensi tinggi (HNSW index)."
+
+[target.pustaka]
+jalur = "src/lib.grd"
+
+[uji]
+berkas = ["src/test.grd"]
