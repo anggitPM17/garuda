@@ -69,6 +69,7 @@ garuda_gen_statem_tests.exe,PASS,0
 garuda_generic_tests.exe,PASS,0
 garuda_global_parity_tests.exe,PASS,0
 garuda_global_registry_tests.exe,PASS,0
+garuda_gpu_accelerator_tests.exe,PASS,0
 garuda_grdc_grd_tests.exe,PASS,0
 garuda_grdmix_e2e_tests.exe,PASS,0
 garuda_grdmix_registry_tests.exe,PASS,0
@@ -133,6 +134,7 @@ garuda_native_sync_tests.exe,PASS,0
 garuda_native_websocket_tests.exe,PASS,0
 garuda_nusantara_tests.exe,PASS,0
 garuda_observer_tests.exe,PASS,0
+garuda_onnx_loader_tests.exe,PASS,0
 garuda_optimizer_tests.exe,PASS,0
 garuda_orm_tests.exe,PASS,0
 garuda_package_manager_tests.exe,PASS,0

@@ -7,6 +7,11 @@ Format pencatatan mematuhi [Keep a Changelog](https://keepachangelog.com/en/1.0.
 
 ## [v67.0.0] - 2025-05-18
 
+### ⚡🧠 Added — Fase 21: Deep Learning GPU Acceleration & ONNX Model Importer (Tag: `v67-fase21-gpu-onnx-stable`)
+* **GPU Accelerator Engine**: `GpuDeviceManager` (CUDA/Metal/Vulkan/ROCm/SIMD) & `GpuTensor` alokasi memori VRAM & kernel paralel `gpu_matmul`, `gpu_add`, `gpu_relu` (`garuda_gpu_accelerator_tests.exe` — PASS).
+* **ONNX & Safetensors Model Importer**: `OnnxModelLoader` graph parser & `OnnxInferenceEngine` eksekusi inferensi AI langsung pada GPU (`garuda_onnx_loader_tests.exe` — PASS).
+* **2 Test Suite Baru**: `garuda_gpu_accelerator_tests.exe` & `garuda_onnx_loader_tests.exe`.
+
 ### 🚀☸️ Added — Fase 20: Cloud-Native Serverless & Kubernetes Operator Core (Tag: `v67-fase20-serverless-k8s-stable`)
 * **Cloud-Native Serverless Engine**: `MicroVmContainer` (<1ms cold-start 0.38ms), isolasi memori 64KB, & `ServerlessEngine` multi-trigger routing (HTTP, Cron, Queue, Database) (`garuda_serverless_tests.exe` — PASS).
 * **Kubernetes Operator & HPA AutoScaler**: `GarudaClusterSpec` CRD parser & `HpaAutoScaler` evaluasi beban CPU/Memory & actor queue depth untuk *scale-out/scale-in* pod kluster (`garuda_k8s_operator_tests.exe` — PASS).
