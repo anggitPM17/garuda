@@ -1,0 +1,13 @@
+[paket]
+nama = "garuda_kripto_blake3_hash_simd"
+versi = "0.1.0"
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
+edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Varian Simd berkinerja tinggi: Fungsi hash kriptografis pohon Merkle dengan performa throughput gigabyte/detik."
+
+[target.pustaka]
+jalur = "src/lib.grd"
+
+[uji]
+berkas = ["src/test.grd"]
