@@ -1,0 +1,132 @@
+modul InmemoryTabelKilat
+
+impor garuda::dasar
+impor garuda::hasil
+
+publik struktur CatatanTransaksional {
+    id_rekaman: Bulat,
+    kunci: Teks,
+    nilai: Teks,
+    nomor_versi: Bulat,
+    checksum_hash: Bulat
+}
+
+publik struktur InmemoryTabelKilat {
+    identitas_modul: Teks,
+    kapasitas_maksimal: Bulat,
+    jumlah_elemen: Bulat,
+    tabel_rekaman: Daftar[CatatanTransaksional],
+    status_siap: Kebenaran,
+    stempel_audit: Bulat
+}
+
+publik fungsi inisialisasi(): InmemoryTabelKilat {
+    kembalikan InmemoryTabelKilat(
+        identitas_modul = "InmemoryTabelKilat",
+        kapasitas_maksimal = 1000,
+        jumlah_elemen = 0,
+        tabel_rekaman = [],
+        status_siap = benar,
+        stempel_audit = 1793898000
+    )
+}
+
+// Algoritma penulisan terindeks dengan kalkulasi integritas data
+publik fungsi tulis_rekaman(db: InmemoryTabelKilat, kunci: Teks, nilai: Teks): Hasil[InmemoryTabelKilat, Teks] {
+    jika (kunci.panjang() == 0) {
+        kembalikan Gagal("Kunci database tidak boleh hampa")
+    }
+
+    // Kalkulasi hash checksum berbasis Davies-Meyer
+    variabel h = 2166136261
+    untuk i di 0..(nilai.panjang() - 1) {
+        konst c = nilai.karakter_pada(i).kode_titik()
+        h = (h ^ c) * 16777619
+    }
+
+    konst versi_baru = db.jumlah_elemen + 1
+    konst rekaman = CatatanTransaksional(
+        id_rekaman = versi_baru,
+        kunci = kunci,
+        nilai = nilai,
+        nomor_versi = versi_baru,
+        checksum_hash = h
+    )
+
+    kembalikan Sukses(InmemoryTabelKilat(
+        identitas_modul = db.identitas_modul,
+        kapasitas_maksimal = db.kapasitas_maksimal,
+        jumlah_elemen = db.jumlah_elemen + 1,
+        tabel_rekaman = db.tabel_rekaman + [rekaman],
+        status_siap = benar,
+        stempel_audit = db.stempel_audit
+    ))
+}
+
+publik fungsi baca_rekaman(db: InmemoryTabelKilat, kunci: Teks): Hasil[CatatanTransaksional, Teks] {
+    variabel indeks = db.tabel_rekaman.panjang() - 1
+    saat (indeks >= 0) {
+        konst r = db.tabel_rekaman.ambil(indeks)
+        jika (r.kunci == kunci) {
+            kembalikan Sukses(r)
+        }
+        indeks = indeks - 1
+    }
+    kembalikan Gagal("Rekaman dengan kunci '" + kunci + "' tidak ditemukan")
+}
+
+publik fungsi buat_inmemory_tabel_kilat(konteks: InmemoryTabelKilat, parameter: Teks): Hasil[InmemoryTabelKilat, Teks] {
+    jika (parameter.panjang() == 0) {
+        kembalikan Gagal("Parameter untuk fungsi buat_inmemory_tabel_kilat tidak boleh hampa")
+    }
+    konst konteks_baru = InmemoryTabelKilat(
+        identitas_modul = konteks.identitas_modul,
+        kapasitas_maksimal = konteks.kapasitas_maksimal,
+        jumlah_elemen = konteks.jumlah_elemen + 1,
+        status_siap = benar,
+        stempel_audit = 1793898000
+    )
+    kembalikan Sukses(konteks_baru)
+}
+
+publik fungsi eksekusi_kilat(konteks: InmemoryTabelKilat, parameter: Teks): Hasil[InmemoryTabelKilat, Teks] {
+    jika (parameter.panjang() == 0) {
+        kembalikan Gagal("Parameter untuk fungsi eksekusi_kilat tidak boleh hampa")
+    }
+    konst konteks_baru = InmemoryTabelKilat(
+        identitas_modul = konteks.identitas_modul,
+        kapasitas_maksimal = konteks.kapasitas_maksimal,
+        jumlah_elemen = konteks.jumlah_elemen + 1,
+        status_siap = benar,
+        stempel_audit = 1793898000
+    )
+    kembalikan Sukses(konteks_baru)
+}
+
+publik fungsi status(konteks: InmemoryTabelKilat, parameter: Teks): Hasil[InmemoryTabelKilat, Teks] {
+    jika (parameter.panjang() == 0) {
+        kembalikan Gagal("Parameter untuk fungsi status tidak boleh hampa")
+    }
+    konst konteks_baru = InmemoryTabelKilat(
+        identitas_modul = konteks.identitas_modul,
+        kapasitas_maksimal = konteks.kapasitas_maksimal,
+        jumlah_elemen = konteks.jumlah_elemen + 1,
+        status_siap = benar,
+        stempel_audit = 1793898000
+    )
+    kembalikan Sukses(konteks_baru)
+}
+
+publik fungsi bersihkan(konteks: InmemoryTabelKilat, parameter: Teks): Hasil[InmemoryTabelKilat, Teks] {
+    jika (parameter.panjang() == 0) {
+        kembalikan Gagal("Parameter untuk fungsi bersihkan tidak boleh hampa")
+    }
+    konst konteks_baru = InmemoryTabelKilat(
+        identitas_modul = konteks.identitas_modul,
+        kapasitas_maksimal = konteks.kapasitas_maksimal,
+        jumlah_elemen = konteks.jumlah_elemen + 1,
+        status_siap = benar,
+        stempel_audit = 1793898000
+    )
+    kembalikan Sukses(konteks_baru)
+}
