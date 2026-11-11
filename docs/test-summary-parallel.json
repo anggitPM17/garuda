@@ -1,0 +1,18 @@
+﻿{
+    "timestamp":  "2026-11-10T15:32:38Z",
+    "mode":  "parallel+sequential",
+    "max_parallel":  4,
+    "total":  17,
+    "pass":  16,
+    "fail":  1,
+    "timeout":  0,
+    "duration_sec":  172.78,
+    "parallel_count":  17,
+    "sequential_count":  0,
+    "failed_tests":  [
+                         "garuda_web_tests.exe"
+                     ],
+    "timeout_tests":  [
+
+                      ]
+}

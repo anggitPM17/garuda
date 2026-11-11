@@ -8,10 +8,16 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
 endif()
 
 if(MSVC)
+  # CATATAN: /MP TIDAK ditaruh di sini. Paralelisme dikontrol via
+  # MSBuild /m:<N> saat cmake --build. Menaruh /MP di sini +
+  # /m di MSBuild menyebabkan oversubscription.
+  add_compile_options(/Gy /GF)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /Brepro")
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /Brepro")
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /Brepro")
   set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} /Brepro")
+  # Suppress warning flood dari header legacy
+  add_compile_definitions(_CRT_SECURE_NO_WARNINGS _WINSOCK_DEPRECATED_NO_WARNINGS)
 endif()
 
 option(GARUDA_BUILD_TESTS "Bangun tes dan benchmark" ON)
@@ -33,12 +39,9 @@ endif()
 
 find_package(Threads REQUIRED)
 
-include(FetchContent)
-FetchContent_Declare(httplib
-    GIT_REPOSITORY https://github.com/yhirose/cpp-httplib
-    GIT_TAG v0.14.1
-    GIT_SHALLOW TRUE)
-FetchContent_MakeAvailable(httplib)
+add_library(httplib INTERFACE)
+target_include_directories(httplib INTERFACE
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src/vendor/httplib>)
 
 add_library(sqlite3 STATIC src/vendor/sqlite3/sqlite3.c)
 target_include_directories(sqlite3 PUBLIC
@@ -46,7 +49,7 @@ target_include_directories(sqlite3 PUBLIC
   $<INSTALL_INTERFACE:include>)
 set_target_properties(sqlite3 PROPERTIES LINKER_LANGUAGE CXX)
 if(MSVC)
-  target_compile_options(sqlite3 PRIVATE /W0)
+  target_compile_options(sqlite3 PRIVATE /W0 /MP4)
 endif()
 
 file(GLOB MBEDTLS_SOURCES "src/vendor/mbedtls/library/*.c")
@@ -56,17 +59,50 @@ target_include_directories(mbedtls PUBLIC
   $<INSTALL_INTERFACE:include>)
 set_target_properties(mbedtls PROPERTIES LINKER_LANGUAGE CXX)
 if(MSVC)
-  target_compile_options(mbedtls PRIVATE /W0)
+  target_compile_options(mbedtls PRIVATE /W0 /MP4)
   target_link_libraries(mbedtls PUBLIC bcrypt)
 endif()
 
-add_library(garuda INTERFACE)
+if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/src/garuda_core.cpp")
+  file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/src/garuda_core.cpp"
+    "#include \"garuda/beam/tools/script_engine.hpp\"\nnamespace garuda { void _core_link_anchor() {} }\n")
+endif()
+
+add_library(garuda STATIC src/garuda_core.cpp)
 add_library(Garuda::garuda ALIAS garuda)
-target_include_directories(garuda INTERFACE
+target_include_directories(garuda PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
-target_link_libraries(garuda INTERFACE Threads::Threads sqlite3 mbedtls httplib::httplib)
-target_compile_features(garuda INTERFACE cxx_std_20)
+target_link_libraries(garuda PUBLIC Threads::Threads sqlite3 mbedtls httplib)
+target_compile_features(garuda PUBLIC cxx_std_20)
+
+# Precompiled Header untuk mempercepat rebuild (header berat di-include di semua target)
+if(MSVC)
+  target_precompile_headers(garuda PRIVATE
+    <string>
+    <vector>
+    <memory>
+    <unordered_map>
+    <unordered_set>
+    <map>
+    <set>
+    <algorithm>
+    <functional>
+    <thread>
+    <mutex>
+    <atomic>
+    <chrono>
+    <cstdint>
+    <cstddef>
+    <iostream>
+    <sstream>
+    <fstream>
+    <filesystem>
+    <optional>
+    <variant>
+    <string_view>
+  )
+endif()
 
 add_executable(garuda_ultra src/main.cpp)
 target_link_libraries(garuda_ultra PRIVATE garuda)
@@ -681,7 +717,7 @@ endif()
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-install(TARGETS garuda sqlite3 mbedtls EXPORT GarudaTargets)
+install(TARGETS garuda sqlite3 mbedtls httplib EXPORT GarudaTargets)
 install(EXPORT GarudaTargets NAMESPACE Garuda:: DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/Garuda)
 write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/GarudaConfigVersion.cmake
   VERSION ${PROJECT_VERSION} COMPATIBILITY SameMajorVersion ARCH_INDEPENDENT)
