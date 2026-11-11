@@ -1,0 +1,13 @@
+[paket]
+nama = "garuda_algoritma_kmp_pencari_vektor"
+versi = "0.1.0"
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
+edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Varian Vektor berkinerja tinggi: Pencarian substring Knuth-Morris-Pratt waktu linier dengan tabel awalan parsial."
+
+[target.pustaka]
+jalur = "src/lib.grd"
+
+[uji]
+berkas = ["src/test.grd"]
