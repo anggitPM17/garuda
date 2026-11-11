@@ -1,0 +1,13 @@
+[paket]
+nama = "garuda_game_input_gamepad"
+versi = "0.1.0"
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
+edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Pengelola input Virtual Joystick / D-Pad layar sentuh mobile, serta abstraksi pemetaan tombol Keyboard, Mouse, dan Gamepad / Controller USB/Bluetooth."
+
+[target.pustaka]
+jalur = "src/lib.grd"
+
+[uji]
+berkas = ["src/test.grd"]
