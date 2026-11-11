@@ -1,0 +1,25 @@
+{
+  "nama": "garuda_game_simpan_status",
+  "modul": "GameSimpanStatus",
+  "versi": "0.1.0",
+  "penulis": "Anggit Prasetyo (@anggitPM17)",
+  "deskripsi": "Serialisasi status Save Game, Auto-save Checkpoint berbasis waktu, dan enkripsi profil pemain terproteksi anti-cheat checksum.",
+  "lisensi": "MIT",
+  "kategori": "Pengembangan Game",
+  "status": "stabil",
+  "titik_masuk": "src/lib.grd",
+  "gpm": {
+    "versi_kompatibel": ">=0.4.0",
+    "arsitektur": "gvm-universal",
+    "registri": "https://gpm.garuda-lang.org/v1"
+  },
+  "dependensi": {
+    "garuda_dasar": "^1.0.0",
+    "garuda_hasil": "^1.0.0"
+  },
+  "naskah": {
+    "bangun": "grdmix bangun --rilis",
+    "uji": "grdmix uji --semua",
+    "format": "grdmix format ."
+  }
+}
