@@ -1,0 +1,13 @@
+[paket]
+nama = "garuda_kompiler_ll1_pengurai"
+versi = "0.1.0"
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
+edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Kerangka parser rekursif menurun LL(1) dengan tabel first and follow."
+
+[target.pustaka]
+jalur = "src/lib.grd"
+
+[uji]
+berkas = ["src/test.grd"]
