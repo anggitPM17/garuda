@@ -7,8 +7,8 @@ Format pencatatan mematuhi [Keep a Changelog](https://keepachangelog.com/en/1.0.
 
 ## [v67.0.0] - 2025-05-18
 
-### 🖥️🎓 Added — Participant GUI Editor Binary (`EditorGaruda.exe`)
-* **EditorGaruda.exe**: Biner aplikasi desktop IDE koding dan pelatihan interaktif mandiri (`src/editor_garuda_main.cpp`) untuk peserta pelatihan tanpa memerlukan PowerShell (`EditorGaruda.exe` — PASS).
+### 🖥️🎓 Added — Interactive Participant Training Hub (`EditorGaruda.exe`)
+* **Interactive Training Hub**: Pengayaan biner `EditorGaruda.exe` (`src/editor_garuda_main.cpp`) dengan dukungan pembukaan berkas kodingan peserta via argumen CLI/drag-and-drop, pemuat kurikulum pelatihan interaktif (Modul 1 s.d 4), serta pemindaian visual 389 katalog paket resmi (`EditorGaruda.exe` — PASS).
 
 ### 🖥️🎓 Added — GARUDA CODING STUDIO v2.0 & Auto-Grader Training Engine (`GarudaStudioIDE`)
 * **Auto-Grader Training Engine**: Penilaian otomatis kodingan peserta pelatihan (`cek_jawaban_peserta`) dengan skor dan umpan balik langsung (`packages/ide/src/garuda_studio.grd`).
