@@ -1,0 +1,13 @@
+[paket]
+nama = "garuda_hpc_simd_vektorisasi"
+versi = "0.1.0"
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
+edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Primitif operasi paralel 512-bit AVX-512 dan ARM NEON untuk percepatan komputasi numerik."
+
+[target.pustaka]
+jalur = "src/lib.grd"
+
+[uji]
+berkas = ["src/test.grd"]
