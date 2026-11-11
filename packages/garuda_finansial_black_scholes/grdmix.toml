@@ -1,0 +1,13 @@
+[paket]
+nama = "garuda_finansial_black_scholes"
+versi = "0.1.0"
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
+edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Penetapan harga opsi Black-Scholes-Merton analitis untuk Call & Put Eropa serta perhitungan parameter sensitivitas The Greeks (Delta, Gamma, Vega, Theta, Rho)."
+
+[target.pustaka]
+jalur = "src/lib.grd"
+
+[uji]
+berkas = ["src/test.grd"]
