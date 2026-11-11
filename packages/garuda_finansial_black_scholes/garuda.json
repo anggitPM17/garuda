@@ -1,0 +1,25 @@
+{
+  "nama": "garuda_finansial_black_scholes",
+  "modul": "FinansialBlackScholes",
+  "versi": "0.1.0",
+  "penulis": "Anggit Prasetyo (@anggitPM17)",
+  "deskripsi": "Penetapan harga opsi Black-Scholes-Merton analitis untuk Call & Put Eropa serta perhitungan parameter sensitivitas The Greeks (Delta, Gamma, Vega, Theta, Rho).",
+  "lisensi": "MIT",
+  "kategori": "Finansial & Kuantitatif",
+  "status": "stabil",
+  "titik_masuk": "src/lib.grd",
+  "gpm": {
+    "versi_kompatibel": ">=0.4.0",
+    "arsitektur": "gvm-universal",
+    "registri": "https://gpm.garuda-lang.org/v1"
+  },
+  "dependensi": {
+    "garuda_dasar": "^1.0.0",
+    "garuda_hasil": "^1.0.0"
+  },
+  "naskah": {
+    "bangun": "grdmix bangun --rilis",
+    "uji": "grdmix uji --semua",
+    "format": "grdmix format ."
+  }
+}
