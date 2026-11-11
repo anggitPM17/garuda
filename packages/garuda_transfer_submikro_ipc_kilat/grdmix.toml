@@ -1,0 +1,13 @@
+[paket]
+nama = "garuda_transfer_submikro_ipc_kilat"
+versi = "0.1.0"
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
+edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Varian Kilat berkinerja tinggi: Komunikasi antar-proses (IPC) berbasis memori bersama (shared memory) nanodetik."
+
+[target.pustaka]
+jalur = "src/lib.grd"
+
+[uji]
+berkas = ["src/test.grd"]
