@@ -1,0 +1,25 @@
+{
+  "nama": "garuda_jaringan_mqtt_klien_kilat",
+  "modul": "MqttKlienKilat",
+  "versi": "0.1.0",
+  "penulis": "Anggit Prasetyo (@anggitPM17)",
+  "deskripsi": "Varian Kilat berkinerja tinggi: Protokol pesan IoT MQTT 3.1.1 dan 5.0 dengan QoS level 0, 1, dan 2.",
+  "lisensi": "MIT",
+  "kategori": "Jaringan & Protokol",
+  "status": "stabil",
+  "titik_masuk": "src/lib.grd",
+  "gpm": {
+    "versi_kompatibel": ">=0.4.0",
+    "arsitektur": "gvm-universal",
+    "registri": "https://gpm.garuda-lang.org/v1"
+  },
+  "dependensi": {
+    "garuda_dasar": "^1.0.0",
+    "garuda_hasil": "^1.0.0"
+  },
+  "naskah": {
+    "bangun": "grdmix bangun --rilis",
+    "uji": "grdmix uji --semua",
+    "format": "grdmix format ."
+  }
+}
