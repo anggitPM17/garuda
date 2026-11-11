@@ -1,0 +1,13 @@
+[paket]
+nama = "garuda_hpc_mpi_kluster"
+versi = "0.1.0"
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
+edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Protokol Message Passing Interface (MPI) nir-blokir untuk sinkronisasi antarsimpul superkomputer."
+
+[target.pustaka]
+jalur = "src/lib.grd"
+
+[uji]
+berkas = ["src/test.grd"]
