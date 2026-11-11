@@ -7,6 +7,10 @@ Format pencatatan mematuhi [Keep a Changelog](https://keepachangelog.com/en/1.0.
 
 ## [v67.0.0] - 2025-05-18
 
+### 🔄🔋 Added — Lapis 3 Tahap 3.2: Mobile Lifecycle & Battery State Machine (`GvmMobileLifecycleManager`)
+* **GvmMobileLifecycleManager**: State machine penanganan siklus hidup OS Android/iOS (`include/garuda/mobile/mobile_lifecycle.hpp`) dengan transisi status (`CREATED`, `STARTED`, `RESUMED`, `PAUSED`, `STOPPED`, `DESTROYED`) (`garuda_mobile_lifecycle_tests.exe` — PASS).
+* **Power Saving & Memory Saver Hooks**: Otomatisasi pengaktifan *Power-Saving Mode* pada Aktor GVM saat `ON_PAUSE`/`ON_STOP` dan callback pelepasan memori pada event `ON_TRIM_MEMORY`.
+
 ### 📱🤖 Added — Lapis 3 Tahap 3.1: Android NDK Cross-Compiler & APK Asset Bundler (`GvmAndroidPacker`)
 * **GvmAndroidPacker**: `GvmAndroidPacker` & `AndroidPackerConfig` (`include/garuda/mobile/android_packer.hpp`) membundel AOT Bytecode Garuda + header metadata mobile (`app_id`, `target_abi`, `version_code`, `version_name`) + FNV-1a checksum menjadi berkas aset APK `assets/app.grdbc` (`garuda_android_packer_tests.exe` — PASS).
 * **Integrasi NDK Runtime**: Ekstraksi dan verifikasi integritas bytecode di memori NDK Android saat inisialisasi `JNI_OnLoad`.
