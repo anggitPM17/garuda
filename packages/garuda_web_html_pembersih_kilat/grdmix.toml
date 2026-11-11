@@ -1,0 +1,13 @@
+[paket]
+nama = "garuda_web_html_pembersih_kilat"
+versi = "0.1.0"
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
+edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Varian Kilat berkinerja tinggi: Sanitasi markup HTML untuk pencegahan celah keamanan Cross-Site Scripting (XSS)."
+
+[target.pustaka]
+jalur = "src/lib.grd"
+
+[uji]
+berkas = ["src/test.grd"]
