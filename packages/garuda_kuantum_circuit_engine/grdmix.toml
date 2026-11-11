@@ -1,0 +1,13 @@
+[paket]
+nama = "garuda_kuantum_circuit_engine"
+versi = "0.1.0"
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
+edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Mesin eksekusi Quantum Circuit multi-qubit dengan penjadwalan gerbang berwaktu, dekoherensi noise, dan visualisasi diagram sirkuit ASCII."
+
+[target.pustaka]
+jalur = "src/lib.grd"
+
+[uji]
+berkas = ["src/test.grd"]
