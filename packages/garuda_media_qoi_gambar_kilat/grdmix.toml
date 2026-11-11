@@ -1,0 +1,13 @@
+[paket]
+nama = "garuda_media_qoi_gambar_kilat"
+versi = "0.1.0"
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
+edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Varian Kilat berkinerja tinggi: Enkoder Quite OK Image Format untuk kompresi gambar cepat nir-rugi."
+
+[target.pustaka]
+jalur = "src/lib.grd"
+
+[uji]
+berkas = ["src/test.grd"]
