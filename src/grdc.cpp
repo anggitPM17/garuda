@@ -9,6 +9,7 @@
 #include "../include/garuda/compiler/bytecode_reader.hpp"
 #include "../include/garuda/compiler/formatter.hpp"
 #include "../include/garuda/compiler/linter.hpp"
+#include "../include/garuda/compiler/standalone_packer.hpp"
 #include "../include/garuda/beam/gvm/actor_runtime.hpp"
 #include "../include/garuda/beam/micro/gvm_micro.hpp"
 #include "repl.cpp"
@@ -32,8 +33,8 @@ void print_version() {
 
 void print_help() {
     std::cout << "Penggunaan CLI Garuda:\n";
-    std::cout << "  grdc compile <file.grd>      Kompilasi kode sumber ke berkas biner .gvm\n";
-    std::cout << "  grdc run <file.grd|file.gvm> Kompilasi (bila .grd) dan eksekusi langsung\n";
+    std::cout << "  grdc compile <file.grd> [--standalone <out.exe>] Kompilasi kode sumber ke .gvm atau executable mandiri .exe\n";
+    std::cout << "  grdc run <file.grd|file.gvm>                      Kompilasi (bila .grd) dan eksekusi langsung\n";
     std::cout << "  grdc fmt <file.grd>          Auto-format berkas kode sumber Garuda\n";
     std::cout << "  grdc lint <file.grd>         Jalankan analisis linter gaya penulisan kode\n";
     std::cout << "  grdc repl                   Jalankan Interactive REPL Shell\n";
@@ -72,6 +73,27 @@ std::optional<CodeGeneratorOutput> compile_grd_source(const std::string& source_
 
 #ifndef GARUDA_GRDC_NO_MAIN
 int main(int argc, char* argv[]) {
+    // 0. Auto-detect if running as a Standalone Packed Executable
+    std::vector<uint8_t> embedded_bytecode;
+    if (garuda::compiler::StandalonePacker::extract_embedded_bytecode(argv[0], embedded_bytecode)) {
+        std::string temp_exec_gvm = "temp_embedded_exec.gvm";
+        std::ofstream temp_ofs(temp_exec_gvm, std::ios::binary);
+        temp_ofs.write(reinterpret_cast<const char*>(embedded_bytecode.data()), embedded_bytecode.size());
+        temp_ofs.close();
+
+        auto code_output = BytecodeReader::read(temp_exec_gvm);
+        fs::remove(temp_exec_gvm);
+
+        if (code_output.has_value()) {
+            GvmActorRuntime runtime(code_output->all_instructions, code_output->function_table);
+            auto result = runtime.run_until_done("utama");
+            if (result.has_value()) {
+                std::cout << "\n✅ Hasil Eksekusi Program Standalone: " << to_string(*result) << "\n";
+            }
+            return 0;
+        }
+    }
+
     if (argc < 2) {
         print_help();
         return 0;
@@ -176,6 +198,52 @@ int main(int argc, char* argv[]) {
         std::string source_path = argv[2];
         auto output = compile_grd_source(source_path);
         if (!output.has_value()) return 1;
+
+        // Check for --standalone flag
+        bool is_standalone = false;
+        std::string standalone_out = "";
+        for (int i = 3; i < argc; ++i) {
+            if (std::string(argv[i]) == "--standalone") {
+                is_standalone = true;
+                if (i + 1 < argc) {
+                    standalone_out = argv[i + 1];
+                }
+                break;
+            }
+        }
+
+        if (is_standalone) {
+            if (standalone_out.empty()) {
+                standalone_out = source_path;
+                auto pos = standalone_out.rfind(".grd");
+                if (pos != std::string::npos) {
+                    standalone_out.replace(pos, 4, ".exe");
+                } else {
+                    standalone_out += ".exe";
+                }
+            }
+
+            // Serialize bytecode to memory
+            std::string temp_gvm = "temp_compile_standalone.gvm";
+            if (!BytecodeWriter::write(*output, temp_gvm)) {
+                std::cerr << "❌ Error: Gagal membuat bytecode sementara untuk standalone packaging.\n";
+                return 1;
+            }
+
+            std::ifstream temp_ifs(temp_gvm, std::ios::binary);
+            std::vector<uint8_t> bytecode_bytes((std::istreambuf_iterator<char>(temp_ifs)), std::istreambuf_iterator<char>());
+            temp_ifs.close();
+            fs::remove(temp_gvm);
+
+            std::string current_self_exe = argv[0];
+            if (garuda::compiler::StandalonePacker::pack_executable(current_self_exe, bytecode_bytes, standalone_out)) {
+                std::cout << "🎉 Kompilasi Standalone AOT Berhasil! Executable mandiri: " << standalone_out << "\n";
+                return 0;
+            } else {
+                std::cerr << "❌ Error: Gagal mengemas biner standalone ke '" << standalone_out << "'\n";
+                return 1;
+            }
+        }
 
         std::string out_path = source_path;
         auto pos = out_path.rfind(".grd");

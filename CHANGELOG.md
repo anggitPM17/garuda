@@ -7,6 +7,11 @@ Format pencatatan mematuhi [Keep a Changelog](https://keepachangelog.com/en/1.0.
 
 ## [v67.0.0] - 2025-05-18
 
+### 📦⚙️ Added — Lapis 2 Tahap 1: Standalone AOT Binary Compiler & Packer (`grdc --standalone`)
+* **Standalone AOT Packer**: `StandalonePacker` (`include/garuda/compiler/standalone_packer.hpp`) membundel biner stub runner + bytecode `.grdbc` + 28-byte footer magic (`GARUDA_STUB_V1_FOOTER`) menjadi berkas biner `.exe` mandiri (`garuda_standalone_packer_tests.exe` — PASS).
+* **CLI Compiler Extension**: Opsi `grdc compile <file.grd> --standalone <output.exe>` untuk mengkompilasi file `.grd` langsung menjadi aplikasi biner mandiri tanpa dependensi runtime eksternal.
+* **Auto-Execution Detection**: Auto-detect payload bytecode pada saat eksekusi langsung biner `.exe` terbundel.
+
 ### 🌳🛠️ Added — Fase 23: Modular CMake Architecture, 3D Scene Graph Engine & Structured Test Runner (Tag: `v67-fase23-scenegraph-cmake-stable`)
 * **3D Scene Graph Engine**: `SceneNode` 3D spatial hierarchy dengan world transform matrix computation, visitor traversal, & automatic scene rendering pass (`garuda_scene_graph_tests.exe` — PASS).
 * **Modular CMake Automation & Test Runner**: Skrip Python `tools/cmake_helper.py` teruji untuk registrasi CMake target otomatis & runner PowerShell dengan UTF-8 console encoding + progress logging interaktif + summary JSON export (`garuda_cmake_structure_tests.exe` — PASS).
