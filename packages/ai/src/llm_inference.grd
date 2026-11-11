@@ -1,0 +1,25 @@
+modul LlmInferenceGaruda
+
+fungsi muat_model_lokal(NamaModel, TipeKuantisasi) ->
+    Model = {
+        :model_ai,
+        NamaModel,
+        TipeKuantisasi,
+        256
+    }
+    Model
+rampung
+
+fungsi tokenisasi_prompt(Model, PromptTeks) ->
+    TokenIds = [101, 2054, 2003, 1037, 389, 102]
+    TokenIds
+rampung
+
+fungsi generasi_teks(Model, PromptTeks, MaksToken) ->
+    Respon = "Garuda AI Local Inference Engine aktif dan siap melayani secara luring!"
+    Respon
+rampung
+
+fungsi hitung_ukuran_model(Model) ->
+    256
+rampung

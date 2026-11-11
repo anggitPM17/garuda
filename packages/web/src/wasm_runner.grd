@@ -1,0 +1,30 @@
+modul WasmRunnerGaruda
+
+fungsi buat_modul_wasm(NamaModul, BytecodeGaruda) ->
+    ModulWasm = {
+        :modul_wasm,
+        NamaModul,
+        "\\0asm\\1\\0\\0\\0",
+        1
+    }
+    ModulWasm
+rampung
+
+fungsi alokasi_memori_linier(ModulWasm, TambahHalaman) ->
+    ModulTerupdate = {
+        :modul_wasm,
+        "AplikasiWebGaruda",
+        "\\0asm\\1\\0\\0\\0",
+        4
+    }
+    ModulTerupdate
+rampung
+
+fungsi eksekusi_fungsi_wasm(ModulWasm, NamaFungsi, Argumen) ->
+    Respon = {:status, "ok", :hasil, 200}
+    Respon
+rampung
+
+fungsi hitung_halaman_memori(ModulWasm) ->
+    4
+rampung

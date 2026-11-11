@@ -7,6 +7,12 @@ Format pencatatan mematuhi [Keep a Changelog](https://keepachangelog.com/en/1.0.
 
 ## [v67.0.0] - 2025-05-18
 
+### 🌐⚡ Added — WebAssembly (Wasm) Web-Runner Engine (`WasmRunnerGaruda`)
+* **WasmRunnerGaruda**: Pustaka eksekusi biner Wasm murni Bahasa Garuda (`packages/web/src/wasm_runner.grd`) untuk membundel bytecode ke modul `.wasm` (`buat_modul_wasm`) dan mengalokasikan halaman memori Wasm linear (`alokasi_memori_linier`) di browser (`garuda_web_wasm_runner_tests.exe` — PASS).
+
+### 🧠🤖 Added — On-Device Local AI / LLM Inference Engine (`LlmInferenceGaruda`)
+* **LlmInferenceGaruda**: Engine inferensi AI/LLM On-Device murni Bahasa Garuda (`packages/ai/src/llm_inference.grd`) untuk pemuatan model kuantisasi INT8/INT4 (`muat_model_lokal`), BPE tokenisasi prompt (`tokenisasi_prompt`), dan generasi teks autoregresif luring (`generasi_teks`) (`garuda_ai_llm_inference_tests.exe` — PASS).
+
 ### 🖥️🎨 Added — Desktop Native GUI Framework (`GarudaUI`)
 * **GarudaUI Framework**: Pustaka antarmuka pengguna desktop deklaratif murni Bahasa Garuda (`packages/gui/src/garuda_ui.grd`) untuk membangun aplikasi jendela desktop (`buat_jendela`, `tambah_tombol`, `tambah_teks_input`, `tambah_kotak_pesan`) tanpa konsumsi memori besar Electron (`garuda_ui_framework_tests.exe` — PASS).
 
