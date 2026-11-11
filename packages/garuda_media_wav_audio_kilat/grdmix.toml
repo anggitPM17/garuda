@@ -1,0 +1,13 @@
+[paket]
+nama = "garuda_media_wav_audio_kilat"
+versi = "0.1.0"
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
+edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Varian Kilat berkinerja tinggi: Parser dan enkoder berkas audio RIFF WAV PCM 16/24/32-bit integer dan float."
+
+[target.pustaka]
+jalur = "src/lib.grd"
+
+[uji]
+berkas = ["src/test.grd"]
