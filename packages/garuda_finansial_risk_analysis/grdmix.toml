@@ -1,0 +1,13 @@
+[paket]
+nama = "garuda_finansial_risk_analysis"
+versi = "0.1.0"
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
+edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Analisis risiko keuangan portofolio kuantitatif: Value at Risk (VaR Parametrik & Monte Carlo), Conditional VaR (Expected Shortfall), dan Sharpe/Sortino Ratio."
+
+[target.pustaka]
+jalur = "src/lib.grd"
+
+[uji]
+berkas = ["src/test.grd"]
