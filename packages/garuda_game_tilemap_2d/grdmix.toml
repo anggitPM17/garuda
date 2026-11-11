@@ -1,0 +1,13 @@
+[paket]
+nama = "garuda_game_tilemap_2d"
+versi = "0.1.0"
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
+edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Parser format peta Tiled JSON, rendering layer tile 2D (ortogonal/isometrik), dan deteksi tile bersolid (dinding/lantai/rintangan)."
+
+[target.pustaka]
+jalur = "src/lib.grd"
+
+[uji]
+berkas = ["src/test.grd"]
