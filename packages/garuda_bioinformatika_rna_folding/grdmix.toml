@@ -1,0 +1,13 @@
+[paket]
+nama = "garuda_bioinformatika_rna_folding"
+versi = "0.1.0"
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
+edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Prediksi struktur sekunder pelipatan RNA berbasis energi bebas minimum (Minimum Free Energy - Nussinov & Zuker dynamic programming) dengan notasi Dot-Bracket."
+
+[target.pustaka]
+jalur = "src/lib.grd"
+
+[uji]
+berkas = ["src/test.grd"]
