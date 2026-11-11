@@ -1,0 +1,25 @@
+{
+  "nama": "garuda_sistem_sinyal_proses",
+  "modul": "SinyalProses",
+  "versi": "0.1.0",
+  "penulis": "Anggit Prasetyo (@anggitPM17)",
+  "deskripsi": "Penanganan sinyal POSIX seperti SIGINT dan SIGTERM untuk graceful shutdown aplikasi.",
+  "lisensi": "MIT",
+  "kategori": "Sistem & OS",
+  "status": "stabil",
+  "titik_masuk": "src/lib.grd",
+  "gpm": {
+    "versi_kompatibel": ">=0.4.0",
+    "arsitektur": "gvm-universal",
+    "registri": "https://gpm.garuda-lang.org/v1"
+  },
+  "dependensi": {
+    "garuda_dasar": "^1.0.0",
+    "garuda_hasil": "^1.0.0"
+  },
+  "naskah": {
+    "bangun": "grdmix bangun --rilis",
+    "uji": "grdmix uji --semua",
+    "format": "grdmix format ."
+  }
+}
