@@ -7,6 +7,13 @@ Format pencatatan mematuhi [Keep a Changelog](https://keepachangelog.com/en/1.0.
 
 ## [v67.0.0] - 2025-05-18
 
+### 🔐🔑 Added — Lapis 2 Tahap 4: Post-Quantum Cryptography Hybrid Layer (ML-KEM-768 Kyber)
+* **PqcHybridEngine**: Implementasi NIST FIPS 203 ML-KEM-768 Kyber Key Encapsulation Mechanism (`include/garuda/beam/crypto/pqc_hybrid.hpp`) untuk pertukaran kunci kriptografi resisten-kuantum (`garuda_pqc_hybrid_tests.exe` — PASS).
+* **Hybrid Secret Derivation**: Penggabungan kunci klasik ECDH P-256 dan ML-KEM-768 Kyber menjadi kunci master hybrid 32-byte.
+
+### 🔌💻 Added — Lapis 2 Tahap 3: Interop C++ Embedding Host API (`GvmEmbeddingHost`)
+* **GvmEmbeddingHost API**: Host Integration Engine (`include/garuda/beam/interop/embedding_api.hpp`) yang memungkinkan aplikasi C++/game engine menanamkan runtime GVM (kompilasi skrip, penetapan variabel global, dan pemanggilan fungsi) secara langsung (`garuda_embedding_api_tests.exe` — PASS).
+
 ### 🛡️🔒 Added — Lapis 2 Tahap 2: Script Sandboxing & Resource Isolation Engine (`GvmSandbox`)
 * **GvmSandbox Engine**: `GvmSandbox` & `SandboxPolicy` (`include/garuda/beam/sys/sandbox.hpp`) menyediakan isolasi keamanan per-thread/per-actor untuk membatasi hak akses Filesystem (Read/Write), Jaringan (Socket Connection), Subprocess Execution, dan Memori Maksimal (`garuda_sandbox_tests.exe` — PASS).
 * **Path Whitelisting**: Dukungan daftar kustom `allowed_paths` untuk mengizinkan akses I/O khusus ke folder/file tertentu dalam mode terisolasi.
