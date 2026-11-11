@@ -1,0 +1,13 @@
+[paket]
+nama = "garuda_algoritma_trie_ganda_simd"
+versi = "0.1.0"
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
+edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Varian Simd berkinerja tinggi: Double-array trie dengan kepadatan tinggi untuk leksikon bahasa alami."
+
+[target.pustaka]
+jalur = "src/lib.grd"
+
+[uji]
+berkas = ["src/test.grd"]
