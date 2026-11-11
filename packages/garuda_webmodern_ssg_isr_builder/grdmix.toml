@@ -1,0 +1,13 @@
+[paket]
+nama = "garuda_webmodern_ssg_isr_builder"
+versi = "0.1.0"
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
+edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Pembangun situs statis (SSG) dan Incremental Static Regeneration (ISR) berbasis cache berwaktu."
+
+[target.pustaka]
+jalur = "src/lib.grd"
+
+[uji]
+berkas = ["src/test.grd"]
