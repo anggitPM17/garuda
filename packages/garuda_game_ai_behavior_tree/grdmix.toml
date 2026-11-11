@@ -1,0 +1,13 @@
+[paket]
+nama = "garuda_game_ai_behavior_tree"
+versi = "0.1.0"
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
+edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Kecerdasan Buatan (AI) Musuh berbasis Behavior Tree: composite nodes (Sequence, Selector), Blackboard data sharing, Leaf actions, dan Decorators."
+
+[target.pustaka]
+jalur = "src/lib.grd"
+
+[uji]
+berkas = ["src/test.grd"]
