@@ -1,0 +1,13 @@
+[paket]
+nama = "garuda_kuantum_qubit"
+versi = "0.1.0"
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
+edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Simulasi Qubit keadaan superposisi murni dan matriks densitas tereduksi dengan representasi vektor keadaan ruang Hilbert kompleks."
+
+[target.pustaka]
+jalur = "src/lib.grd"
+
+[uji]
+berkas = ["src/test.grd"]
