@@ -1,0 +1,25 @@
+{
+  "nama": "garuda_waktu_kronos_waktu_kilat",
+  "modul": "KronosWaktuKilat",
+  "versi": "0.1.0",
+  "penulis": "Anggit Prasetyo (@anggitPM17)",
+  "deskripsi": "Varian Kilat berkinerja tinggi: Representasi waktu instan nano-detik dengan parsing standar ISO-8601.",
+  "lisensi": "MIT",
+  "kategori": "Waktu & Kalender",
+  "status": "stabil",
+  "titik_masuk": "src/lib.grd",
+  "gpm": {
+    "versi_kompatibel": ">=0.4.0",
+    "arsitektur": "gvm-universal",
+    "registri": "https://gpm.garuda-lang.org/v1"
+  },
+  "dependensi": {
+    "garuda_dasar": "^1.0.0",
+    "garuda_hasil": "^1.0.0"
+  },
+  "naskah": {
+    "bangun": "grdmix bangun --rilis",
+    "uji": "grdmix uji --semua",
+    "format": "grdmix format ."
+  }
+}
