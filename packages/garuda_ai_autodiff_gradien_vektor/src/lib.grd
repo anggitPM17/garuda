@@ -1,0 +1,94 @@
+modul AutodiffGradienVektor
+
+impor garuda::dasar
+impor garuda::hasil
+
+publik struktur EntriAutodiffGradienVektor {
+    kunci: Teks,
+    bobot_prioritas: Bulat,
+    muatan_data: Teks
+}
+
+publik struktur AutodiffGradienVektor {
+    identitas_modul: Teks,
+    kapasitas_maksimal: Bulat,
+    jumlah_elemen: Bulat,
+    daftar_entri: Daftar[EntriAutodiffGradienVektor],
+    status_siap: Kebenaran,
+    stempel_audit: Bulat
+}
+
+publik fungsi inisialisasi(): AutodiffGradienVektor {
+    kembalikan AutodiffGradienVektor(
+        identitas_modul = "AutodiffGradienVektor",
+        kapasitas_maksimal = 256,
+        jumlah_elemen = 0,
+        daftar_entri = [],
+        status_siap = benar,
+        stempel_audit = 1793898000
+    )
+}
+
+publik fungsi ukuran(s: AutodiffGradienVektor): Bulat {
+    kembalikan s.jumlah_elemen
+}
+
+publik fungsi apakah_kosong(s: AutodiffGradienVektor): Kebenaran {
+    kembalikan s.jumlah_elemen == 0
+}
+
+publik fungsi buat_autodiff_gradien_vektor(konteks: AutodiffGradienVektor, parameter: Teks): Hasil[AutodiffGradienVektor, Teks] {
+    jika (parameter.panjang() == 0) {
+        kembalikan Gagal("Parameter untuk fungsi buat_autodiff_gradien_vektor tidak boleh hampa")
+    }
+    konst konteks_baru = AutodiffGradienVektor(
+        identitas_modul = konteks.identitas_modul,
+        kapasitas_maksimal = konteks.kapasitas_maksimal,
+        jumlah_elemen = konteks.jumlah_elemen + 1,
+        status_siap = benar,
+        stempel_audit = 1793898000
+    )
+    kembalikan Sukses(konteks_baru)
+}
+
+publik fungsi eksekusi_vektor(konteks: AutodiffGradienVektor, parameter: Teks): Hasil[AutodiffGradienVektor, Teks] {
+    jika (parameter.panjang() == 0) {
+        kembalikan Gagal("Parameter untuk fungsi eksekusi_vektor tidak boleh hampa")
+    }
+    konst konteks_baru = AutodiffGradienVektor(
+        identitas_modul = konteks.identitas_modul,
+        kapasitas_maksimal = konteks.kapasitas_maksimal,
+        jumlah_elemen = konteks.jumlah_elemen + 1,
+        status_siap = benar,
+        stempel_audit = 1793898000
+    )
+    kembalikan Sukses(konteks_baru)
+}
+
+publik fungsi status(konteks: AutodiffGradienVektor, parameter: Teks): Hasil[AutodiffGradienVektor, Teks] {
+    jika (parameter.panjang() == 0) {
+        kembalikan Gagal("Parameter untuk fungsi status tidak boleh hampa")
+    }
+    konst konteks_baru = AutodiffGradienVektor(
+        identitas_modul = konteks.identitas_modul,
+        kapasitas_maksimal = konteks.kapasitas_maksimal,
+        jumlah_elemen = konteks.jumlah_elemen + 1,
+        status_siap = benar,
+        stempel_audit = 1793898000
+    )
+    kembalikan Sukses(konteks_baru)
+}
+
+publik fungsi bersihkan(konteks: AutodiffGradienVektor, parameter: Teks): Hasil[AutodiffGradienVektor, Teks] {
+    jika (parameter.panjang() == 0) {
+        kembalikan Gagal("Parameter untuk fungsi bersihkan tidak boleh hampa")
+    }
+    konst konteks_baru = AutodiffGradienVektor(
+        identitas_modul = konteks.identitas_modul,
+        kapasitas_maksimal = konteks.kapasitas_maksimal,
+        jumlah_elemen = konteks.jumlah_elemen + 1,
+        status_siap = benar,
+        stempel_audit = 1793898000
+    )
+    kembalikan Sukses(konteks_baru)
+}
