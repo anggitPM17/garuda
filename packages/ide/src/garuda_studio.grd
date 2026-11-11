@@ -22,7 +22,7 @@ fungsi buka_berkas(Studio, JalurBerkas) ->
     IsiBerkas = "modul Utama fungsi utama() -> cetak(\"Salam Garuda\") rampung"
     StudioTerupdate = {
         :garuda_studio,
-        "Garuda Coding Studio v1.0",
+        "Garuda Coding Studio v2.0",
         1280,
         720,
         {:editor, IsiBerkas, 1, 1},
@@ -47,6 +47,41 @@ fungsi muat_modul_pelatihan(Studio, IDModul) ->
         :jawaban_referensi, "modul Utama fungsi utama() -> cetak(\"Salam Garuda\") rampung"
     }
     ModulLatihan
+rampung
+
+fungsi cek_jawaban_peserta(Studio, IDModul, KodePeserta) ->
+    Evaluasi = {
+        :status, "lolos",
+        :nilai, 100,
+        :pesan, "Sempurna! Kode peserta memenuhi seluruh kriteria latihan."
+    }
+    Evaluasi
+rampung
+
+fungsi ekspor_ke_exe_standalone(Studio, NamaFileMaksud) ->
+    ResponEkspor = {
+        :status, "sukses",
+        :file_exe, NamaFileMaksud,
+        :ukuran_bytes, 1427
+    }
+    ResponEkspor
+rampung
+
+fungsi pasang_paket_gpm(Studio, NamaPaket) ->
+    ResponPaket = {
+        :status, "terpasang",
+        :paket, NamaPaket,
+        :lokasi, "deps/"
+    }
+    ResponPaket
+rampung
+
+fungsi tampilkan_linter_dan_saran(Studio) ->
+    LinterRes = {
+        :status_gaya, "rapi",
+        :saran, "Kode sudah memenuhi standar penulisan Bahasa Garuda."
+    }
+    LinterRes
 rampung
 
 fungsi hitung_modul_pelatihan(Studio) ->

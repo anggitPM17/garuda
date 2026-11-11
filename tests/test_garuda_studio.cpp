@@ -8,7 +8,7 @@
 using namespace garuda::beam::interop;
 using namespace garuda::beam;
 
-void test_garuda_studio_ide() {
+void test_garuda_studio_ide_v2() {
     std::string studio_file = "packages/ide/src/garuda_studio.grd";
 
     std::ifstream ifs(studio_file);
@@ -29,18 +29,22 @@ void test_garuda_studio_ide() {
     assert(host.has_function("buka_berkas") && "GarudaStudioIDE should have 'buka_berkas' function");
     assert(host.has_function("jalankan_skrip") && "GarudaStudioIDE should have 'jalankan_skrip' function");
     assert(host.has_function("muat_modul_pelatihan") && "GarudaStudioIDE should have 'muat_modul_pelatihan' function");
+    assert(host.has_function("cek_jawaban_peserta") && "GarudaStudioIDE should have 'cek_jawaban_peserta' function");
+    assert(host.has_function("ekspor_ke_exe_standalone") && "GarudaStudioIDE should have 'ekspor_ke_exe_standalone' function");
+    assert(host.has_function("pasang_paket_gpm") && "GarudaStudioIDE should have 'pasang_paket_gpm' function");
+    assert(host.has_function("tampilkan_linter_dan_saran") && "GarudaStudioIDE should have 'tampilkan_linter_dan_saran' function");
     assert(host.has_function("hitung_modul_pelatihan") && "GarudaStudioIDE should have 'hitung_modul_pelatihan' function");
 
     auto count_res = host.call_function("hitung_modul_pelatihan");
     assert(count_res.has_value() && "hitung_modul_pelatihan should return a value");
     assert(std::get<int64_t>(*count_res) == 4 && "GarudaStudioIDE training curriculum module count should be 4");
 
-    std::cout << "[PASS] test_garuda_studio_ide" << std::endl;
+    std::cout << "[PASS] test_garuda_studio_ide_v2" << std::endl;
 }
 
 int main() {
-    std::cout << "--- RUNNING GARUDA CODING STUDIO IDE TESTS ---" << std::endl;
-    test_garuda_studio_ide();
-    std::cout << "--- ALL GARUDA CODING STUDIO IDE TESTS PASSED 100% ---" << std::endl;
+    std::cout << "--- RUNNING GARUDA CODING STUDIO IDE v2.0 TESTS ---" << std::endl;
+    test_garuda_studio_ide_v2();
+    std::cout << "--- ALL GARUDA CODING STUDIO IDE v2.0 TESTS PASSED 100% ---" << std::endl;
     return 0;
 }

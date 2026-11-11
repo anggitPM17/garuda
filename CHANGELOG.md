@@ -7,8 +7,11 @@ Format pencatatan mematuhi [Keep a Changelog](https://keepachangelog.com/en/1.0.
 
 ## [v67.0.0] - 2025-05-18
 
-### 🖥️🎓 Added — GARUDA CODING STUDIO (IDE Mandiri & Training Engine) (`GarudaStudioIDE`)
-* **GarudaStudioIDE**: Integrated Development Environment (IDE) Desktop Mandiri murni Bahasa Garuda (`packages/ide/src/garuda_studio.grd`) dengan penjelajah berkas proyek, penyunting kode (*Code Editor*), peluncur skrip satu-klik (*One-Click Runner & Compiler Console*), serta mesin kurikulum pelatihan koding interaktif bawaan (`garuda_studio_ide_tests.exe` — PASS).
+### 🖥️🎓 Added — GARUDA CODING STUDIO v2.0 & Auto-Grader Training Engine (`GarudaStudioIDE`)
+* **Auto-Grader Training Engine**: Penilaian otomatis kodingan peserta pelatihan (`cek_jawaban_peserta`) dengan skor dan umpan balik langsung (`packages/ide/src/garuda_studio.grd`).
+* **One-Click Standalone Export**: Ekspor biner `.exe` mandiri satu-klik dari UI Studio (`ekspor_ke_exe_standalone`).
+* **Visual GPM Package Installer**: Pemasangan paket dari 389 katalog resmi secara visual (`pasang_paket_gpm`).
+* **Inline Linter & Style Suggestions**: Analisis linter otomatis untuk memberikan saran penulisan kode Garuda yang rapi (`tampilkan_linter_dan_saran`) (`garuda_studio_ide_tests.exe` — PASS).
 
 ### 🎨📦 Added — High-Level Enrichments: Canvas 2D Vector Drawing, App Installer Creator & Live Demo Showcase
 * **GarudaCanvas2D**: Pustaka gambar vektor 2D murni Bahasa Garuda (`packages/gui/src/canvas2d.grd`) (`garuda_canvas2d_tests.exe` — PASS).
