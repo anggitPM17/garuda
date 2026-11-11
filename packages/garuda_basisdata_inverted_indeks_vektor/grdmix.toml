@@ -1,0 +1,13 @@
+[paket]
+nama = "garuda_basisdata_inverted_indeks_vektor"
+versi = "0.1.0"
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
+edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Varian Vektor berkinerja tinggi: Indeks terbalik teks penuh dengan pembobotan TF-IDF untuk mesin pencari."
+
+[target.pustaka]
+jalur = "src/lib.grd"
+
+[uji]
+berkas = ["src/test.grd"]
