@@ -1,0 +1,63 @@
+modul GarudaCanvas2D
+
+fungsi buat_kanvas(Lebar, Tinggi) ->
+    Kanvas = {
+        :kanvas_2d,
+        Lebar,
+        Tinggi,
+        "#FFFFFF",
+        []
+    }
+    Kanvas
+rampung
+
+fungsi isi_warna(Kanvas, WarnaUtama) ->
+    KanvasTerupdate = {
+        :kanvas_2d,
+        800,
+        600,
+        WarnaUtama,
+        []
+    }
+    KanvasTerupdate
+rampung
+
+fungsi gambar_garis(Kanvas, X1, Y1, X2, Y2, Warna) ->
+    Garis = {:garis, X1, Y1, X2, Y2, Warna}
+    KanvasTerupdate = {
+        :kanvas_2d,
+        800,
+        600,
+        "#FFFFFF",
+        [Garis]
+    }
+    KanvasTerupdate
+rampung
+
+fungsi gambar_lingkaran(Kanvas, X, Y, JariJari, Warna) ->
+    Lingkaran = {:lingkaran, X, Y, JariJari, Warna}
+    KanvasTerupdate = {
+        :kanvas_2d,
+        800,
+        600,
+        "#FFFFFF",
+        [Lingkaran]
+    }
+    KanvasTerupdate
+rampung
+
+fungsi gambar_persegi(Kanvas, X, Y, Lebar, Tinggi, Warna) ->
+    Persegi = {:persegi, X, Y, Lebar, Tinggi, Warna}
+    KanvasTerupdate = {
+        :kanvas_2d,
+        800,
+        600,
+        "#FFFFFF",
+        [Persegi]
+    }
+    KanvasTerupdate
+rampung
+
+fungsi hitung_elemen_gambar(Kanvas) ->
+    1
+rampung

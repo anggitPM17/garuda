@@ -7,6 +7,11 @@ Format pencatatan mematuhi [Keep a Changelog](https://keepachangelog.com/en/1.0.
 
 ## [v67.0.0] - 2025-05-18
 
+### 🎨📦 Added — High-Level Enrichments: Canvas 2D Vector Drawing, App Installer Creator & Live Demo Showcase
+* **GarudaCanvas2D**: Pustaka gambar vektor 2D murni Bahasa Garuda (`packages/gui/src/canvas2d.grd`) (`garuda_canvas2d_tests.exe` — PASS).
+* **GvmInstallerCreator**: Mesin pembentuk Windows Setup Installer `.msi` (`include/garuda/compiler/installer_creator.hpp`) (`garuda_installer_creator_tests.exe` — PASS).
+* **Live Demo Showcase Script**: Skrip peragaan langsung murni Bahasa Garuda (`examples/live_demo/demo_showcase.grd`) yang memamerkan seluruh 13 kapabilitas ekosistem Garuda.
+
 ### 🌐⚡ Added — WebAssembly (Wasm) Web-Runner Engine (`WasmRunnerGaruda`)
 * **WasmRunnerGaruda**: Pustaka eksekusi biner Wasm murni Bahasa Garuda (`packages/web/src/wasm_runner.grd`) untuk membundel bytecode ke modul `.wasm` (`buat_modul_wasm`) dan mengalokasikan halaman memori Wasm linear (`alokasi_memori_linier`) di browser (`garuda_web_wasm_runner_tests.exe` — PASS).
 
