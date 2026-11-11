@@ -1,0 +1,25 @@
+{
+  "nama": "garuda_kuantum_gerbang_logika",
+  "modul": "KuantumGerbangLogika",
+  "versi": "0.1.0",
+  "penulis": "Anggit Prasetyo (@anggitPM17)",
+  "deskripsi": "Operator dan gerbang logika kuantum uniter (Pauli-X, Pauli-Y, Pauli-Z, Hadamard, Phase-S/T, CNOT entangling, dan Toffoli CCNOT).",
+  "lisensi": "MIT",
+  "kategori": "Komputasi Kuantum",
+  "status": "stabil",
+  "titik_masuk": "src/lib.grd",
+  "gpm": {
+    "versi_kompatibel": ">=0.4.0",
+    "arsitektur": "gvm-universal",
+    "registri": "https://gpm.garuda-lang.org/v1"
+  },
+  "dependensi": {
+    "garuda_dasar": "^1.0.0",
+    "garuda_hasil": "^1.0.0"
+  },
+  "naskah": {
+    "bangun": "grdmix bangun --rilis",
+    "uji": "grdmix uji --semua",
+    "format": "grdmix format ."
+  }
+}
