@@ -1,0 +1,78 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Garuda",
+  "patterns": [
+    {
+      "include": "#keywords"
+    },
+    {
+      "include": "#atoms"
+    },
+    {
+      "include": "#strings"
+    },
+    {
+      "include": "#comments"
+    },
+    {
+      "include": "#numbers"
+    },
+    {
+      "include": "#functions"
+    }
+  ],
+  "repository": {
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.garuda",
+          "match": "\\b(modul|fungsi|makro|rampung|tampa|cakra|kirim|cetak|yen|lain|ketika|coba|tangkap|kembalikan|diri)\\b"
+        }
+      ]
+    },
+    "atoms": {
+      "patterns": [
+        {
+          "name": "constant.other.symbol.garuda",
+          "match": ":[a-zA-Z0-9_]+"
+        }
+      ]
+    },
+    "strings": {
+      "name": "string.quoted.double.garuda",
+      "begin": "\"",
+      "end": "\"",
+      "patterns": [
+        {
+          "name": "constant.character.escape.garuda",
+          "match": "\\\\."
+        }
+      ]
+    },
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.number-sign.garuda",
+          "match": "#.*$"
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.garuda",
+          "match": "\\b[0-9]+(\\.[0-9]+)?\\b"
+        }
+      ]
+    },
+    "functions": {
+      "patterns": [
+        {
+          "name": "entity.name.function.garuda",
+          "match": "\\b([a-z_][a-zA-Z0-9_]*)\\s*(?=\\()"
+        }
+      ]
+    }
+  },
+  "scopeName": "source.grd"
+}

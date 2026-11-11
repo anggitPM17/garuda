@@ -7,6 +7,11 @@ Format pencatatan mematuhi [Keep a Changelog](https://keepachangelog.com/en/1.0.
 
 ## [v67.0.0] - 2025-05-18
 
+### 🎨💻 Added — Official VS Code Extension & Language Server Protocol (LSP) Engine (`garuda-vscode-lsp`)
+* **TextMate Syntax Highlighting**: Grammar resmi `vscode-extension/syntaxes/garuda.tmLanguage.json` dengan pewarnaan kata kunci Indonesia (`modul`, `fungsi`, `tampa`, `kirim`, `cetak`, `yen`, `lain`, `coba`, `tangkap`, `rampung`), atom (`:ok`), string, angka, dan komentar `#`.
+* **Language Configuration**: Auto-closing brackets `()`, `[]`, `{}` dan aturan auto-indentasi otomatis (`vscode-extension/language-configuration.json`).
+* **LSP Stdlib IntelliSense & Hover Tooltips**: Auto-completion dan Markdown hover documentation (`include/garuda/compiler/lsp_engine.hpp`) untuk seluruh Pustaka Standar (`String`, `List`, `Map`, `File`, `Math`, `Time`, `Path`) (`garuda_lsp_tests.exe` — ALL 10 PASS).
+
 ### 📦🚀 Added — Integrated Package Manager Client (`grdc pkg`) & 389 Packages Audit
 * **Integrated CLI Command**: Perintah CLI `grdc pkg list` (mendaftar seluruh 389 paket terverifikasi), `grdc pkg verify` (verifikasi integritas 389 paket), dan `grdc pkg install <nama_paket>` (memasang dependensi ke direktori proyek) (`garuda_package_manager_client_tests.exe` — PASS).
 * **Package Manager Engine**: `GpmPackageManager` (`include/garuda/pkg/package_manager.hpp`) untuk pindaian manifes JSON/TOML, verifikasi struktur paket `src/lib.grd`, dan pengelolaan instalasi lokal.

@@ -163,7 +163,18 @@ private:
 
     std::string handle_completion(std::int64_t req_id) {
         std::vector<std::string> keywords = {
-            "modul", "fungsi", "makro", "rampung", "tampa", "cakra", "kirim", "cetak", "yen", "lain", "ketika", "diri"
+            "modul", "fungsi", "makro", "rampung", "tampa", "cakra", "kirim", "cetak", "yen", "lain", "ketika", "coba", "tangkap", "kembalikan", "diri"
+        };
+
+        std::vector<std::pair<std::string, std::string>> stdlib_funcs = {
+            {"String.panjang", "Fungsi menghitung panjang karakter string"},
+            {"String.pangkas", "Fungsi memangkas spasi di awal dan akhir string"},
+            {"List.peta", "Fungsi pemetaan elemen list"},
+            {"List.saring", "Fungsi penyaringan elemen list"},
+            {"Map.taruh", "Fungsi memasukkan pasangan kunci-nilai ke Map"},
+            {"File.baca", "Fungsi membaca isi berkas dari disk"},
+            {"Math.akar", "Fungsi kalkulasi akar kuadrat"},
+            {"Time.sekarang", "Fungsi mengambil timestamp UNIX detik saat ini"}
         };
 
         std::vector<Term> items;
@@ -171,7 +182,15 @@ private:
             items.push_back(list_of({
                 tuple_of({Term("label"), Term(kw)}),
                 tuple_of({Term("kind"), Term(14LL)}), // 14 = Keyword
-                tuple_of({Term("detail"), Term("Garuda Nusantara Keyword")})
+                tuple_of({Term("detail"), Term("Garuda Language Keyword")})
+            }));
+        }
+
+        for (const auto& sf : stdlib_funcs) {
+            items.push_back(list_of({
+                tuple_of({Term("label"), Term(sf.first)}),
+                tuple_of({Term("kind"), Term(3LL)}), // 3 = Function
+                tuple_of({Term("detail"), Term(sf.second)})
             }));
         }
 
@@ -181,7 +200,7 @@ private:
     std::string handle_hover(std::int64_t req_id, const Term&) {
         Term contents = list_of({
             tuple_of({Term("kind"), Term("markdown")}),
-            tuple_of({Term("value"), Term("**Garuda Nusantara Keyword**\n\nModul / Fungsi Bahasa Garuda.")})
+            tuple_of({Term("value"), Term("### Garuda Language Keyword & Stdlib\n\nModul / Fungsi Resmi Bahasa Pemrograman Garuda.\n\n```garuda\nmodul Contoh\nfungsi utama() ->\n    cetak(\"Salam Garuda\")\nrampung\n```")})
         });
 
         Term result = list_of({

@@ -1,8 +1,9 @@
 {
   "name": "garuda-vscode-lsp",
-  "displayName": "Garuda Language LSP Client",
-  "description": "VS Code LSP Client extension untuk Bahasa Garuda",
-  "version": "0.1.0",
+  "displayName": "Garuda Language Official VS Code Extension & LSP Client",
+  "description": "Ekstensi Resmi VS Code dengan Syntax Highlighting & LSP Engine untuk Bahasa Garuda",
+  "version": "1.0.0",
+  "publisher": "garuda-project",
   "engines": {
     "vscode": "^1.80.0"
   },
@@ -22,7 +23,15 @@
       {
         "id": "garuda",
         "aliases": ["Garuda", "garuda"],
-        "extensions": [".grd"]
+        "extensions": [".grd"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "garuda",
+        "scopeName": "source.grd",
+        "path": "./syntaxes/garuda.tmLanguage.json"
       }
     ]
   },
