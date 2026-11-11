@@ -1,0 +1,13 @@
+[paket]
+nama = "garuda_hpc_memori_numa_vektor"
+versi = "0.1.0"
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
+edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Varian Vektor berkinerja tinggi: Pengalokasi halaman memori sadar topologi NUMA (Non-Uniform Memory Access)."
+
+[target.pustaka]
+jalur = "src/lib.grd"
+
+[uji]
+berkas = ["src/test.grd"]
