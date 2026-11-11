@@ -1,0 +1,13 @@
+[paket]
+nama = "garuda_kecerdasan_naive_bayes_kilat"
+versi = "0.1.0"
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
+edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Varian Kilat berkinerja tinggi: Pengklasifikasi teks probabilistik Naive Bayes untuk analisis sentimen."
+
+[target.pustaka]
+jalur = "src/lib.grd"
+
+[uji]
+berkas = ["src/test.grd"]
