@@ -1,0 +1,25 @@
+{
+  "nama": "garuda_sistem_pemantau_direktori_kilat",
+  "modul": "PemantauDirektoriKilat",
+  "versi": "0.1.0",
+  "penulis": "Anggit Prasetyo (@anggitPM17)",
+  "deskripsi": "Varian Kilat berkinerja tinggi: Pendeteksi perubahan berkas dan direktori sistem berkas secara asinkron.",
+  "lisensi": "MIT",
+  "kategori": "Sistem & OS",
+  "status": "stabil",
+  "titik_masuk": "src/lib.grd",
+  "gpm": {
+    "versi_kompatibel": ">=0.4.0",
+    "arsitektur": "gvm-universal",
+    "registri": "https://gpm.garuda-lang.org/v1"
+  },
+  "dependensi": {
+    "garuda_dasar": "^1.0.0",
+    "garuda_hasil": "^1.0.0"
+  },
+  "naskah": {
+    "bangun": "grdmix bangun --rilis",
+    "uji": "grdmix uji --semua",
+    "format": "grdmix format ."
+  }
+}
