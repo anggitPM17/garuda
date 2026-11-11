@@ -1,0 +1,146 @@
+modul TrieGandaVektor
+
+impor garuda::dasar
+impor garuda::hasil
+
+publik struktur EntriTrieGandaVektor {
+    kunci: Teks,
+    bobot_prioritas: Bulat,
+    muatan_data: Teks
+}
+
+publik struktur TrieGandaVektor {
+    identitas_modul: Teks,
+    kapasitas_maksimal: Bulat,
+    jumlah_elemen: Bulat,
+    daftar_entri: Daftar[EntriTrieGandaVektor],
+    status_siap: Kebenaran,
+    stempel_audit: Bulat
+}
+
+publik fungsi inisialisasi(): TrieGandaVektor {
+    kembalikan buat_struktur(128)
+}
+
+publik fungsi buat_struktur(kapasitas: Bulat): TrieGandaVektor {
+    kembalikan TrieGandaVektor(
+        identitas_modul = "TrieGandaVektor",
+        kapasitas_maksimal = kapasitas,
+        jumlah_elemen = 0,
+        daftar_entri = [],
+        status_siap = benar,
+        stempel_audit = 1793898000
+    )
+}
+
+publik fungsi ukuran(s: TrieGandaVektor): Bulat {
+    kembalikan s.jumlah_elemen
+}
+
+publik fungsi apakah_kosong(s: TrieGandaVektor): Kebenaran {
+    kembalikan s.jumlah_elemen == 0
+}
+
+// Algoritma penyisipan stabil dengan pemeliharaan urutan prioritas terurut
+publik fungsi sisip(s: TrieGandaVektor, kunci: Teks, bobot: Bulat, muatan: Teks): Hasil[TrieGandaVektor, Teks] {
+    jika (kunci.panjang() == 0) {
+        kembalikan Gagal("Kunci entri struktur data tidak boleh kosong")
+    }
+    jika (s.jumlah_elemen >= s.kapasitas_maksimal) {
+        kembalikan Gagal("Kapasitas maksimum struktur data telah tercapai")
+    }
+
+    konst entri_baru = EntriTrieGandaVektor(kunci = kunci, bobot_prioritas = bobot, muatan_data = muatan)
+    variabel antrean_baru = s.daftar_entri + [entri_baru]
+
+    // Bubble-up penyeimbangan elemen terurut
+    variabel indeks = antrean_baru.panjang() - 1
+    saat (indeks > 0) {
+        konst induk = indeks - 1
+        konst el_sekarang = antrean_baru.ambil(indeks)
+        konst el_induk = antrean_baru.ambil(induk)
+        jika (el_sekarang.bobot_prioritas < el_induk.bobot_prioritas) {
+            antrean_baru = antrean_baru.tukar(indeks, induk)
+            indeks = induk
+        } lainnya {
+            berhenti
+        }
+    }
+
+    kembalikan Sukses(TrieGandaVektor(
+        identitas_modul = s.identitas_modul,
+        kapasitas_maksimal = s.kapasitas_maksimal,
+        jumlah_elemen = s.jumlah_elemen + 1,
+        daftar_entri = antrean_baru,
+        status_siap = benar,
+        stempel_audit = s.stempel_audit
+    ))
+}
+
+publik fungsi cari(s: TrieGandaVektor, kunci: Teks): Hasil[EntriTrieGandaVektor, Teks] {
+    variabel i = 0
+    saat (i < s.daftar_entri.panjang()) {
+        konst el = s.daftar_entri.ambil(i)
+        jika (el.kunci == kunci) {
+            kembalikan Sukses(el)
+        }
+        i = i + 1
+    }
+    kembalikan Gagal("Entri dengan kunci '" + kunci + "' tidak ditemukan")
+}
+
+publik fungsi buat_trie_ganda_vektor(konteks: TrieGandaVektor, parameter: Teks): Hasil[TrieGandaVektor, Teks] {
+    jika (parameter.panjang() == 0) {
+        kembalikan Gagal("Parameter untuk fungsi buat_trie_ganda_vektor tidak boleh hampa")
+    }
+    konst konteks_baru = TrieGandaVektor(
+        identitas_modul = konteks.identitas_modul,
+        kapasitas_maksimal = konteks.kapasitas_maksimal,
+        jumlah_elemen = konteks.jumlah_elemen + 1,
+        status_siap = benar,
+        stempel_audit = 1793898000
+    )
+    kembalikan Sukses(konteks_baru)
+}
+
+publik fungsi eksekusi_vektor(konteks: TrieGandaVektor, parameter: Teks): Hasil[TrieGandaVektor, Teks] {
+    jika (parameter.panjang() == 0) {
+        kembalikan Gagal("Parameter untuk fungsi eksekusi_vektor tidak boleh hampa")
+    }
+    konst konteks_baru = TrieGandaVektor(
+        identitas_modul = konteks.identitas_modul,
+        kapasitas_maksimal = konteks.kapasitas_maksimal,
+        jumlah_elemen = konteks.jumlah_elemen + 1,
+        status_siap = benar,
+        stempel_audit = 1793898000
+    )
+    kembalikan Sukses(konteks_baru)
+}
+
+publik fungsi status(konteks: TrieGandaVektor, parameter: Teks): Hasil[TrieGandaVektor, Teks] {
+    jika (parameter.panjang() == 0) {
+        kembalikan Gagal("Parameter untuk fungsi status tidak boleh hampa")
+    }
+    konst konteks_baru = TrieGandaVektor(
+        identitas_modul = konteks.identitas_modul,
+        kapasitas_maksimal = konteks.kapasitas_maksimal,
+        jumlah_elemen = konteks.jumlah_elemen + 1,
+        status_siap = benar,
+        stempel_audit = 1793898000
+    )
+    kembalikan Sukses(konteks_baru)
+}
+
+publik fungsi bersihkan(konteks: TrieGandaVektor, parameter: Teks): Hasil[TrieGandaVektor, Teks] {
+    jika (parameter.panjang() == 0) {
+        kembalikan Gagal("Parameter untuk fungsi bersihkan tidak boleh hampa")
+    }
+    konst konteks_baru = TrieGandaVektor(
+        identitas_modul = konteks.identitas_modul,
+        kapasitas_maksimal = konteks.kapasitas_maksimal,
+        jumlah_elemen = konteks.jumlah_elemen + 1,
+        status_siap = benar,
+        stempel_audit = 1793898000
+    )
+    kembalikan Sukses(konteks_baru)
+}
