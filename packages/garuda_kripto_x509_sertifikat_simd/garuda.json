@@ -1,0 +1,25 @@
+{
+  "nama": "garuda_kripto_x509_sertifikat_simd",
+  "modul": "X509SertifikatSimd",
+  "versi": "0.1.0",
+  "penulis": "Anggit Prasetyo (@anggitPM17)",
+  "deskripsi": "Varian Simd berkinerja tinggi: Validasi rantai sertifikat publik X.509 dan penguraian ekstensi CRL/OCSP.",
+  "lisensi": "MIT",
+  "kategori": "Keamanan & Kriptografi",
+  "status": "stabil",
+  "titik_masuk": "src/lib.grd",
+  "gpm": {
+    "versi_kompatibel": ">=0.4.0",
+    "arsitektur": "gvm-universal",
+    "registri": "https://gpm.garuda-lang.org/v1"
+  },
+  "dependensi": {
+    "garuda_dasar": "^1.0.0",
+    "garuda_hasil": "^1.0.0"
+  },
+  "naskah": {
+    "bangun": "grdmix bangun --rilis",
+    "uji": "grdmix uji --semua",
+    "format": "grdmix format ."
+  }
+}
