@@ -1,0 +1,13 @@
+[paket]
+nama = "garuda_jaringan_coap_iot_vektor"
+versi = "0.1.0"
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
+edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Varian Vektor berkinerja tinggi: Constrained Application Protocol RFC 7252 untuk perangkat embedded berdaya rendah."
+
+[target.pustaka]
+jalur = "src/lib.grd"
+
+[uji]
+berkas = ["src/test.grd"]
