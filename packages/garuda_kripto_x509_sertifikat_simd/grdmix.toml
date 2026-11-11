@@ -1,0 +1,13 @@
+[paket]
+nama = "garuda_kripto_x509_sertifikat_simd"
+versi = "0.1.0"
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
+edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Varian Simd berkinerja tinggi: Validasi rantai sertifikat publik X.509 dan penguraian ekstensi CRL/OCSP."
+
+[target.pustaka]
+jalur = "src/lib.grd"
+
+[uji]
+berkas = ["src/test.grd"]
