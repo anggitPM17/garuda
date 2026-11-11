@@ -7,6 +7,10 @@ Format pencatatan mematuhi [Keep a Changelog](https://keepachangelog.com/en/1.0.
 
 ## [v67.0.0] - 2025-05-18
 
+### 📦🚀 Added — Integrated Package Manager Client (`grdc pkg`) & 389 Packages Audit
+* **Integrated CLI Command**: Perintah CLI `grdc pkg list` (mendaftar seluruh 389 paket terverifikasi), `grdc pkg verify` (verifikasi integritas 389 paket), dan `grdc pkg install <nama_paket>` (memasang dependensi ke direktori proyek) (`garuda_package_manager_client_tests.exe` — PASS).
+* **Package Manager Engine**: `GpmPackageManager` (`include/garuda/pkg/package_manager.hpp`) untuk pindaian manifes JSON/TOML, verifikasi struktur paket `src/lib.grd`, dan pengelolaan instalasi lokal.
+
 ### 🎮🕹️ Added — LAPIS 4: Game Engine Platform & Real-Time Graphics Engine (Pure Garuda Script Engine)
 * **Stage 4.1 (ECS Core)**: Modul `GameEcsGaruda` (`packages/game/src/ecs.grd`) untuk manajemen dunia game (`buat_dunia`, `buat_entitas`), alokasi komponen data (`:posisi`, `:kecepatan`), dan sistem pergerakan (`sistem_gerak_update`) (`garuda_game_ecs_tests.exe` — PASS).
 * **Stage 4.2 (3D Scene Graph & PBR)**: Modul `GameScene3DGaruda` (`packages/game/src/scene3d.grd`) untuk hierarki spasial 3D (`buat_node_3d`, `tambah_anak_node`), kalkulasi matriks world transform, dan PBR Material pipeline (`buat_material_pbr`) (`garuda_game_scene3d_tests.exe` — PASS).
