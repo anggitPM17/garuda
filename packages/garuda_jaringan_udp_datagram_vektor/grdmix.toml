@@ -1,0 +1,13 @@
+[paket]
+nama = "garuda_jaringan_udp_datagram_vektor"
+versi = "0.1.0"
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
+edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Varian Vektor berkinerja tinggi: Soket datagram UDP non-blocking untuk streaming metrik dan game server."
+
+[target.pustaka]
+jalur = "src/lib.grd"
+
+[uji]
+berkas = ["src/test.grd"]
