@@ -1,0 +1,13 @@
+[paket]
+nama = "garuda_algoritma_kd_pohon_simd"
+versi = "0.1.0"
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
+edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Varian Simd berkinerja tinggi: Pohon pembagi ruang k-dimensi untuk pencarian titik terdekat (nearest neighbor)."
+
+[target.pustaka]
+jalur = "src/lib.grd"
+
+[uji]
+berkas = ["src/test.grd"]
