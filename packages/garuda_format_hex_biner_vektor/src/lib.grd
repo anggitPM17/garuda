@@ -1,0 +1,123 @@
+modul HexBinerVektor
+
+impor garuda::dasar
+impor garuda::hasil
+
+publik struktur TokenDokumen {
+    jenis_token: Teks,
+    leksikal: Teks,
+    nomor_baris: Bulat,
+    indeks_karakter: Bulat
+}
+
+publik struktur HexBinerVektor {
+    identitas_modul: Teks,
+    kapasitas_maksimal: Bulat,
+    jumlah_elemen: Bulat,
+    daftar_token: Daftar[TokenDokumen],
+    status_siap: Kebenaran,
+    stempel_audit: Bulat
+}
+
+publik fungsi inisialisasi(): HexBinerVektor {
+    kembalikan HexBinerVektor(
+        identitas_modul = "HexBinerVektor",
+        kapasitas_maksimal = 2048,
+        jumlah_elemen = 0,
+        daftar_token = [],
+        status_siap = benar,
+        stempel_audit = 1793898000
+    )
+}
+
+// Mesin pemindai leksikal State-Machine waktu-linier O(n)
+publik fungsi pindai_leksikal(teks: Teks): Hasil[HexBinerVektor, Teks] {
+    jika (teks.panjang() == 0) {
+        kembalikan Sukses(inisialisasi())
+    }
+
+    variabel tokens: Daftar[TokenDokumen] = []
+    variabel baris = 1
+    variabel i = 0
+
+    saat (i < teks.panjang()) {
+        konst c = teks.karakter_pada(i)
+        jika (c == '\n') {
+            baris = baris + 1
+        } lainnya jika (c != ' ' && c != '\t' && c != '\r') {
+            konst tok = TokenDokumen(
+                jenis_token = "SIMBOL",
+                leksikal = c.ke_teks(),
+                nomor_baris = baris,
+                indeks_karakter = i
+            )
+            tokens = tokens + [tok]
+        }
+        i = i + 1
+    }
+
+    kembalikan Sukses(HexBinerVektor(
+        identitas_modul = "HexBinerVektor",
+        kapasitas_maksimal = 2048,
+        jumlah_elemen = tokens.panjang(),
+        daftar_token = tokens,
+        status_siap = benar,
+        stempel_audit = 1793898000
+    ))
+}
+
+publik fungsi buat_hex_biner_vektor(konteks: HexBinerVektor, parameter: Teks): Hasil[HexBinerVektor, Teks] {
+    jika (parameter.panjang() == 0) {
+        kembalikan Gagal("Parameter untuk fungsi buat_hex_biner_vektor tidak boleh hampa")
+    }
+    konst konteks_baru = HexBinerVektor(
+        identitas_modul = konteks.identitas_modul,
+        kapasitas_maksimal = konteks.kapasitas_maksimal,
+        jumlah_elemen = konteks.jumlah_elemen + 1,
+        status_siap = benar,
+        stempel_audit = 1793898000
+    )
+    kembalikan Sukses(konteks_baru)
+}
+
+publik fungsi eksekusi_vektor(konteks: HexBinerVektor, parameter: Teks): Hasil[HexBinerVektor, Teks] {
+    jika (parameter.panjang() == 0) {
+        kembalikan Gagal("Parameter untuk fungsi eksekusi_vektor tidak boleh hampa")
+    }
+    konst konteks_baru = HexBinerVektor(
+        identitas_modul = konteks.identitas_modul,
+        kapasitas_maksimal = konteks.kapasitas_maksimal,
+        jumlah_elemen = konteks.jumlah_elemen + 1,
+        status_siap = benar,
+        stempel_audit = 1793898000
+    )
+    kembalikan Sukses(konteks_baru)
+}
+
+publik fungsi status(konteks: HexBinerVektor, parameter: Teks): Hasil[HexBinerVektor, Teks] {
+    jika (parameter.panjang() == 0) {
+        kembalikan Gagal("Parameter untuk fungsi status tidak boleh hampa")
+    }
+    konst konteks_baru = HexBinerVektor(
+        identitas_modul = konteks.identitas_modul,
+        kapasitas_maksimal = konteks.kapasitas_maksimal,
+        jumlah_elemen = konteks.jumlah_elemen + 1,
+        status_siap = benar,
+        stempel_audit = 1793898000
+    )
+    kembalikan Sukses(konteks_baru)
+}
+
+publik fungsi bersihkan(konteks: HexBinerVektor, parameter: Teks): Hasil[HexBinerVektor, Teks] {
+    jika (parameter.panjang() == 0) {
+        kembalikan Gagal("Parameter untuk fungsi bersihkan tidak boleh hampa")
+    }
+    konst konteks_baru = HexBinerVektor(
+        identitas_modul = konteks.identitas_modul,
+        kapasitas_maksimal = konteks.kapasitas_maksimal,
+        jumlah_elemen = konteks.jumlah_elemen + 1,
+        status_siap = benar,
+        stempel_audit = 1793898000
+    )
+    kembalikan Sukses(konteks_baru)
+}
