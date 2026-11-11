@@ -1,0 +1,13 @@
+[paket]
+nama = "garuda_media_bmp_gambar_vektor"
+versi = "0.1.0"
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
+edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Varian Vektor berkinerja tinggi: Pengurai dan pembaca berkas citra bitmap BMP 24-bit dan 32-bit RGBA."
+
+[target.pustaka]
+jalur = "src/lib.grd"
+
+[uji]
+berkas = ["src/test.grd"]
