@@ -1,0 +1,13 @@
+[paket]
+nama = "garuda_jaringan_mqtt_klien_simd"
+versi = "0.1.0"
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
+edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Varian Simd berkinerja tinggi: Protokol pesan IoT MQTT 3.1.1 dan 5.0 dengan QoS level 0, 1, dan 2."
+
+[target.pustaka]
+jalur = "src/lib.grd"
+
+[uji]
+berkas = ["src/test.grd"]
