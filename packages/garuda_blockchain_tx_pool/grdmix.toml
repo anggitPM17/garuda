@@ -1,0 +1,13 @@
+[paket]
+nama = "garuda_blockchain_tx_pool"
+versi = "0.1.0"
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
+edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Transaction Memory Pool (Mempool) terurut biaya gas dengan verifikasi nonce urut, deteksi double-spending, dan pengusiran transaksi usang."
+
+[target.pustaka]
+jalur = "src/lib.grd"
+
+[uji]
+berkas = ["src/test.grd"]
