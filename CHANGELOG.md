@@ -7,6 +7,10 @@ Format pencatatan mematuhi [Keep a Changelog](https://keepachangelog.com/en/1.0.
 
 ## [v67.0.0] - 2025-05-18
 
+### 🛡️🔒 Added — Lapis 2 Tahap 2: Script Sandboxing & Resource Isolation Engine (`GvmSandbox`)
+* **GvmSandbox Engine**: `GvmSandbox` & `SandboxPolicy` (`include/garuda/beam/sys/sandbox.hpp`) menyediakan isolasi keamanan per-thread/per-actor untuk membatasi hak akses Filesystem (Read/Write), Jaringan (Socket Connection), Subprocess Execution, dan Memori Maksimal (`garuda_sandbox_tests.exe` — PASS).
+* **Path Whitelisting**: Dukungan daftar kustom `allowed_paths` untuk mengizinkan akses I/O khusus ke folder/file tertentu dalam mode terisolasi.
+
 ### 📦⚙️ Added — Lapis 2 Tahap 1: Standalone AOT Binary Compiler & Packer (`grdc --standalone`)
 * **Standalone AOT Packer**: `StandalonePacker` (`include/garuda/compiler/standalone_packer.hpp`) membundel biner stub runner + bytecode `.grdbc` + 28-byte footer magic (`GARUDA_STUB_V1_FOOTER`) menjadi berkas biner `.exe` mandiri (`garuda_standalone_packer_tests.exe` — PASS).
 * **CLI Compiler Extension**: Opsi `grdc compile <file.grd> --standalone <output.exe>` untuk mengkompilasi file `.grd` langsung menjadi aplikasi biner mandiri tanpa dependensi runtime eksternal.
