@@ -1,0 +1,25 @@
+{
+  "nama": "garuda_hpc_mpi_kluster_kilat",
+  "modul": "MpiKlusterKilat",
+  "versi": "0.1.0",
+  "penulis": "Anggit Prasetyo (@anggitPM17)",
+  "deskripsi": "Varian Kilat berkinerja tinggi: Protokol Message Passing Interface (MPI) nir-blokir untuk sinkronisasi antarsimpul superkomputer.",
+  "lisensi": "MIT",
+  "kategori": "Superkomputer & HPC Paralel",
+  "status": "stabil",
+  "titik_masuk": "src/lib.grd",
+  "gpm": {
+    "versi_kompatibel": ">=0.4.0",
+    "arsitektur": "gvm-universal",
+    "registri": "https://gpm.garuda-lang.org/v1"
+  },
+  "dependensi": {
+    "garuda_dasar": "^1.0.0",
+    "garuda_hasil": "^1.0.0"
+  },
+  "naskah": {
+    "bangun": "grdmix bangun --rilis",
+    "uji": "grdmix uji --semua",
+    "format": "grdmix format ."
+  }
+}
