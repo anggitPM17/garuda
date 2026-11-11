@@ -1,0 +1,13 @@
+[paket]
+nama = "garuda_webmodern_api_router_openapi"
+versi = "0.1.0"
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
+edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Router API RESTful dan JSON-RPC bertipe aman dengan auto-generator spesifikasi OpenAPI 3.1."
+
+[target.pustaka]
+jalur = "src/lib.grd"
+
+[uji]
+berkas = ["src/test.grd"]
