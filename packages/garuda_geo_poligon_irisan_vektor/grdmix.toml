@@ -1,0 +1,13 @@
+[paket]
+nama = "garuda_geo_poligon_irisan_vektor"
+versi = "0.1.0"
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
+edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Varian Vektor berkinerja tinggi: Algoritma Sutherland-Hodgman untuk pemotongan dan uji titik dalam poligon (PIP)."
+
+[target.pustaka]
+jalur = "src/lib.grd"
+
+[uji]
+berkas = ["src/test.grd"]
