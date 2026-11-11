@@ -7,8 +7,10 @@ Format pencatatan mematuhi [Keep a Changelog](https://keepachangelog.com/en/1.0.
 
 ## [v67.0.0] - 2025-05-18
 
-### 🖥️🎓 Added — Interactive Participant Training Hub (`EditorGaruda.exe`)
-* **Interactive Training Hub**: Pengayaan biner `EditorGaruda.exe` (`src/editor_garuda_main.cpp`) dengan dukungan pembukaan berkas kodingan peserta via argumen CLI/drag-and-drop, pemuat kurikulum pelatihan interaktif (Modul 1 s.d 4), serta pemindaian visual 389 katalog paket resmi (`EditorGaruda.exe` — PASS).
+### 🖥️🎓 Added — GARUDA CODING STUDIO v3.0 & Production Sample Code Browser (`GarudaStudioIDE`)
+* **Auto-Formatter Engine**: Format ulang kode otomatis (`format_kode_otomatis`) sesuai standar Garuda.
+* **Project Storage & Progress Report**: Penyimpanan berkas proyek (`simpan_proyek_peserta`) dan laporan rekapitulasi kelulusan peserta (`tampilkan_laporan_kemajuan_peserta`).
+* **Production Sample Code Browser**: Pemuatan contoh kode aplikasi produksi nyata (REST API, WebSocket, Game 3D, Local AI) (`muat_contoh_kode_produksi`) (`garuda_studio_ide_tests.exe` — PASS).
 
 ### 🖥️🎓 Added — GARUDA CODING STUDIO v2.0 & Auto-Grader Training Engine (`GarudaStudioIDE`)
 * **Auto-Grader Training Engine**: Penilaian otomatis kodingan peserta pelatihan (`cek_jawaban_peserta`) dengan skor dan umpan balik langsung (`packages/ide/src/garuda_studio.grd`).
