@@ -87,3 +87,16 @@ rampung
 fungsi hitung_modul_pelatihan(Studio) ->
     4
 rampung
+
+fungsi utama() ->
+    Studio = inisialisasi_studio("Garuda Coding Studio v2.0 - IDE Mandiri", 1280, 720)
+    cetak("=======================================================")
+    cetak("🦅 GARUDA CODING STUDIO v2.0 READY!")
+    cetak("=======================================================")
+    cetak(" - File Explorer : Aktif")
+    cetak(" - Code Editor   : Syntax Highlighting & Auto-Indent Aktif")
+    cetak(" - Auto-Grader   : Training Engine Ready")
+    cetak(" - One-Click Exe : Standalone Packer Ready")
+    cetak("=======================================================")
+    200
+rampung
