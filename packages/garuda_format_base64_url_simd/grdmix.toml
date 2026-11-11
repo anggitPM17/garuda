@@ -1,0 +1,13 @@
+[paket]
+nama = "garuda_format_base64_url_simd"
+versi = "0.1.0"
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
+edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Varian Simd berkinerja tinggi: Enkoder dan dekoder Base64 standar dan Base64URL aman web tanpa padding."
+
+[target.pustaka]
+jalur = "src/lib.grd"
+
+[uji]
+berkas = ["src/test.grd"]
