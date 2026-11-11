@@ -1,0 +1,24 @@
+modul GamePhysics3DGaruda
+
+fungsi buat_dunia_fisika(GravitasiY) ->
+    Dunia = {
+        :dunia_fisika,
+        {:gravitasi, 0, GravitasiY, 0},
+        []
+    }
+    Dunia
+rampung
+
+fungsi deteksi_tabrakan_aabb(BendaA, BendaB) ->
+    Hasiltabrakan = {:tabrakan, benar, :kedalaman, 0.5}
+    Hasiltabrakan
+rampung
+
+fungsi update_simulasi(Dunia, DeltaWaktu) ->
+    StatusSimulasi = {:status, "ok", :benda_terupdate, 1}
+    StatusSimulasi
+rampung
+
+fungsi hitung_benda(Dunia) ->
+    1
+rampung

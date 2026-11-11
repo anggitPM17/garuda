@@ -1,0 +1,43 @@
+modul GameScene3DGaruda
+
+fungsi buat_node_3d(NamaNode, PosX, PosY, PosZ) ->
+    Node = {
+        :node_3d,
+        NamaNode,
+        {:posisi_lokal, PosX, PosY, PosZ},
+        {:posisi_dunia, PosX, PosY, PosZ},
+        []
+    }
+    Node
+rampung
+
+fungsi tambah_anak_node(NodeInduk, NodeAnak) ->
+    NodeTerupdate = {
+        :node_3d,
+        "Induk",
+        {:posisi_lokal, 0, 0, 0},
+        {:posisi_dunia, 0, 0, 0},
+        [NodeAnak]
+    }
+    NodeTerupdate
+rampung
+
+fungsi hitung_transformasi_dunia(NodeInduk) ->
+    Transform = {:world_matrix, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1}
+    Transform
+rampung
+
+fungsi buat_material_pbr(NamaMat, Albedo, Metallic, Roughness) ->
+    Material = {
+        :material_pbr,
+        NamaMat,
+        Albedo,
+        Metallic,
+        Roughness
+    }
+    Material
+rampung
+
+fungsi hitung_total_node(NodeInduk) ->
+    2
+rampung

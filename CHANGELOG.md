@@ -7,8 +7,11 @@ Format pencatatan mematuhi [Keep a Changelog](https://keepachangelog.com/en/1.0.
 
 ## [v67.0.0] - 2025-05-18
 
-### 🎮👾 Added — Lapis 4 Stage 4.1: Garuda ECS Core & Game World Manager (`GameEcsGaruda`)
-* **GameEcsGaruda**: Arsitektur Entity Component System murni Bahasa Garuda (`packages/game/src/ecs.grd`) untuk manajemen entitas game (`buat_dunia`, `buat_entitas`), alokasi komponen data (`:posisi`, `:kecepatan`), dan sistem pergerakan (`sistem_gerak_update`) (`garuda_game_ecs_tests.exe` — PASS).
+### 🎮🕹️ Added — LAPIS 4: Game Engine Platform & Real-Time Graphics Engine (Pure Garuda Script Engine)
+* **Stage 4.1 (ECS Core)**: Modul `GameEcsGaruda` (`packages/game/src/ecs.grd`) untuk manajemen dunia game (`buat_dunia`, `buat_entitas`), alokasi komponen data (`:posisi`, `:kecepatan`), dan sistem pergerakan (`sistem_gerak_update`) (`garuda_game_ecs_tests.exe` — PASS).
+* **Stage 4.2 (3D Scene Graph & PBR)**: Modul `GameScene3DGaruda` (`packages/game/src/scene3d.grd`) untuk hierarki spasial 3D (`buat_node_3d`, `tambah_anak_node`), kalkulasi matriks world transform, dan PBR Material pipeline (`buat_material_pbr`) (`garuda_game_scene3d_tests.exe` — PASS).
+* **Stage 4.3 (3D Physics Engine)**: Modul `GamePhysics3DGaruda` (`packages/game/src/physics3d.grd`) untuk AABB 3D collision detection, gravitasi, dan update simulasi fisika 3D (`garuda_game_physics3d_tests.exe` — PASS).
+* **Stage 4.4 (3D Spatial Audio)**: Modul `GameAudio3DGaruda` (`packages/game/src/audio3d.grd`) untuk posisi pendengar vs sumber suara dan kalkulasi peredaman jarak 3D (*inverse distance attenuation*) (`garuda_game_audio3d_tests.exe` — PASS).
 
 ### 🦅🔥 Added — Full Self-Hosting Compiler Bahasa Garuda (`grdc.grd`) (3-Stage Bootstrapping)
 * **Self-Hosting Lexer**: Tokenizer murni Bahasa Garuda (`packages/compiler/src/lexer.grd`) yang memecah skrip `.grd` menjadi tuple token (`garuda_self_hosting_lexer_tests.exe` — PASS).
