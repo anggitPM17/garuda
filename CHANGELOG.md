@@ -7,6 +7,10 @@ Format pencatatan mematuhi [Keep a Changelog](https://keepachangelog.com/en/1.0.
 
 ## [v67.0.0] - 2025-05-18
 
+### 📱🤖 Added — Lapis 3 Tahap 3.1: Android NDK Cross-Compiler & APK Asset Bundler (`GvmAndroidPacker`)
+* **GvmAndroidPacker**: `GvmAndroidPacker` & `AndroidPackerConfig` (`include/garuda/mobile/android_packer.hpp`) membundel AOT Bytecode Garuda + header metadata mobile (`app_id`, `target_abi`, `version_code`, `version_name`) + FNV-1a checksum menjadi berkas aset APK `assets/app.grdbc` (`garuda_android_packer_tests.exe` — PASS).
+* **Integrasi NDK Runtime**: Ekstraksi dan verifikasi integritas bytecode di memori NDK Android saat inisialisasi `JNI_OnLoad`.
+
 ### 🔐🔑 Added — Lapis 2 Tahap 4: Post-Quantum Cryptography Hybrid Layer (ML-KEM-768 Kyber)
 * **PqcHybridEngine**: Implementasi NIST FIPS 203 ML-KEM-768 Kyber Key Encapsulation Mechanism (`include/garuda/beam/crypto/pqc_hybrid.hpp`) untuk pertukaran kunci kriptografi resisten-kuantum (`garuda_pqc_hybrid_tests.exe` — PASS).
 * **Hybrid Secret Derivation**: Penggabungan kunci klasik ECDH P-256 dan ML-KEM-768 Kyber menjadi kunci master hybrid 32-byte.
