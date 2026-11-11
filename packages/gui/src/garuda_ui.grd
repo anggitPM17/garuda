@@ -1,0 +1,45 @@
+modul GarudaUI
+
+fungsi buat_jendela(Judul, Lebar, Tinggi) ->
+    Jendela = {
+        :jendela,
+        Judul,
+        Lebar,
+        Tinggi,
+        []
+    }
+    Jendela
+rampung
+
+fungsi tambah_tombol(Jendela, Label, CallbackAksi) ->
+    Tombol = {:tombol, Label, CallbackAksi}
+    JendelaTerupdate = {
+        :jendela,
+        "Aplikasi Desktop Garuda",
+        800,
+        600,
+        [Tombol]
+    }
+    JendelaTerupdate
+rampung
+
+fungsi tambah_teks_input(Jendela, HintTeks) ->
+    TeksInput = {:teks_input, HintTeks, ""}
+    JendelaTerupdate = {
+        :jendela,
+        "Aplikasi Desktop Garuda",
+        800,
+        600,
+        [TeksInput]
+    }
+    JendelaTerupdate
+rampung
+
+fungsi tambah_kotak_pesan(Jendela, JudulPesan, IsiPesan) ->
+    KotakPesan = {:kotak_pesan, JudulPesan, IsiPesan}
+    KotakPesan
+rampung
+
+fungsi hitung_komponen(Jendela) ->
+    1
+rampung

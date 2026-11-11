@@ -7,6 +7,12 @@ Format pencatatan mematuhi [Keep a Changelog](https://keepachangelog.com/en/1.0.
 
 ## [v67.0.0] - 2025-05-18
 
+### 🖥️🎨 Added — Desktop Native GUI Framework (`GarudaUI`)
+* **GarudaUI Framework**: Pustaka antarmuka pengguna desktop deklaratif murni Bahasa Garuda (`packages/gui/src/garuda_ui.grd`) untuk membangun aplikasi jendela desktop (`buat_jendela`, `tambah_tombol`, `tambah_teks_input`, `tambah_kotak_pesan`) tanpa konsumsi memori besar Electron (`garuda_ui_framework_tests.exe` — PASS).
+
+### ⚡🔄 Added — Zero-Downtime Hot Code Reloading & Live Beam Code Swap (`GvmLiveHotReloader`)
+* **GvmLiveHotReloader**: Mesin pembaruan kode *live* GVM (`include/garuda/beam/gvm/hot_reload_live.hpp`) untuk memperbarui offset instruksi fungsi Aktor secara otomatis tanpa mematikan proses server/game (`garuda_hot_reload_live_tests.exe` — PASS).
+
 ### 🎨💻 Added — Official VS Code Extension & Language Server Protocol (LSP) Engine (`garuda-vscode-lsp`)
 * **TextMate Syntax Highlighting**: Grammar resmi `vscode-extension/syntaxes/garuda.tmLanguage.json` dengan pewarnaan kata kunci Indonesia (`modul`, `fungsi`, `tampa`, `kirim`, `cetak`, `yen`, `lain`, `coba`, `tangkap`, `rampung`), atom (`:ok`), string, angka, dan komentar `#`.
 * **Language Configuration**: Auto-closing brackets `()`, `[]`, `{}` dan aturan auto-indentasi otomatis (`vscode-extension/language-configuration.json`).
