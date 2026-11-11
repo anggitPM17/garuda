@@ -1,0 +1,13 @@
+[paket]
+nama = "garuda_transfer_mmap_biner_stream_kilat"
+versi = "0.1.0"
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
+edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Varian Kilat berkinerja tinggi: Buku besar biner throughput tinggi terpetakan memori (Memory-Mapped File) kontinu."
+
+[target.pustaka]
+jalur = "src/lib.grd"
+
+[uji]
+berkas = ["src/test.grd"]
