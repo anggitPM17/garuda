@@ -1,0 +1,13 @@
+[paket]
+nama = "garuda_kripto_pkcs7_bantalan_vektor"
+versi = "0.1.0"
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
+edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Varian Vektor berkinerja tinggi: Pemberian dan pembersihan padding blok data kriptografi simetris."
+
+[target.pustaka]
+jalur = "src/lib.grd"
+
+[uji]
+berkas = ["src/test.grd"]
