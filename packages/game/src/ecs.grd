@@ -1,0 +1,25 @@
+modul GameEcsGaruda
+
+fungsi buat_dunia() ->
+    Dunia = {
+        :dunia,
+        1,
+        [
+            {:entitas, 1, {:posisi, 0, 0, 0}, {:kecepatan, 1, 2, 0}}
+        ]
+    }
+    Dunia
+rampung
+
+fungsi buat_entitas(Dunia) ->
+    2
+rampung
+
+fungsi sistem_gerak_update(Dunia, DeltaWaktu) ->
+    HasilUpdate = {:status, "ok", :entitas_terproses, 1}
+    HasilUpdate
+rampung
+
+fungsi hitung_entitas(Dunia) ->
+    1
+rampung

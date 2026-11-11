@@ -7,6 +7,9 @@ Format pencatatan mematuhi [Keep a Changelog](https://keepachangelog.com/en/1.0.
 
 ## [v67.0.0] - 2025-05-18
 
+### 🎮👾 Added — Lapis 4 Stage 4.1: Garuda ECS Core & Game World Manager (`GameEcsGaruda`)
+* **GameEcsGaruda**: Arsitektur Entity Component System murni Bahasa Garuda (`packages/game/src/ecs.grd`) untuk manajemen entitas game (`buat_dunia`, `buat_entitas`), alokasi komponen data (`:posisi`, `:kecepatan`), dan sistem pergerakan (`sistem_gerak_update`) (`garuda_game_ecs_tests.exe` — PASS).
+
 ### 🦅🔥 Added — Full Self-Hosting Compiler Bahasa Garuda (`grdc.grd`) (3-Stage Bootstrapping)
 * **Self-Hosting Lexer**: Tokenizer murni Bahasa Garuda (`packages/compiler/src/lexer.grd`) yang memecah skrip `.grd` menjadi tuple token (`garuda_self_hosting_lexer_tests.exe` — PASS).
 * **Self-Hosting Parser**: Recursive Descent Parser murni Bahasa Garuda (`packages/compiler/src/parser.grd`) yang membangun Pohon Sintaksis Abstrak (AST) (`garuda_self_hosting_parser_tests.exe` — PASS).
