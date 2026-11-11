@@ -1,0 +1,13 @@
+[paket]
+nama = "garuda_game_ui_hud"
+versi = "0.1.0"
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
+edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Komponen UI Dalam Game (Heads-Up Display): Bar Darah/HP, Bar Mana, Papan Skor/Leaderboard, Inventaris Item Grid, dan Kotak Dialog NPC."
+
+[target.pustaka]
+jalur = "src/lib.grd"
+
+[uji]
+berkas = ["src/test.grd"]
