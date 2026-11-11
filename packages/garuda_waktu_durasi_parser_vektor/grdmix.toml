@@ -1,0 +1,13 @@
+[paket]
+nama = "garuda_waktu_durasi_parser_vektor"
+versi = "0.1.0"
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
+edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Varian Vektor berkinerja tinggi: Parser teks durasi manusia seperti '2j 30m 15d' menjadi nilai milidetik."
+
+[target.pustaka]
+jalur = "src/lib.grd"
+
+[uji]
+berkas = ["src/test.grd"]
