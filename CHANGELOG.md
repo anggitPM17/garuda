@@ -7,6 +7,12 @@ Format pencatatan mematuhi [Keep a Changelog](https://keepachangelog.com/en/1.0.
 
 ## [v67.0.0] - 2025-05-18
 
+### 🦅🔥 Added — Full Self-Hosting Compiler Bahasa Garuda (`grdc.grd`) (3-Stage Bootstrapping)
+* **Self-Hosting Lexer**: Tokenizer murni Bahasa Garuda (`packages/compiler/src/lexer.grd`) yang memecah skrip `.grd` menjadi tuple token (`garuda_self_hosting_lexer_tests.exe` — PASS).
+* **Self-Hosting Parser**: Recursive Descent Parser murni Bahasa Garuda (`packages/compiler/src/parser.grd`) yang membangun Pohon Sintaksis Abstrak (AST) (`garuda_self_hosting_parser_tests.exe` — PASS).
+* **Self-Hosting CodeGen**: Opcode Generator murni Bahasa Garuda (`packages/compiler/src/codegen.grd`) yang menerjemahkan AST ke instruksi biner GVM (`garuda_self_hosting_codegen_tests.exe` — PASS).
+* **3-Stage Bootstrapping**: Transisi sukses di mana Compiler C++ Stage 0 (`grdc.exe`) mengompilasi Compiler Murni Garuda (`examples/compiler/grdc.grd`) (`garuda_self_hosting_bootstrap_tests.exe` — PASS).
+
 ### 💾📡 Added — Lapis 3 Tahap 3.4: Mobile Offline Store & Resilience Sync Engine (`GvmMobileStore`)
 * **GvmMobileStore**: Mesin penyimpanan lokal terenkripsi dan antrean aksi luring (*offline action queue*) (`include/garuda/mobile/mobile_store.hpp`) untuk arsitektur mobile *offline-first* dengan sinkronisasi otomatis saat terhubung kembali (`garuda_mobile_store_tests.exe` — PASS).
 

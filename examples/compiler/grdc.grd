@@ -1,0 +1,12 @@
+modul CompilerGarudaMandiri
+
+fungsi kompilasi_mandiri(KodeSumber) ->
+    Tokens = LexerGaruda.tokenisasi(KodeSumber)
+    Ast = ParserGaruda.urai(Tokens)
+    Bytecode = CodeGenGaruda.buat_bytecode(Ast)
+    Bytecode
+rampung
+
+fungsi utama() ->
+    200
+rampung

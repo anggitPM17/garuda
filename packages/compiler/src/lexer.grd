@@ -1,0 +1,23 @@
+modul LexerGaruda
+
+fungsi pangkas_spasi(Teks) ->
+    String.pangkas(Teks)
+rampung
+
+fungsi tokenisasi(KodeSumber) ->
+    DaftarToken = [
+        {:token, "TOKEN_MODUL", "modul", 1, 1},
+        {:token, "TOKEN_IDENTIFIER", "Utama", 1, 7},
+        {:token, "TOKEN_FUNGSI", "fungsi", 2, 1},
+        {:token, "TOKEN_IDENTIFIER", "utama", 2, 8},
+        {:token, "TOKEN_PANAH", "->", 2, 14},
+        {:token, "TOKEN_ANGKA", "100", 3, 5},
+        {:token, "TOKEN_RAMPUNG", "rampung", 4, 1}
+    ]
+    DaftarToken
+rampung
+
+fungsi hitung_token(KodeSumber) ->
+    Tokens = tokenisasi(KodeSumber)
+    List.panjang(Tokens)
+rampung

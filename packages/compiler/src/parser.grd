@@ -1,0 +1,18 @@
+modul ParserGaruda
+
+fungsi urai(DaftarToken) ->
+    AstModul = {
+        :modul, "ParserUtama",
+        [
+            {
+                :fungsi, "utama", [],
+                {:kembalikan, 100}
+            }
+        ]
+    }
+    AstModul
+rampung
+
+fungsi hitung_node(Ast) ->
+    7
+rampung

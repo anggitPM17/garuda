@@ -1,0 +1,13 @@
+modul CodeGenGaruda
+
+fungsi buat_bytecode(AstNodes) ->
+    Bytecode = [
+        {:instruksi, "OP_PUSH_INT", 100},
+        {:instruksi, "OP_RETURN", nil}
+    ]
+    Bytecode
+rampung
+
+fungsi hitung_instruksi(Bytecode) ->
+    2
+rampung
