@@ -1,0 +1,13 @@
+[paket]
+nama = "garuda_game_simpan_status"
+versi = "0.1.0"
+penulis = ["Anggit Prasetyo <anggit@garuda-lang.org>"]
+edisi = "2026"
+lisensi = "MIT"
+deskripsi = "Serialisasi status Save Game, Auto-save Checkpoint berbasis waktu, dan enkripsi profil pemain terproteksi anti-cheat checksum."
+
+[target.pustaka]
+jalur = "src/lib.grd"
+
+[uji]
+berkas = ["src/test.grd"]
