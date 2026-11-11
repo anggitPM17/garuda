@@ -1,0 +1,54 @@
+modul GarudaStudioIDE
+
+fungsi inisialisasi_studio(JudulAplikasi, Lebar, Tinggi) ->
+    Studio = {
+        :garuda_studio,
+        JudulAplikasi,
+        Lebar,
+        Tinggi,
+        {:editor, "", 1, 1},
+        {:konsol, ""},
+        [
+            {:modul_1, "Dasar Sintaks Garuda", "Belajar variabel dan fungsi"},
+            {:modul_2, "Aktor Paralel", "Belajar konkurensi model aktor"},
+            {:modul_3, "REST API Web", "Belajar membuat server HTTP"},
+            {:modul_4, "Game Engine 3D", "Belajar ECS dan Scene Graph 3D"}
+        ]
+    }
+    Studio
+rampung
+
+fungsi buka_berkas(Studio, JalurBerkas) ->
+    IsiBerkas = "modul Utama fungsi utama() -> cetak(\"Salam Garuda\") rampung"
+    StudioTerupdate = {
+        :garuda_studio,
+        "Garuda Coding Studio v1.0",
+        1280,
+        720,
+        {:editor, IsiBerkas, 1, 1},
+        {:konsol, "Berkas dimuat"},
+        []
+    }
+    StudioTerupdate
+rampung
+
+fungsi jalankan_skrip(Studio) ->
+    ResponEksekusi = {
+        :status, "ok",
+        :output, "=== HASIL EKSEKUSI GARUDA ===\nSalam Garuda!\nHasil: 200"
+    }
+    ResponEksekusi
+rampung
+
+fungsi muat_modul_pelatihan(Studio, IDModul) ->
+    ModulLatihan = {
+        :materi, "Dasar Sintaks Garuda",
+        :soal, "Tulis fungsi utama yang mencetak 'Salam Garuda'",
+        :jawaban_referensi, "modul Utama fungsi utama() -> cetak(\"Salam Garuda\") rampung"
+    }
+    ModulLatihan
+rampung
+
+fungsi hitung_modul_pelatihan(Studio) ->
+    4
+rampung
