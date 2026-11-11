@@ -7,6 +7,12 @@ Format pencatatan mematuhi [Keep a Changelog](https://keepachangelog.com/en/1.0.
 
 ## [v67.0.0] - 2025-05-18
 
+### 💾📡 Added — Lapis 3 Tahap 3.4: Mobile Offline Store & Resilience Sync Engine (`GvmMobileStore`)
+* **GvmMobileStore**: Mesin penyimpanan lokal terenkripsi dan antrean aksi luring (*offline action queue*) (`include/garuda/mobile/mobile_store.hpp`) untuk arsitektur mobile *offline-first* dengan sinkronisasi otomatis saat terhubung kembali (`garuda_mobile_store_tests.exe` — PASS).
+
+### 🌉📱 Added — Lapis 3 Tahap 3.3: Native Bridge & Host UI Binding Interface (`GvmNativeBridge`)
+* **GvmNativeBridge**: Jembatan pesan dua arah (`include/garuda/mobile/native_bridge.hpp`) antara Runtime Aktor GVM Garuda (C++) dengan UI Host Native (Kotlin Jetpack Compose / Swift SwiftUI) tanpa perlu membuat UI engine dari nol (`garuda_native_bridge_tests.exe` — PASS).
+
 ### 🔄🔋 Added — Lapis 3 Tahap 3.2: Mobile Lifecycle & Battery State Machine (`GvmMobileLifecycleManager`)
 * **GvmMobileLifecycleManager**: State machine penanganan siklus hidup OS Android/iOS (`include/garuda/mobile/mobile_lifecycle.hpp`) dengan transisi status (`CREATED`, `STARTED`, `RESUMED`, `PAUSED`, `STOPPED`, `DESTROYED`) (`garuda_mobile_lifecycle_tests.exe` — PASS).
 * **Power Saving & Memory Saver Hooks**: Otomatisasi pengaktifan *Power-Saving Mode* pada Aktor GVM saat `ON_PAUSE`/`ON_STOP` dan callback pelepasan memori pada event `ON_TRIM_MEMORY`.
