@@ -57,5 +57,10 @@ int main(int argc, char* argv[]) {
                   << to_string(*init_res) << ")\n";
     }
 
+    std::cout << "\n=======================================================\n";
+    std::cout << " Tekan [ENTER] untuk keluar dari Garuda Coding Studio...\n";
+    std::cout << "=======================================================\n";
+    std::cin.get();
+
     return 0;
 }
