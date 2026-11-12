@@ -348,6 +348,20 @@ void RunGarudaScript(HWND hwnd) {
     std::cout.rdbuf(old_cout);
     std::string captured_output = buffer.str();
 
+    // Clean up UTF-8 emoji prefix bytes from GVM runtime logs for crystal clear display
+    size_t pos = 0;
+    while ((pos = captured_output.find("\xF0\x9F\x90\xA3")) != std::string::npos) {
+        captured_output.replace(pos, 4, "");
+    }
+    pos = 0;
+    while ((pos = captured_output.find("\xF0\x9F\x92\xAC")) != std::string::npos) {
+        captured_output.replace(pos, 4, "");
+    }
+    pos = 0;
+    while ((pos = captured_output.find("??")) != std::string::npos) {
+        captured_output.replace(pos, 2, "");
+    }
+
     auto end_time = std::chrono::high_resolution_clock::now();
     auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
 
@@ -781,7 +795,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             AppendMenuW(hMenuRun, MF_STRING, ID_BTN_LINT, L"[LINT] Cek Linter Kode");
             AppendMenuW(hMenuRun, MF_STRING, ID_BTN_GRADE, L"[GRADE] Cek Nilai Auto-Grader");
             AppendMenuW(hMenuRun, MF_STRING, ID_BTN_EXPORT, L"[EXE] Ekspor ke .exe \tCtrl+Shift+E");
-            AppendMenuW(hMenuRun, MF_STRING, ID_BTN_AST_STATS, L"[AST] Inspek AST & Statistik Kode");
 
             AppendMenuW(hMenuBar, MF_POPUP, (UINT_PTR)hMenuFile, L"File");
             AppendMenuW(hMenuBar, MF_POPUP, (UINT_PTR)hMenuSamples, L"Contoh Kodingan");
@@ -790,25 +803,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             SetMenu(hwnd, hMenuBar);
 
-            // Crisp & High-Definition Action Buttons
+            // Crisp & High-Definition Action Buttons with Spacious Padding
             CreateWindowW(L"BUTTON", L"[>] Jalankan (Ctrl+R)", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                          10, 10, 135, 32, hwnd, (HMENU)ID_BTN_RUN, NULL, NULL);
+                          10, 10, 140, 32, hwnd, (HMENU)ID_BTN_RUN, NULL, NULL);
             CreateWindowW(L"BUTTON", L"[AI] AI Fix", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                          150, 10, 85, 32, hwnd, (HMENU)ID_BTN_AIFIX, NULL, NULL);
+                          155, 10, 85, 32, hwnd, (HMENU)ID_BTN_AIFIX, NULL, NULL);
             CreateWindowW(L"BUTTON", L"[PKGS] Paket (1441+)", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                          240, 10, 125, 32, hwnd, (HMENU)ID_BTN_PACKAGES, NULL, NULL);
+                          245, 10, 130, 32, hwnd, (HMENU)ID_BTN_PACKAGES, NULL, NULL);
             CreateWindowW(L"BUTTON", L"[FMT] Format", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                          370, 10, 85, 32, hwnd, (HMENU)ID_BTN_FMT, NULL, NULL);
+                          380, 10, 95, 32, hwnd, (HMENU)ID_BTN_FMT, NULL, NULL);
             CreateWindowW(L"BUTTON", L"[LINT] Linter", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                          460, 10, 85, 32, hwnd, (HMENU)ID_BTN_LINT, NULL, NULL);
+                          480, 10, 90, 32, hwnd, (HMENU)ID_BTN_LINT, NULL, NULL);
             CreateWindowW(L"BUTTON", L"[AST] Statistik", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                          550, 10, 95, 32, hwnd, (HMENU)ID_BTN_AST_STATS, NULL, NULL);
+                          575, 10, 100, 32, hwnd, (HMENU)ID_BTN_AST_STATS, NULL, NULL);
             CreateWindowW(L"BUTTON", L"[GRADE] Auto-Grader", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                          650, 10, 115, 32, hwnd, (HMENU)ID_BTN_GRADE, NULL, NULL);
+                          680, 10, 125, 32, hwnd, (HMENU)ID_BTN_GRADE, NULL, NULL);
             CreateWindowW(L"BUTTON", L"[EXE] Ekspor .exe", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                          770, 10, 105, 32, hwnd, (HMENU)ID_BTN_EXPORT, NULL, NULL);
+                          810, 10, 110, 32, hwnd, (HMENU)ID_BTN_EXPORT, NULL, NULL);
             CreateWindowW(L"BUTTON", L"[CLR] Bersihkan", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                          880, 10, 90, 32, hwnd, (HMENU)ID_BTN_CLEAR, NULL, NULL);
+                          925, 10, 95, 32, hwnd, (HMENU)ID_BTN_CLEAR, NULL, NULL);
 
             // Labels
             g_hwndLabelCode = CreateWindowW(L"STATIC", L"Area Pengedit Kode Bahasa Garuda (Consolas Monospace + Syntax Highlighting):", WS_VISIBLE | WS_CHILD,
@@ -828,7 +841,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Code Editor Box
             g_hwndEditCode = CreateWindowExW(WS_EX_CLIENTEDGE, L"RICHEDIT20A", g_sample_hello_w,
                                             WS_VISIBLE | WS_CHILD | ES_MULTILINE | WS_VSCROLL | WS_HSCROLL | ES_AUTOVSCROLL | ES_AUTOHSCROLL,
-                                            60, 70, 910, 320, hwnd, (HMENU)ID_EDIT_CODE, NULL, NULL);
+                                            60, 70, 950, 320, hwnd, (HMENU)ID_EDIT_CODE, NULL, NULL);
             SendMessageA(g_hwndEditCode, WM_SETFONT, (WPARAM)g_hFontCode, TRUE);
 
             SendMessageA(g_hwndEditCode, EM_SETEVENTMASK, 0, ENM_CHANGE | ENM_SELCHANGE | ENM_SCROLL);
@@ -844,7 +857,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             // Output Console Box
             g_hwndEditOutput = CreateWindowExW(WS_EX_CLIENTEDGE, L"RICHEDIT20A", L"",
                                               WS_VISIBLE | WS_CHILD | ES_MULTILINE | WS_VSCROLL | ES_READONLY,
-                                              10, 420, 960, 130, hwnd, (HMENU)ID_EDIT_OUTPUT, NULL, NULL);
+                                              10, 420, 1000, 130, hwnd, (HMENU)ID_EDIT_OUTPUT, NULL, NULL);
             SendMessageA(g_hwndEditOutput, WM_SETFONT, (WPARAM)g_hFontCode, TRUE);
             SendMessageA(g_hwndEditOutput, EM_SETBKGNDCOLOR, 0, (LPARAM)RGB(24, 24, 24));
 
@@ -1068,7 +1081,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     HWND hwnd = CreateWindowExW(0, L"GarudaStudioWindowClass",
                                 L"Garuda Studio v3.5 - Modern Professional GUI IDE",
                                 WS_OVERLAPPEDWINDOW,
-                                CW_USEDEFAULT, CW_USEDEFAULT, 990, 720,
+                                CW_USEDEFAULT, CW_USEDEFAULT, 1040, 720,
                                 NULL, NULL, hInstance, NULL);
 
     if (!hwnd) {
