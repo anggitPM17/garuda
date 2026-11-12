@@ -4,7 +4,7 @@
 > **Versi Rilis**: `v67.0.0` (Final Production Release)  
 > **Tag Git**: `v67.0.0-final-release`  
 > **Tanggal Rilis**: 18 Mei 2025 / 12 November 2026  
-> **Lisensi**: Apache License 2.0  
+> **Lisensi**: MIT License  
 > **Portal Resmi**: [https://richat.my.id/](https://richat.my.id/) | **GitHub**: [https://github.com/anggitPM17/garuda](https://github.com/anggitPM17/garuda)
 
 ---

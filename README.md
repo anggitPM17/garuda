@@ -4,7 +4,7 @@
 
 Garuda v67.0.0 hadir secara berdikari dengan dukungan lintas platform: **Backend Microservices, Mobile Native (Android/iOS), WebAssembly (Browser), hingga Game Engine 2D/3D & Full Self-Hosting Compiler**.
 
-[![License: Apache 2.0](https://img.shields.io/badge/License-Apache--2.0-yellow.svg)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Made in Indonesia](https://img.shields.io/badge/Made%20in-Indonesia-red)](https://richat.my.id)
 [![Version](https://img.shields.io/badge/version-v67.0.0--final--release-blue)](CHANGELOG.md)
 
