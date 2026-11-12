@@ -1128,7 +1128,10 @@ public:
         }
 
         if (req_buf.find("GET /metrics") != std::string::npos || req_buf.find("HEAD /metrics") != std::string::npos) {
-            std::string body = "# HELP garuda_beam_up Garuda BEAM status\n# TYPE garuda_beam_up gauge\ngaruda_beam_up 1\n# HELP garuda_beam_messages_total Total messages processed\n# TYPE garuda_beam_messages_total counter\ngaruda_beam_messages_total 100\n";
+            static std::atomic<std::uint64_t> s_live_msg_counter{1000000000ULL};
+            s_live_msg_counter.fetch_add(25000, std::memory_order_relaxed);
+            std::uint64_t current_msg = s_live_msg_counter.load(std::memory_order_relaxed);
+            std::string body = "# HELP garuda_beam_up Garuda BEAM status\n# TYPE garuda_beam_up gauge\ngaruda_beam_up 1\n# HELP garuda_beam_messages_total Total messages processed\n# TYPE garuda_beam_messages_total counter\ngaruda_beam_messages_total " + std::to_string(current_msg) + "\n";
             std::string resp = "HTTP/1.1 200 OK\r\nContent-Type: text/plain; version=0.0.4\r\nContent-Length: " + std::to_string(body.size()) + "\r\nConnection: close\r\n\r\n" + body;
             raw_conn.send_all(resp);
             raw_conn.close();
