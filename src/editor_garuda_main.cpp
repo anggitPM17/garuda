@@ -3,19 +3,24 @@
 #endif
 
 #include <windows.h>
+#include <commctrl.h>
 #include <commdlg.h>
+
+#pragma comment(lib, "comctl32.lib")
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <sstream>
 #include <vector>
 #include <filesystem>
+#include <chrono>
 
 #include "../include/garuda/beam/interop/embedding_api.hpp"
 #include "../include/garuda/compiler/lexer.hpp"
 #include "../include/garuda/compiler/parser.hpp"
 #include "../include/garuda/compiler/codegen.hpp"
 #include "../include/garuda/compiler/linter.hpp"
+#include "../include/garuda/compiler/formatter.hpp"
 #include "../include/garuda/compiler/bytecode_writer.hpp"
 #include "../include/garuda/compiler/standalone_packer.hpp"
 
@@ -38,13 +43,18 @@ using namespace garuda::beam;
 #define ID_BTN_RUN          2001
 #define ID_BTN_GRADE        2002
 #define ID_BTN_LINT         2003
-#define ID_BTN_EXPORT       2004
+#define ID_BTN_FMT          2004
+#define ID_BTN_EXPORT       2005
 
 #define ID_EDIT_CODE        3001
 #define ID_EDIT_OUTPUT      3002
+#define ID_STATUS_BAR       3003
 
 HWND g_hwndEditCode = NULL;
 HWND g_hwndEditOutput = NULL;
+HWND g_hwndLabelCode = NULL;
+HWND g_hwndLabelOutput = NULL;
+HWND g_hwndStatusBar = NULL;
 HFONT g_hFontCode = NULL;
 
 const char* g_sample_hello =
@@ -92,6 +102,24 @@ const char* g_sample_ai =
     "    200\r\n"
     "rampung\r\n";
 
+std::string CleanUtf8ForWin32(const std::string& input) {
+    std::string clean;
+    clean.reserve(input.size());
+    for (size_t i = 0; i < input.size(); ++i) {
+        unsigned char c = static_cast<unsigned char>(input[i]);
+        if (c >= 32 && c <= 126) {
+            clean += c;
+        } else if (c == '\n') {
+            clean += "\r\n";
+        } else if (c == '\r') {
+            // Handled with \n
+        } else if (c == '\t') {
+            clean += "\t";
+        }
+    }
+    return clean;
+}
+
 std::string GetNormalizedCodeFromEditor() {
     int len = GetWindowTextLengthA(g_hwndEditCode);
     if (len <= 0) return g_sample_hello;
@@ -101,7 +129,6 @@ std::string GetNormalizedCodeFromEditor() {
     GetWindowTextA(g_hwndEditCode, &raw[0], len + 1);
     raw.resize(len);
 
-    // Replace CRLF with LF
     std::string normalized;
     normalized.reserve(raw.size());
     for (size_t i = 0; i < raw.size(); ++i) {
@@ -111,11 +138,26 @@ std::string GetNormalizedCodeFromEditor() {
     return normalized;
 }
 
+void UpdateStatusBarInfo() {
+    if (!g_hwndEditCode || !g_hwndStatusBar) return;
+
+    DWORD start = 0, end = 0;
+    SendMessageA(g_hwndEditCode, EM_GETSEL, (WPARAM)&start, (LPARAM)&end);
+    int line = static_cast<int>(SendMessageA(g_hwndEditCode, EM_LINEFROMCHAR, start, 0)) + 1;
+    int line_index = static_cast<int>(SendMessageA(g_hwndEditCode, EM_LINEINDEX, line - 1, 0));
+    int col = static_cast<int>(start - line_index) + 1;
+
+    std::string status = " Baris: " + std::to_string(line) + ", Kolom: " + std::to_string(col) +
+                         " | Encoding: UTF-8 | GVM Runtime v67.0.0 Ready";
+    SetWindowTextA(g_hwndStatusBar, status.c_str());
+}
+
 void RunGarudaScript(HWND hwnd) {
     (void)hwnd;
     std::string code = GetNormalizedCodeFromEditor();
 
-    // Redirect std::cout to capture cetak() output
+    auto start_time = std::chrono::high_resolution_clock::now();
+
     std::stringstream buffer;
     std::streambuf* old_cout = std::cout.rdbuf(buffer.rdbuf());
 
@@ -127,16 +169,18 @@ void RunGarudaScript(HWND hwnd) {
         res = host.call_function("utama");
     }
 
-    // Restore std::cout
     std::cout.rdbuf(old_cout);
     std::string captured_output = buffer.str();
+
+    auto end_time = std::chrono::high_resolution_clock::now();
+    auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
 
     std::string out;
     if (!load_ok) {
         out = "=== ERR: GAGAL KOMPILASI KODE GARUDA ===\r\n";
-        out += "Harap periksa sintaks modul, fungsi, atau kata kunci 'rampung'.\r\n";
+        out += "Harap periksa sintaks modul, fungsi, atau kata kunci 'rampung'.\r\n\r\n";
         if (!captured_output.empty()) {
-            out += "Detail Log:\r\n" + captured_output;
+            out += "Detail Log:\r\n" + CleanUtf8ForWin32(captured_output);
         }
     } else if (!res.has_value()) {
         out = "=== ERR: FUNGSI 'utama' TIDAK DITEMUKAN ===\r\n";
@@ -144,13 +188,42 @@ void RunGarudaScript(HWND hwnd) {
     } else {
         out = "=== HASIL EKSEKUSI PROGRAM GARUDA (REAL EXECUTION) ===\r\n";
         if (!captured_output.empty()) {
-            out += "Output Konsol:\r\n" + captured_output + "\r\n";
+            out += "Output Konsol:\r\n" + CleanUtf8ForWin32(captured_output) + "\r\n";
         }
         out += "Status  : OK (Selesai Tanpa Error)\r\n";
         out += "Respon  : " + to_string(*res) + "\r\n";
+        out += "Waktu   : " + std::to_string(elapsed_ms) + " ms\r\n";
     }
 
     SetWindowTextA(g_hwndEditOutput, out.c_str());
+}
+
+void FormatGarudaScript(HWND hwnd) {
+    (void)hwnd;
+    std::string code = GetNormalizedCodeFromEditor();
+
+    try {
+        Lexer lexer(code);
+        Parser parser(lexer.tokenize());
+        auto module = parser.parse_program();
+
+        Formatter fmt;
+        std::string formatted = fmt.format(module);
+
+        // Normalize to CRLF for Windows Edit Control
+        std::string crlf_formatted;
+        crlf_formatted.reserve(formatted.size() * 2);
+        for (char c : formatted) {
+            if (c == '\n') crlf_formatted += "\r\n";
+            else if (c != '\r') crlf_formatted += c;
+        }
+
+        SetWindowTextA(g_hwndEditCode, crlf_formatted.c_str());
+        SetWindowTextA(g_hwndEditOutput, "=== FORMATTER ===\r\nStatus : Kode Berhasil Diformat Rapi sesuai standar Garuda!");
+    } catch (const std::exception& e) {
+        std::string out = "=== FORMATTER ERR ===\r\nGagal memformat kode: " + std::string(e.what());
+        SetWindowTextA(g_hwndEditOutput, out.c_str());
+    }
 }
 
 void LintGarudaScript(HWND hwnd) {
@@ -205,7 +278,7 @@ void GradeGarudaScript(HWND hwnd) {
     }
 
     // 2. Linter Cleanliness (25 pts)
-    if (parse_ok) {
+    if (parse_ok && module) {
         Linter linter;
         auto warnings = linter.lint(module);
         if (warnings.empty()) {
@@ -311,7 +384,16 @@ void OpenFileDialog(HWND hwnd) {
         if (ifs.is_open()) {
             std::string content((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
             ifs.close();
-            SetWindowTextA(g_hwndEditCode, content.c_str());
+
+            // Convert LF to CRLF
+            std::string crlf_content;
+            crlf_content.reserve(content.size() * 2);
+            for (char c : content) {
+                if (c == '\n') crlf_content += "\r\n";
+                else if (c != '\r') crlf_content += c;
+            }
+
+            SetWindowTextA(g_hwndEditCode, crlf_content.c_str());
             SetWindowTextA(g_hwndEditOutput, ("Berhasil membuka berkas: " + std::string(szFile)).c_str());
         }
     }
@@ -361,6 +443,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             AppendMenuA(hMenuRun, MF_STRING, ID_BTN_RUN, "Jalankan Kode \tCtrl+R");
             AppendMenuA(hMenuRun, MF_STRING, ID_BTN_LINT, "Cek Linter Kode");
+            AppendMenuA(hMenuRun, MF_STRING, ID_BTN_FMT, "Format Kode Rapi");
             AppendMenuA(hMenuRun, MF_STRING, ID_BTN_GRADE, "Cek Nilai Auto-Grader");
             AppendMenuA(hMenuRun, MF_STRING, ID_BTN_EXPORT, "Ekspor ke .exe \tCtrl+Shift+E");
 
@@ -372,71 +455,130 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             // Action Buttons Toolbar
             CreateWindowA("BUTTON", "Jalankan (Ctrl+R)", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                          10, 10, 150, 35, hwnd, (HMENU)ID_BTN_RUN, NULL, NULL);
+                          10, 10, 140, 32, hwnd, (HMENU)ID_BTN_RUN, NULL, NULL);
+            CreateWindowA("BUTTON", "Format Rapi", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                          155, 10, 110, 32, hwnd, (HMENU)ID_BTN_FMT, NULL, NULL);
             CreateWindowA("BUTTON", "Cek Linter", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                          170, 10, 120, 35, hwnd, (HMENU)ID_BTN_LINT, NULL, NULL);
+                          270, 10, 110, 32, hwnd, (HMENU)ID_BTN_LINT, NULL, NULL);
             CreateWindowA("BUTTON", "Auto-Grader", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                          300, 10, 140, 35, hwnd, (HMENU)ID_BTN_GRADE, NULL, NULL);
+                          385, 10, 120, 32, hwnd, (HMENU)ID_BTN_GRADE, NULL, NULL);
             CreateWindowA("BUTTON", "Ekspor .exe", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                          450, 10, 140, 35, hwnd, (HMENU)ID_BTN_EXPORT, NULL, NULL);
+                          510, 10, 120, 32, hwnd, (HMENU)ID_BTN_EXPORT, NULL, NULL);
 
             // Label for Code Editor
-            CreateWindowA("STATIC", "Area Pengedit Kode Bahasa Garuda (Consolas 11pt Monospace):", WS_VISIBLE | WS_CHILD,
-                          10, 55, 600, 20, hwnd, NULL, NULL, NULL);
+            g_hwndLabelCode = CreateWindowA("STATIC", "Area Pengedit Kode Bahasa Garuda (Consolas Monospace):", WS_VISIBLE | WS_CHILD,
+                                            10, 50, 600, 18, hwnd, NULL, NULL, NULL);
 
             // Create Monospace Font
-            g_hFontCode = CreateFontA(18, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
+            g_hFontCode = CreateFontA(17, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
                                      OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
                                      FIXED_PITCH | FF_MODERN, "Consolas");
 
             // Code Editor Box
             g_hwndEditCode = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", g_sample_hello,
                                             WS_VISIBLE | WS_CHILD | ES_MULTILINE | WS_VSCROLL | WS_HSCROLL | ES_AUTOVSCROLL | ES_AUTOHSCROLL,
-                                            10, 80, 860, 320, hwnd, (HMENU)ID_EDIT_CODE, NULL, NULL);
+                                            10, 70, 860, 320, hwnd, (HMENU)ID_EDIT_CODE, NULL, NULL);
             SendMessageA(g_hwndEditCode, WM_SETFONT, (WPARAM)g_hFontCode, TRUE);
 
             // Label for Output Console
-            CreateWindowA("STATIC", "Konsol Hasil Eksekusi & Output Studio:", WS_VISIBLE | WS_CHILD,
-                          10, 410, 600, 20, hwnd, NULL, NULL, NULL);
+            g_hwndLabelOutput = CreateWindowA("STATIC", "Konsol Hasil Eksekusi & Output Studio:", WS_VISIBLE | WS_CHILD,
+                                              10, 400, 600, 18, hwnd, NULL, NULL, NULL);
 
             // Output Console Box
             g_hwndEditOutput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "Klik 'Jalankan' atau tekan Ctrl+R untuk menguji program...",
                                               WS_VISIBLE | WS_CHILD | ES_MULTILINE | WS_VSCROLL | ES_READONLY,
-                                              10, 435, 860, 130, hwnd, (HMENU)ID_EDIT_OUTPUT, NULL, NULL);
+                                              10, 420, 860, 130, hwnd, (HMENU)ID_EDIT_OUTPUT, NULL, NULL);
             SendMessageA(g_hwndEditOutput, WM_SETFONT, (WPARAM)g_hFontCode, TRUE);
+
+            // Status Bar at Bottom
+            g_hwndStatusBar = CreateWindowExA(0, STATUSCLASSNAMEA, " Ready | Garuda Studio v3.5",
+                                              WS_VISIBLE | WS_CHILD | SBARS_SIZEGRIP,
+                                              0, 0, 0, 0, hwnd, (HMENU)ID_STATUS_BAR, NULL, NULL);
+
+            UpdateStatusBarInfo();
+            break;
+        }
+
+        case WM_SIZE: {
+            int width = LOWORD(lParam);
+            int height = HIWORD(lParam);
+
+            if (g_hwndEditCode && g_hwndEditOutput) {
+                int margin = 10;
+                int toolbar_h = 42;
+                int label_h = 18;
+                int statusbar_h = 24;
+
+                int avail_h = height - toolbar_h - (label_h * 2) - statusbar_h - (margin * 4);
+                if (avail_h < 100) avail_h = 100;
+
+                int code_h = (avail_h * 65) / 100;
+                int output_h = avail_h - code_h;
+
+                int code_y = toolbar_h + margin + label_h;
+                int label_out_y = code_y + code_h + margin;
+                int output_y = label_out_y + label_h;
+
+                MoveWindow(g_hwndLabelCode, margin, toolbar_h + margin, width - (margin * 2), label_h, TRUE);
+                MoveWindow(g_hwndEditCode, margin, code_y, width - (margin * 2), code_h, TRUE);
+                MoveWindow(g_hwndLabelOutput, margin, label_out_y, width - (margin * 2), label_h, TRUE);
+                MoveWindow(g_hwndEditOutput, margin, output_y, width - (margin * 2), output_h, TRUE);
+                MoveWindow(g_hwndStatusBar, 0, height - statusbar_h, width, statusbar_h, TRUE);
+            }
             break;
         }
 
         case WM_COMMAND: {
             int wmId = LOWORD(wParam);
+            int wmEvent = HIWORD(wParam);
+
+            if (wmId == ID_EDIT_CODE && wmEvent == EN_CHANGE) {
+                UpdateStatusBarInfo();
+            }
+
             switch (wmId) {
                 case ID_MENU_FILE_NEW:
-                    SetWindowTextA(g_hwndEditCode, g_sample_hello);
+                    SetWindowTextA(g_hwndEditCode, "");
                     SetWindowTextA(g_hwndEditOutput, "Berkas baru dibuat.");
+                    UpdateStatusBarInfo();
                     break;
                 case ID_MENU_FILE_OPEN:
                     OpenFileDialog(hwnd);
+                    UpdateStatusBarInfo();
                     break;
                 case ID_MENU_FILE_SAVE:
                     SaveFileDialog(hwnd);
                     break;
                 case ID_MENU_SAMPLE_HELL:
                     SetWindowTextA(g_hwndEditCode, g_sample_hello);
+                    SetWindowTextA(g_hwndEditOutput, "Sampel 'Hello World' dimuat.");
+                    UpdateStatusBarInfo();
                     break;
                 case ID_MENU_SAMPLE_CALC:
                     SetWindowTextA(g_hwndEditCode, g_sample_calc);
+                    SetWindowTextA(g_hwndEditOutput, "Sampel 'Kalkulator' dimuat.");
+                    UpdateStatusBarInfo();
                     break;
                 case ID_MENU_SAMPLE_API:
                     SetWindowTextA(g_hwndEditCode, g_sample_api);
+                    SetWindowTextA(g_hwndEditOutput, "Sampel 'REST API' dimuat.");
+                    UpdateStatusBarInfo();
                     break;
                 case ID_MENU_SAMPLE_GAME:
                     SetWindowTextA(g_hwndEditCode, g_sample_game);
+                    SetWindowTextA(g_hwndEditOutput, "Sampel 'Game Engine 3D' dimuat.");
+                    UpdateStatusBarInfo();
                     break;
                 case ID_MENU_SAMPLE_AI:
                     SetWindowTextA(g_hwndEditCode, g_sample_ai);
+                    SetWindowTextA(g_hwndEditOutput, "Sampel 'Local AI LLM' dimuat.");
+                    UpdateStatusBarInfo();
                     break;
                 case ID_BTN_RUN:
                     RunGarudaScript(hwnd);
+                    break;
+                case ID_BTN_FMT:
+                    FormatGarudaScript(hwnd);
                     break;
                 case ID_BTN_LINT:
                     LintGarudaScript(hwnd);
@@ -469,6 +611,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     (void)hPrevInstance;
     (void)lpCmdLine;
 
+    // Ensure Common Controls for Status Bar are initialized
+    INITCOMMONCONTROLSEX icex;
+    icex.dwSize = sizeof(INITCOMMONCONTROLSEX);
+    icex.dwICC = ICC_WIN95_CLASSES | ICC_BAR_CLASSES;
+    InitCommonControlsEx(&icex);
+
     WNDCLASSEXA wc = {0};
     wc.cbSize = sizeof(WNDCLASSEXA);
     wc.style = CS_HREDRAW | CS_VREDRAW;
@@ -485,8 +633,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     HWND hwnd = CreateWindowExA(0, "GarudaStudioWindowClass",
                                 "Garuda Coding Studio v3.5 - Professional GUI IDE Editor",
-                                WS_OVERLAPPEDWINDOW & ~WS_MAXIMIZEBOX,
-                                CW_USEDEFAULT, CW_USEDEFAULT, 900, 640,
+                                WS_OVERLAPPEDWINDOW,
+                                CW_USEDEFAULT, CW_USEDEFAULT, 920, 680,
                                 NULL, NULL, hInstance, NULL);
 
     if (!hwnd) {
