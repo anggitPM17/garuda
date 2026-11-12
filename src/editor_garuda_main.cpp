@@ -617,11 +617,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HMENU hMenuSamples = CreateMenu();
             HMENU hMenuRun = CreateMenu();
 
-            AppendMenuW(hMenuFile, MF_STRING, ID_MENU_FILE_NEW, L"📄 Baru (New)");
-            AppendMenuW(hMenuFile, MF_STRING, ID_MENU_FILE_OPEN, L"📁 Buka Berkas (.grd)... \tCtrl+O");
-            AppendMenuW(hMenuFile, MF_STRING, ID_MENU_FILE_SAVE, L"💾 Simpan Berkas (.grd)... \tCtrl+S");
+            AppendMenuW(hMenuFile, MF_STRING, ID_MENU_FILE_NEW, L"Baru (New)");
+            AppendMenuW(hMenuFile, MF_STRING, ID_MENU_FILE_OPEN, L"Buka Berkas (.grd)... \tCtrl+O");
+            AppendMenuW(hMenuFile, MF_STRING, ID_MENU_FILE_SAVE, L"Simpan Berkas (.grd)... \tCtrl+S");
             AppendMenuW(hMenuFile, MF_SEPARATOR, 0, NULL);
-            AppendMenuW(hMenuFile, MF_STRING, ID_MENU_FILE_EXIT, L"❌ Keluar");
+            AppendMenuW(hMenuFile, MF_STRING, ID_MENU_FILE_EXIT, L"Keluar");
 
             AppendMenuW(hMenuSamples, MF_STRING, ID_MENU_SAMPLE_HELL, L"1. Hello World & Cetak Teks");
             AppendMenuW(hMenuSamples, MF_STRING, ID_MENU_SAMPLE_ACTOR, L"2. Model Aktor - Spawn & Pesan");
@@ -630,37 +630,37 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             AppendMenuW(hMenuSamples, MF_STRING, ID_MENU_SAMPLE_API, L"5. REST API Web Server");
             AppendMenuW(hMenuSamples, MF_STRING, ID_MENU_SAMPLE_GAME, L"6. Game Engine 3D & ECS");
 
-            AppendMenuW(hMenuRun, MF_STRING, ID_BTN_RUN, L"▶ Jalankan Kode \tCtrl+R");
-            AppendMenuW(hMenuRun, MF_STRING, ID_BTN_AIFIX, L"💡 AI Code Fixer \tCtrl+Shift+F");
-            AppendMenuW(hMenuRun, MF_STRING, ID_BTN_FMT, L"⚡ Format Kode Rapi");
-            AppendMenuW(hMenuRun, MF_STRING, ID_BTN_LINT, L"🔍 Cek Linter Kode");
-            AppendMenuW(hMenuRun, MF_STRING, ID_BTN_GRADE, L"🏆 Cek Nilai Auto-Grader");
-            AppendMenuW(hMenuRun, MF_STRING, ID_BTN_EXPORT, L"📦 Ekspor ke .exe \tCtrl+Shift+E");
+            AppendMenuW(hMenuRun, MF_STRING, ID_BTN_RUN, L"[>] Jalankan Kode \tCtrl+R");
+            AppendMenuW(hMenuRun, MF_STRING, ID_BTN_AIFIX, L"[AI] AI Code Fixer \tCtrl+Shift+F");
+            AppendMenuW(hMenuRun, MF_STRING, ID_BTN_FMT, L"[FMT] Format Kode Rapi");
+            AppendMenuW(hMenuRun, MF_STRING, ID_BTN_LINT, L"[LINT] Cek Linter Kode");
+            AppendMenuW(hMenuRun, MF_STRING, ID_BTN_GRADE, L"[GRADE] Cek Nilai Auto-Grader");
+            AppendMenuW(hMenuRun, MF_STRING, ID_BTN_EXPORT, L"[EXE] Ekspor ke .exe \tCtrl+Shift+E");
 
-            AppendMenuW(hMenuBar, MF_POPUP, (UINT_PTR)hMenuFile, L"📁 File");
-            AppendMenuW(hMenuBar, MF_POPUP, (UINT_PTR)hMenuSamples, L"📚 Contoh Kodingan");
-            AppendMenuW(hMenuBar, MF_POPUP, (UINT_PTR)hMenuRun, L"⚡ Eksekusi");
+            AppendMenuW(hMenuBar, MF_POPUP, (UINT_PTR)hMenuFile, L"File");
+            AppendMenuW(hMenuBar, MF_POPUP, (UINT_PTR)hMenuSamples, L"Contoh Kodingan");
+            AppendMenuW(hMenuBar, MF_POPUP, (UINT_PTR)hMenuRun, L"Eksekusi");
 
             SetMenu(hwnd, hMenuBar);
 
-            // Create High-Definition Buttons with Symbols
-            CreateWindowW(L"BUTTON", L"▶ Jalankan (Ctrl+R)", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                          10, 10, 140, 32, hwnd, (HMENU)ID_BTN_RUN, NULL, NULL);
-            CreateWindowW(L"BUTTON", L"💡 AI Fix", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                          155, 10, 95, 32, hwnd, (HMENU)ID_BTN_AIFIX, NULL, NULL);
-            CreateWindowW(L"BUTTON", L"⚡ Format Rapi", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                          255, 10, 110, 32, hwnd, (HMENU)ID_BTN_FMT, NULL, NULL);
-            CreateWindowW(L"BUTTON", L"🔍 Cek Linter", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                          370, 10, 100, 32, hwnd, (HMENU)ID_BTN_LINT, NULL, NULL);
-            CreateWindowW(L"BUTTON", L"🏆 Auto-Grader", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                          475, 10, 115, 32, hwnd, (HMENU)ID_BTN_GRADE, NULL, NULL);
-            CreateWindowW(L"BUTTON", L"📦 Ekspor .exe", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                          595, 10, 110, 32, hwnd, (HMENU)ID_BTN_EXPORT, NULL, NULL);
-            CreateWindowW(L"BUTTON", L"🧹 Bersihkan", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                          710, 10, 95, 32, hwnd, (HMENU)ID_BTN_CLEAR, NULL, NULL);
+            // Crisp & High-Definition Action Buttons
+            CreateWindowW(L"BUTTON", L"[>] Jalankan (Ctrl+R)", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                          10, 10, 145, 32, hwnd, (HMENU)ID_BTN_RUN, NULL, NULL);
+            CreateWindowW(L"BUTTON", L"[AI] AI Fix", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                          160, 10, 95, 32, hwnd, (HMENU)ID_BTN_AIFIX, NULL, NULL);
+            CreateWindowW(L"BUTTON", L"[FMT] Format Rapi", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                          260, 10, 115, 32, hwnd, (HMENU)ID_BTN_FMT, NULL, NULL);
+            CreateWindowW(L"BUTTON", L"[LINT] Cek Linter", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                          380, 10, 105, 32, hwnd, (HMENU)ID_BTN_LINT, NULL, NULL);
+            CreateWindowW(L"BUTTON", L"[GRADE] Auto-Grader", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                          490, 10, 125, 32, hwnd, (HMENU)ID_BTN_GRADE, NULL, NULL);
+            CreateWindowW(L"BUTTON", L"[EXE] Ekspor .exe", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                          620, 10, 115, 32, hwnd, (HMENU)ID_BTN_EXPORT, NULL, NULL);
+            CreateWindowW(L"BUTTON", L"[CLR] Bersihkan", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                          740, 10, 100, 32, hwnd, (HMENU)ID_BTN_CLEAR, NULL, NULL);
 
             // Labels
-            g_hwndLabelCode = CreateWindowW(L"STATIC", L"📝 Area Pengedit Kode Bahasa Garuda (Consolas Monospace + Syntax Highlighting):", WS_VISIBLE | WS_CHILD,
+            g_hwndLabelCode = CreateWindowW(L"STATIC", L"Area Pengedit Kode Bahasa Garuda (Consolas Monospace + Syntax Highlighting):", WS_VISIBLE | WS_CHILD,
                                             10, 50, 600, 18, hwnd, NULL, NULL, NULL);
 
             // Monospace & UI Fonts
@@ -687,11 +687,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             SendMessageA(g_hwndGutter, EM_SETBKGNDCOLOR, 0, (LPARAM)RGB(37, 37, 38));
 
             // Label for Output Console
-            g_hwndLabelOutput = CreateWindowW(L"STATIC", L"📺 Konsol Hasil Eksekusi & Inspector Aktor GVM:", WS_VISIBLE | WS_CHILD,
+            g_hwndLabelOutput = CreateWindowW(L"STATIC", L"Konsol Hasil Eksekusi & Inspector Aktor GVM:", WS_VISIBLE | WS_CHILD,
                                               10, 400, 600, 18, hwnd, NULL, NULL, NULL);
 
             // Output Console Box
-            g_hwndEditOutput = CreateWindowExW(WS_EX_CLIENTEDGE, L"RICHEDIT20A", L"Klik '▶ Jalankan' atau tekan Ctrl+R untuk menguji program di Garuda Studio...",
+            g_hwndEditOutput = CreateWindowExW(WS_EX_CLIENTEDGE, L"RICHEDIT20A", L"Klik '[>] Jalankan' atau tekan Ctrl+R untuk menguji program di Garuda Studio...",
                                               WS_VISIBLE | WS_CHILD | ES_MULTILINE | WS_VSCROLL | ES_READONLY,
                                               10, 420, 890, 130, hwnd, (HMENU)ID_EDIT_OUTPUT, NULL, NULL);
             SendMessageA(g_hwndEditOutput, WM_SETFONT, (WPARAM)g_hFontCode, TRUE);
