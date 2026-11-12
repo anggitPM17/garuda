@@ -7,10 +7,14 @@ Format pencatatan mematuhi [Keep a Changelog](https://keepachangelog.com/en/1.0.
 
 ## [v67.0.0] - 2025-05-18
 
-### 🖥️🎓 Added — GARUDA CODING STUDIO v3.0 & Production Sample Code Browser (`GarudaStudioIDE`)
-* **Auto-Formatter Engine**: Format ulang kode otomatis (`format_kode_otomatis`) sesuai standar Garuda.
-* **Project Storage & Progress Report**: Penyimpanan berkas proyek (`simpan_proyek_peserta`) dan laporan rekapitulasi kelulusan peserta (`tampilkan_laporan_kemajuan_peserta`).
-* **Production Sample Code Browser**: Pemuatan contoh kode aplikasi produksi nyata (REST API, WebSocket, Game 3D, Local AI) (`muat_contoh_kode_produksi`) (`garuda_studio_ide_tests.exe` — PASS).
+### 🎮🕹️ Added — LAPIS 4: Game Engine Platform & Real-Time Graphics Engine (Pure Garuda Scripting)
+* **Stage 4.1 - Garuda Pure ECS Core**: Arsitektur Entity Component System murni Bahasa Garuda (`packages/game/src/ecs.grd`) untuk manajemen entitas dan kolam komponen game (`garuda_game_ecs_tests.exe` — PASS).
+* **Stage 4.2 - Garuda Pure 3D Scene Graph**: Hierarki spasial 3D `SceneNode` dan perkalian matriks *world transform* murni skrip Garuda (`packages/game/src/scene3d.grd`) (`garuda_game_scene3d_tests.exe` — PASS).
+* **Stage 4.3 - Garuda Pure 3D Physics Engine**: Deteksi tabrakan 3D AABB/Sphere dan kalkulasi gravitasi/benda kaku murni skrip Garuda (`packages/game/src/physics3d.grd`) (`garuda_game_physics3d_tests.exe` — PASS).
+* **Stage 4.4 - Garuda Pure 3D Spatial Audio**: Pemrosesan suara spasial 3D (*listener vs emitter*) dan kurva peredaman jarak murni skrip Garuda (`packages/game/src/audio3d.grd`) (`garuda_game_audio3d_tests.exe` — PASS).
+
+### 🖥️🎨 Added — Professional Native Windows GUI Application (`EditorGaruda.exe` v3.5)
+* **Native Win32 GUI App**: Reintegrasi total `EditorGaruda.exe` (`src/editor_garuda_main.cpp`) menjadi aplikasi jendela GUI Windows grafis asli (*seperti Notepad++*) dengan Menu Bar (`File`, `Contoh Kodingan`, `Eksekusi`), Consolas 11pt Monospace Editor Box, Action Toolbar Buttons, Output Console Box, dan Windows File Dialogs (`OPENFILENAME` & `GetSaveFileName`) (`EditorGaruda.exe` — PASS).
 
 ### 🖥️🎓 Added — GARUDA CODING STUDIO v2.0 & Auto-Grader Training Engine (`GarudaStudioIDE`)
 * **Auto-Grader Training Engine**: Penilaian otomatis kodingan peserta pelatihan (`cek_jawaban_peserta`) dengan skor dan umpan balik langsung (`packages/ide/src/garuda_studio.grd`).

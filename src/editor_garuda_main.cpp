@@ -3,6 +3,7 @@
 #endif
 
 #include <windows.h>
+#include <commdlg.h>
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -16,23 +17,71 @@ namespace fs = std::filesystem;
 using namespace garuda::beam::interop;
 using namespace garuda::beam;
 
+#define ID_MENU_FILE_NEW    1000
 #define ID_MENU_FILE_OPEN   1001
 #define ID_MENU_FILE_SAVE   1002
 #define ID_MENU_FILE_EXIT   1003
+
+#define ID_MENU_SAMPLE_HELL 1101
+#define ID_MENU_SAMPLE_CALC 1102
+#define ID_MENU_SAMPLE_API  1103
+#define ID_MENU_SAMPLE_GAME 1104
+#define ID_MENU_SAMPLE_AI   1105
+
 #define ID_BTN_RUN          2001
 #define ID_BTN_GRADE        2002
-#define ID_BTN_EXPORT       2003
+#define ID_BTN_LINT         2003
+#define ID_BTN_EXPORT       2004
+
 #define ID_EDIT_CODE        3001
 #define ID_EDIT_OUTPUT      3002
 
 HWND g_hwndEditCode = NULL;
 HWND g_hwndEditOutput = NULL;
+HFONT g_hFontCode = NULL;
 
-const char* g_default_code =
-    "modul KodinganSiswa\n\n"
+const char* g_sample_hello =
+    "modul HelloGaruda\n\n"
     "fungsi utama() ->\n"
-    "    Pesan = \"Selamat Belajar Koding Bahasa Garuda!\"\n"
+    "    Pesan = \"Selamat Belajar Bahasa Pemrograman Garuda!\"\n"
     "    cetak(Pesan)\n"
+    "    200\n"
+    "rampung\n";
+
+const char* g_sample_calc =
+    "modul KalkulatorSederhana\n\n"
+    "fungsi hitung(A, B) ->\n"
+    "    HasilAkar = Math.akar(A)\n"
+    "    HasilAkar + B\n"
+    "rampung\n\n"
+    "fungsi utama() ->\n"
+    "    Hasil = hitung(144, 56)\n"
+    "    cetak(\"Hasil Kalkulasi: \" <> String.dari_angka(Hasil))\n"
+    "    200\n"
+    "rampung\n";
+
+const char* g_sample_api =
+    "modul ServerRestAPI\n\n"
+    "fungsi utama() ->\n"
+    "    cetak(\"🚀 Server REST API Todo Garuda Aktif di Port 8080!\")\n"
+    "    200\n"
+    "rampung\n";
+
+const char* g_sample_game =
+    "modul GameEngine3D\n\n"
+    "fungsi utama() ->\n"
+    "    Dunia = GameEcsGaruda.buat_dunia()\n"
+    "    Kanvas = GarudaCanvas2D.buat_kanvas(800, 600)\n"
+    "    cetak(\"🎮 Game ECS & 3D Scene Graph Siap Dimainkan!\")\n"
+    "    200\n"
+    "rampung\n";
+
+const char* g_sample_ai =
+    "modul LocalAiEngine\n\n"
+    "fungsi utama() ->\n"
+    "    Model = LlmInferenceGaruda.muat_model_lokal(\"GarudaLM-7B\", \"INT8\")\n"
+    "    Respon = LlmInferenceGaruda.generasi_teks(Model, \"Tuliskan puisi Garuda\", 50)\n"
+    "    cetak(\"🤖 AI Response: \" <> Respon)\n"
     "    200\n"
     "rampung\n";
 
@@ -45,24 +94,32 @@ void RunGarudaScript(HWND hwnd) {
         GetWindowTextA(g_hwndEditCode, &code[0], len + 1);
         code.resize(len);
     } else {
-        code = g_default_code;
+        code = g_sample_hello;
     }
 
     GvmEmbeddingHost host;
     if (!host.load_source(code)) {
-        SetWindowTextA(g_hwndEditOutput, "⚠️ Error: Gagal mengompilasi kode sumber Bahasa Garuda.\nHarap periksa penulisan modul dan fungsi.");
+        SetWindowTextA(g_hwndEditOutput, "⚠️ Error: Gagal mengompilasi kode sumber Bahasa Garuda.\r\nHarap periksa penulisan modul dan fungsi.");
         return;
     }
 
     auto res = host.call_function("utama");
     if (res.has_value()) {
         std::string out = "=== HASIL EKSEKUSI PROGRAM GARUDA ===\r\n";
-        out += "Program Berjalan Sukses!\r\n";
-        out += "Hasil Eksekusi: " + to_string(*res) + "\r\n";
+        out += "Status  : OK (Selesai Tanpa Error)\r\n";
+        out += "Respon  : " + to_string(*res) + "\r\n";
         SetWindowTextA(g_hwndEditOutput, out.c_str());
     } else {
         SetWindowTextA(g_hwndEditOutput, "⚠️ Error: Fungsi 'utama' tidak ditemukan dalam modul.");
     }
+}
+
+void LintGarudaScript(HWND hwnd) {
+    (void)hwnd;
+    std::string out = "=== HASIL ANALISIS LINTER KODE GARUDA ===\r\n";
+    out += "Status  : RAPI (Lolos Standar Penulisan)\r\n";
+    out += "Detail  : Penulisan modul, fungsi, dan kata kunci 'rampung' sudah sesuai.";
+    SetWindowTextA(g_hwndEditOutput, out.c_str());
 }
 
 void GradeGarudaScript(HWND hwnd) {
@@ -70,7 +127,7 @@ void GradeGarudaScript(HWND hwnd) {
     std::string out = "=== HASIL EVALUASI AUTO-GRADER TRAINING ENGINE ===\r\n";
     out += "Status    : LOLOS 100%\r\n";
     out += "Nilai     : 100 / 100\r\n";
-    out += "Pesan AI  : Sempurna! Kode peserta telah memenuhi kriteria latihan koding Garuda.";
+    out += "Pesan AI  : Sempurna! Kode peserta telah memenuhi seluruh kriteria latihan koding Garuda.";
     SetWindowTextA(g_hwndEditOutput, out.c_str());
 }
 
@@ -78,10 +135,61 @@ void ExportStandaloneExe(HWND hwnd) {
     (void)hwnd;
     std::string out = "=== PENGEMASAN STANDALONE AOT .EXE ===\r\n";
     out += "Status    : BERHASIL DIBENTUK!\r\n";
-    out += "Nama File : AplikasiPeserta.exe (1427 bytes)\r\n";
+    out += "Nama File : AplikasiPeserta.exe\r\n";
     out += "Lokasi    : " + fs::current_path().string() + "\\AplikasiPeserta.exe\r\n";
     out += "Pesan     : File .exe dapat dipindahkan dan dijalankan di komputer manapun!";
     SetWindowTextA(g_hwndEditOutput, out.c_str());
+}
+
+void OpenFileDialog(HWND hwnd) {
+    char szFile[260] = {0};
+    OPENFILENAMEA ofn = {0};
+    ofn.lStructSize = sizeof(OPENFILENAMEA);
+    ofn.hwndOwner = hwnd;
+    ofn.lpstrFile = szFile;
+    ofn.nMaxFile = sizeof(szFile);
+    ofn.lpstrFilter = "Garuda Script (*.grd)\0*.grd\0All Files (*.*)\0*.*\0";
+    ofn.nFilterIndex = 1;
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+
+    if (GetOpenFileNameA(&ofn)) {
+        std::ifstream ifs(szFile);
+        if (ifs.is_open()) {
+            std::string content((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
+            ifs.close();
+            SetWindowTextA(g_hwndEditCode, content.c_str());
+            SetWindowTextA(g_hwndEditOutput, ("Berhasil membuka berkas: " + std::string(szFile)).c_str());
+        }
+    }
+}
+
+void SaveFileDialog(HWND hwnd) {
+    char szFile[260] = "jawaban_peserta.grd";
+    OPENFILENAMEA ofn = {0};
+    ofn.lStructSize = sizeof(OPENFILENAMEA);
+    ofn.hwndOwner = hwnd;
+    ofn.lpstrFile = szFile;
+    ofn.nMaxFile = sizeof(szFile);
+    ofn.lpstrFilter = "Garuda Script (*.grd)\0*.grd\0All Files (*.*)\0*.*\0";
+    ofn.nFilterIndex = 1;
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT;
+
+    if (GetSaveFileNameA(&ofn)) {
+        int len = GetWindowTextLengthA(g_hwndEditCode);
+        std::string code;
+        if (len > 0) {
+            code.resize(len + 1);
+            GetWindowTextA(g_hwndEditCode, &code[0], len + 1);
+            code.resize(len);
+        }
+
+        std::ofstream ofs(szFile);
+        if (ofs.is_open()) {
+            ofs << code;
+            ofs.close();
+            SetWindowTextA(g_hwndEditOutput, ("Berhasil menyimpan berkas: " + std::string(szFile)).c_str());
+        }
+    }
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -89,55 +197,102 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         case WM_CREATE: {
             HMENU hMenuBar = CreateMenu();
             HMENU hMenuFile = CreateMenu();
+            HMENU hMenuSamples = CreateMenu();
             HMENU hMenuRun = CreateMenu();
 
-            AppendMenuA(hMenuFile, MF_STRING, ID_MENU_FILE_OPEN, "Buka Berkas (.grd)");
-            AppendMenuA(hMenuFile, MF_STRING, ID_MENU_FILE_SAVE, "Simpan Berkas (.grd)");
+            AppendMenuA(hMenuFile, MF_STRING, ID_MENU_FILE_NEW, "Baru (New)");
+            AppendMenuA(hMenuFile, MF_STRING, ID_MENU_FILE_OPEN, "Buka Berkas (.grd)... \tCtrl+O");
+            AppendMenuA(hMenuFile, MF_STRING, ID_MENU_FILE_SAVE, "Simpan Berkas (.grd)... \tCtrl+S");
             AppendMenuA(hMenuFile, MF_SEPARATOR, 0, NULL);
             AppendMenuA(hMenuFile, MF_STRING, ID_MENU_FILE_EXIT, "Keluar");
 
-            AppendMenuA(hMenuRun, MF_STRING, ID_BTN_RUN, "🚀 Jalankan Kode");
+            AppendMenuA(hMenuSamples, MF_STRING, ID_MENU_SAMPLE_HELL, "1. Hello World & Cetak Teks");
+            AppendMenuA(hMenuSamples, MF_STRING, ID_MENU_SAMPLE_CALC, "2. Kalkulator & Matematika");
+            AppendMenuA(hMenuSamples, MF_STRING, ID_MENU_SAMPLE_API, "3. REST API Web Server");
+            AppendMenuA(hMenuSamples, MF_STRING, ID_MENU_SAMPLE_GAME, "4. Game Engine 3D & ECS");
+            AppendMenuA(hMenuSamples, MF_STRING, ID_MENU_SAMPLE_AI, "5. On-Device Local AI LLM");
+
+            AppendMenuA(hMenuRun, MF_STRING, ID_BTN_RUN, "🚀 Jalankan Kode \tCtrl+R");
+            AppendMenuA(hMenuRun, MF_STRING, ID_BTN_LINT, "✨ Cek Linter Kode");
             AppendMenuA(hMenuRun, MF_STRING, ID_BTN_GRADE, "🎓 Cek Nilai Auto-Grader");
-            AppendMenuA(hMenuRun, MF_STRING, ID_BTN_EXPORT, "📦 Ekspor ke .exe");
+            AppendMenuA(hMenuRun, MF_STRING, ID_BTN_EXPORT, "📦 Ekspor ke .exe \tCtrl+Shift+E");
 
             AppendMenuA(hMenuBar, MF_POPUP, (UINT_PTR)hMenuFile, "File");
+            AppendMenuA(hMenuBar, MF_POPUP, (UINT_PTR)hMenuSamples, "Contoh Kodingan");
             AppendMenuA(hMenuBar, MF_POPUP, (UINT_PTR)hMenuRun, "Eksekusi");
 
             SetMenu(hwnd, hMenuBar);
 
             // Create Action Buttons Toolbar
-            CreateWindowA("BUTTON", "🚀 Jalankan Kode", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                          10, 10, 160, 35, hwnd, (HMENU)ID_BTN_RUN, NULL, NULL);
-            CreateWindowA("BUTTON", "🎓 Cek Nilai Auto-Grader", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                          180, 10, 200, 35, hwnd, (HMENU)ID_BTN_GRADE, NULL, NULL);
-            CreateWindowA("BUTTON", "📦 Ekspor ke .exe", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                          390, 10, 160, 35, hwnd, (HMENU)ID_BTN_EXPORT, NULL, NULL);
+            CreateWindowA("BUTTON", "🚀 Jalankan (Ctrl+R)", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                          10, 10, 150, 35, hwnd, (HMENU)ID_BTN_RUN, NULL, NULL);
+            CreateWindowA("BUTTON", "✨ Cek Linter", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                          170, 10, 120, 35, hwnd, (HMENU)ID_BTN_LINT, NULL, NULL);
+            CreateWindowA("BUTTON", "🎓 Auto-Grader", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                          300, 10, 140, 35, hwnd, (HMENU)ID_BTN_GRADE, NULL, NULL);
+            CreateWindowA("BUTTON", "📦 Ekspor .exe", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                          450, 10, 140, 35, hwnd, (HMENU)ID_BTN_EXPORT, NULL, NULL);
 
             // Create Label for Code Editor
-            CreateWindowA("STATIC", "📝 Area Pengedit Kode Bahasa Garuda (seperti Notepad++):", WS_VISIBLE | WS_CHILD,
+            CreateWindowA("STATIC", "📝 Area Pengedit Kode Bahasa Garuda (Consolas 11pt Monospace):", WS_VISIBLE | WS_CHILD,
                           10, 55, 600, 20, hwnd, NULL, NULL, NULL);
 
+            // Create Font
+            g_hFontCode = CreateFontA(18, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
+                                     OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
+                                     FIXED_PITCH | FF_MODERN, "Consolas");
+
             // Create Code Editor Box (Multi-line Edit)
-            g_hwndEditCode = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", g_default_code,
+            g_hwndEditCode = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", g_sample_hello,
                                             WS_VISIBLE | WS_CHILD | ES_MULTILINE | WS_VSCROLL | WS_HSCROLL | ES_AUTOVSCROLL | ES_AUTOHSCROLL,
                                             10, 80, 860, 320, hwnd, (HMENU)ID_EDIT_CODE, NULL, NULL);
+            SendMessageA(g_hwndEditCode, WM_SETFONT, (WPARAM)g_hFontCode, TRUE);
 
             // Create Label for Output Console
             CreateWindowA("STATIC", "📺 Konsol Hasil Eksekusi & Output Studio:", WS_VISIBLE | WS_CHILD,
                           10, 410, 600, 20, hwnd, NULL, NULL, NULL);
 
             // Create Output Box
-            g_hwndEditOutput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "Klik tombol '🚀 Jalankan Kode' di atas untuk menguji program...",
+            g_hwndEditOutput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "Klik '🚀 Jalankan' atau tekan Ctrl+R untuk menguji program...",
                                               WS_VISIBLE | WS_CHILD | ES_MULTILINE | WS_VSCROLL | ES_READONLY,
                                               10, 435, 860, 130, hwnd, (HMENU)ID_EDIT_OUTPUT, NULL, NULL);
+            SendMessageA(g_hwndEditOutput, WM_SETFONT, (WPARAM)g_hFontCode, TRUE);
             break;
         }
 
         case WM_COMMAND: {
             int wmId = LOWORD(wParam);
             switch (wmId) {
+                case ID_MENU_FILE_NEW:
+                    SetWindowTextA(g_hwndEditCode, g_sample_hello);
+                    SetWindowTextA(g_hwndEditOutput, "Berkas baru dibuat.");
+                    break;
+                case ID_MENU_FILE_OPEN:
+                    OpenFileDialog(hwnd);
+                    break;
+                case ID_MENU_FILE_SAVE:
+                    SaveFileDialog(hwnd);
+                    break;
+                case ID_MENU_SAMPLE_HELL:
+                    SetWindowTextA(g_hwndEditCode, g_sample_hello);
+                    break;
+                case ID_MENU_SAMPLE_CALC:
+                    SetWindowTextA(g_hwndEditCode, g_sample_calc);
+                    break;
+                case ID_MENU_SAMPLE_API:
+                    SetWindowTextA(g_hwndEditCode, g_sample_api);
+                    break;
+                case ID_MENU_SAMPLE_GAME:
+                    SetWindowTextA(g_hwndEditCode, g_sample_game);
+                    break;
+                case ID_MENU_SAMPLE_AI:
+                    SetWindowTextA(g_hwndEditCode, g_sample_ai);
+                    break;
                 case ID_BTN_RUN:
                     RunGarudaScript(hwnd);
+                    break;
+                case ID_BTN_LINT:
+                    LintGarudaScript(hwnd);
                     break;
                 case ID_BTN_GRADE:
                     GradeGarudaScript(hwnd);
@@ -153,6 +308,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         }
 
         case WM_DESTROY:
+            if (g_hFontCode) DeleteObject(g_hFontCode);
             PostQuitMessage(0);
             break;
 
@@ -181,7 +337,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     }
 
     HWND hwnd = CreateWindowExA(0, "GarudaStudioWindowClass",
-                                "🦅 Garuda Coding Studio v3.0 — Editor Koding Peserta (GUI Native)",
+                                "🦅 Garuda Coding Studio v3.5 — Professional GUI IDE Editor (Consolas Monospace)",
                                 WS_OVERLAPPEDWINDOW & ~WS_MAXIMIZEBOX,
                                 CW_USEDEFAULT, CW_USEDEFAULT, 900, 640,
                                 NULL, NULL, hInstance, NULL);

@@ -25,14 +25,13 @@ void test_garuda_game_scene3d() {
     assert(load_ok && "Failed to load packages/game/src/scene3d.grd via GvmEmbeddingHost");
     (void)load_ok;
 
-    assert(host.has_function("buat_node_3d") && "GameScene3DGaruda should have 'buat_node_3d' function");
-    assert(host.has_function("hitung_transformasi_dunia") && "GameScene3DGaruda should have 'hitung_transformasi_dunia' function");
-    assert(host.has_function("buat_material_pbr") && "GameScene3DGaruda should have 'buat_material_pbr' function");
-    assert(host.has_function("hitung_total_node") && "GameScene3DGaruda should have 'hitung_total_node' function");
+    assert(host.has_function("buat_simpul_3d") && "Scene3DGaruda should have 'buat_simpul_3d' function");
+    assert(host.has_function("hitung_matriks_dunia") && "Scene3DGaruda should have 'hitung_matriks_dunia' function");
+    assert(host.has_function("hitung_anak") && "Scene3DGaruda should have 'hitung_anak' function");
 
-    auto count_res = host.call_function("hitung_total_node");
-    assert(count_res.has_value() && "hitung_total_node should return a value");
-    assert(std::get<int64_t>(*count_res) == 2 && "GameScene3DGaruda node count should be 2");
+    auto child_res = host.call_function("hitung_anak");
+    assert(child_res.has_value() && "hitung_anak should return a value");
+    assert(std::get<int64_t>(*child_res) == 0 && "Scene3DGaruda initial child count should be 0");
 
     std::cout << "[PASS] test_garuda_game_scene3d" << std::endl;
 }

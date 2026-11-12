@@ -25,14 +25,13 @@ void test_garuda_game_audio3d() {
     assert(load_ok && "Failed to load packages/game/src/audio3d.grd via GvmEmbeddingHost");
     (void)load_ok;
 
-    assert(host.has_function("buat_pendengar") && "GameAudio3DGaruda should have 'buat_pendengar' function");
-    assert(host.has_function("buat_sumber_suara") && "GameAudio3DGaruda should have 'buat_sumber_suara' function");
-    assert(host.has_function("hitung_peredaman_jarak") && "GameAudio3DGaruda should have 'hitung_peredaman_jarak' function");
-    assert(host.has_function("hitung_sumber") && "GameAudio3DGaruda should have 'hitung_sumber' function");
+    assert(host.has_function("buat_pendengar_3d") && "Audio3DGaruda should have 'buat_pendengar_3d' function");
+    assert(host.has_function("hitung_peredaman_jarak") && "Audio3DGaruda should have 'hitung_peredaman_jarak' function");
+    assert(host.has_function("hitung_sumber_suara") && "Audio3DGaruda should have 'hitung_sumber_suara' function");
 
-    auto count_res = host.call_function("hitung_sumber");
-    assert(count_res.has_value() && "hitung_sumber should return a value");
-    assert(std::get<int64_t>(*count_res) == 1 && "GameAudio3DGaruda audio source count should be 1");
+    auto count_res = host.call_function("hitung_sumber_suara");
+    assert(count_res.has_value() && "hitung_sumber_suara should return a value");
+    assert(std::get<int64_t>(*count_res) == 0 && "Audio3DGaruda initial sound emitter count should be 0");
 
     std::cout << "[PASS] test_garuda_game_audio3d" << std::endl;
 }

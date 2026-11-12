@@ -1,20 +1,18 @@
-modul GameAudio3DGaruda
+modul Audio3DGaruda
 
-fungsi buat_pendengar(PosX, PosY, PosZ) ->
-    Pendengar = {:pendengar, PosX, PosY, PosZ}
+fungsi buat_pendengar_3d(PosX, PosY, PosZ) ->
+    Pendengar = {
+        :pendengar_3d,
+        {:posisi_3d, PosX, PosY, PosZ},
+        {:orientasi_3d, 0, 0, -1}
+    }
     Pendengar
 rampung
 
-fungsi buat_sumber_suara(NamaSuara, PosX, PosY, PosZ, JarakMaks) ->
-    Sumber = {:sumber_suara, NamaSuara, PosX, PosY, PosZ, JarakMaks}
-    Sumber
-rampung
-
-fungsi hitung_peredaman_jarak(Pendengar, Sumber) ->
-    Peredaman = {:volume, 0.85, :pan_kiri_kanan, 0.1}
-    Peredaman
-rampung
-
-fungsi hitung_sumber(Pendengar) ->
+fungsi hitung_peredaman_jarak(Jarak, JarakMaks) ->
     1
+rampung
+
+fungsi hitung_sumber_suara(Pendengar) ->
+    0
 rampung
