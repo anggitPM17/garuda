@@ -82,7 +82,7 @@ const char* g_sample_actor =
     "fungsi utama() ->\r\n"
     "    Pid = spawn(loop_penerima)\r\n"
     "    cetak(\"Spawned Aktor PID: <0.1.0>\")\r\n"
-    "    kirim(Pid, {:pesan, \"Salam dari Garuda Playground!\"})\r\n"
+    "    kirim(Pid, {:pesan, \"Salam dari Garuda Studio!\"})\r\n"
     "    kirim(Pid, {:selesai})\r\n"
     "    200\r\n"
     "rampung\r\n";
@@ -210,7 +210,7 @@ void RunGarudaScript(HWND hwnd) {
         out = "=== ERR: FUNGSI 'utama' TIDAK DITEMUKAN ===\r\n";
         out += "Harap tambahkan 'fungsi utama() -> ... rampung' dalam modul Anda.";
     } else {
-        out = "=== GARUDA PLAYGROUND STUDIO (GVM RUNTIME EXECUTION) ===\r\n";
+        out = "=== GARUDA CODING STUDIO (GVM RUNTIME EXECUTION) ===\r\n";
         if (!captured_output.empty()) {
             out += "Output Konsol Aktor:\r\n" + CleanUtf8ForWin32(captured_output) + "\r\n";
         }
@@ -468,7 +468,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             AppendMenuA(hMenuRun, MF_STRING, ID_BTN_EXPORT, "Ekspor ke .exe \tCtrl+Shift+E");
 
             AppendMenuA(hMenuBar, MF_POPUP, (UINT_PTR)hMenuFile, "File");
-            AppendMenuA(hMenuBar, MF_POPUP, (UINT_PTR)hMenuSamples, "Playground Presets");
+            AppendMenuA(hMenuBar, MF_POPUP, (UINT_PTR)hMenuSamples, "Contoh Kodingan");
             AppendMenuA(hMenuBar, MF_POPUP, (UINT_PTR)hMenuRun, "Eksekusi");
 
             SetMenu(hwnd, hMenuBar);
@@ -507,7 +507,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                               10, 400, 600, 18, hwnd, NULL, NULL, NULL);
 
             // Output Console Box
-            g_hwndEditOutput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "Klik 'Jalankan' atau tekan Ctrl+R untuk menguji program di Garuda Playground...",
+            g_hwndEditOutput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "Klik 'Jalankan' atau tekan Ctrl+R untuk menguji program di Garuda Studio...",
                                               WS_VISIBLE | WS_CHILD | ES_MULTILINE | WS_VSCROLL | ES_READONLY,
                                               10, 420, 860, 130, hwnd, (HMENU)ID_EDIT_OUTPUT, NULL, NULL);
             SendMessageA(g_hwndEditOutput, WM_SETFONT, (WPARAM)g_hFontCode, TRUE);
