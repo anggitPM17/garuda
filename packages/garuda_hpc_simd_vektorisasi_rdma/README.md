@@ -1,0 +1,43 @@
+# garuda_hpc_simd_vektorisasi_rdma
+
+> **Modul:** `SimdVektorisasiRdma` • **Kategori:** Superkomputer & HPC Paralel • **Versi:** `0.1.0`
+
+Varian Rdma berkinerja tinggi: Primitif operasi paralel 512-bit AVX-512 dan ARM NEON untuk percepatan komputasi numerik.
+
+## Arsitektur & Tujuan
+Optimalisasi khusus arsitektur rdma untuk beban komputasi terisolasi di GVM.
+
+## Pemasangan via GPM
+Tambahkan ke berkas `grdmix.toml`:
+```toml
+[dependensi]
+garuda_hpc_simd_vektorisasi_rdma = "0.1.0"
+```
+
+Atau instal langsung melalui CLI:
+```bash
+gpm pasang garuda_hpc_simd_vektorisasi_rdma
+```
+
+## Contoh Penggunaan
+```garuda
+modul AplikasiSaya
+
+impor SimdVektorisasiRdma
+
+publik fungsi utama(): Bulat {
+    konst instansi = SimdVektorisasiRdma::inisialisasi()
+    kembalikan 0
+}
+```
+
+## Batasan yang Diketahui (Known Limitations)
+- Modul ini dirancang murni di atas runtime GVM (Garuda Virtual Machine).
+- Bergantung pada ketersediaan alokasi heap memori thread-safe.
+
+## Kebutuhan Engine C++ GVM
+- Jika modul memerlukan operasi I/O jaringan fisik langsung, modul memanggil FFI socket `garuda_socket_ffi`.
+- Kriptografi CSPRNG membutuhkan entropy source `/dev/urandom` atau WinCrypt pada level host C++.
+
+## Lisensi
+Lisensi MIT © 2026 Anggit Prasetyo (@anggitPM17).
