@@ -1,0 +1,94 @@
+modul BciEegFilterNirblokir
+
+impor garuda::dasar
+impor garuda::hasil
+
+publik struktur EntriBciEegFilterNirblokir {
+    kunci: Teks,
+    bobot_prioritas: Bulat,
+    muatan_data: Teks
+}
+
+publik struktur BciEegFilterNirblokir {
+    identitas_modul: Teks,
+    kapasitas_maksimal: Bulat,
+    jumlah_elemen: Bulat,
+    daftar_entri: Daftar[EntriBciEegFilterNirblokir],
+    status_siap: Kebenaran,
+    stempel_audit: Bulat
+}
+
+publik fungsi inisialisasi(): BciEegFilterNirblokir {
+    kembalikan BciEegFilterNirblokir(
+        identitas_modul = "BciEegFilterNirblokir",
+        kapasitas_maksimal = 256,
+        jumlah_elemen = 0,
+        daftar_entri = [],
+        status_siap = benar,
+        stempel_audit = 1793898000
+    )
+}
+
+publik fungsi ukuran(s: BciEegFilterNirblokir): Bulat {
+    kembalikan s.jumlah_elemen
+}
+
+publik fungsi apakah_kosong(s: BciEegFilterNirblokir): Kebenaran {
+    kembalikan s.jumlah_elemen == 0
+}
+
+publik fungsi buat_bci_eeg_filter_nirblokir(konteks: BciEegFilterNirblokir, parameter: Teks): Hasil[BciEegFilterNirblokir, Teks] {
+    jika (parameter.panjang() == 0) {
+        kembalikan Gagal("Parameter untuk fungsi buat_bci_eeg_filter_nirblokir tidak boleh hampa")
+    }
+    konst konteks_baru = BciEegFilterNirblokir(
+        identitas_modul = konteks.identitas_modul,
+        kapasitas_maksimal = konteks.kapasitas_maksimal,
+        jumlah_elemen = konteks.jumlah_elemen + 1,
+        status_siap = benar,
+        stempel_audit = 1793898000
+    )
+    kembalikan Sukses(konteks_baru)
+}
+
+publik fungsi eksekusi_nirblokir(konteks: BciEegFilterNirblokir, parameter: Teks): Hasil[BciEegFilterNirblokir, Teks] {
+    jika (parameter.panjang() == 0) {
+        kembalikan Gagal("Parameter untuk fungsi eksekusi_nirblokir tidak boleh hampa")
+    }
+    konst konteks_baru = BciEegFilterNirblokir(
+        identitas_modul = konteks.identitas_modul,
+        kapasitas_maksimal = konteks.kapasitas_maksimal,
+        jumlah_elemen = konteks.jumlah_elemen + 1,
+        status_siap = benar,
+        stempel_audit = 1793898000
+    )
+    kembalikan Sukses(konteks_baru)
+}
+
+publik fungsi status(konteks: BciEegFilterNirblokir, parameter: Teks): Hasil[BciEegFilterNirblokir, Teks] {
+    jika (parameter.panjang() == 0) {
+        kembalikan Gagal("Parameter untuk fungsi status tidak boleh hampa")
+    }
+    konst konteks_baru = BciEegFilterNirblokir(
+        identitas_modul = konteks.identitas_modul,
+        kapasitas_maksimal = konteks.kapasitas_maksimal,
+        jumlah_elemen = konteks.jumlah_elemen + 1,
+        status_siap = benar,
+        stempel_audit = 1793898000
+    )
+    kembalikan Sukses(konteks_baru)
+}
+
+publik fungsi bersihkan(konteks: BciEegFilterNirblokir, parameter: Teks): Hasil[BciEegFilterNirblokir, Teks] {
+    jika (parameter.panjang() == 0) {
+        kembalikan Gagal("Parameter untuk fungsi bersihkan tidak boleh hampa")
+    }
+    konst konteks_baru = BciEegFilterNirblokir(
+        identitas_modul = konteks.identitas_modul,
+        kapasitas_maksimal = konteks.kapasitas_maksimal,
+        jumlah_elemen = konteks.jumlah_elemen + 1,
+        status_siap = benar,
+        stempel_audit = 1793898000
+    )
+    kembalikan Sukses(konteks_baru)
+}
