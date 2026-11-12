@@ -48,19 +48,22 @@ using namespace garuda::beam;
 #define ID_BTN_GRADE            2004
 #define ID_BTN_EXPORT           2005
 #define ID_BTN_CLEAR            2006
+#define ID_BTN_AIFIX            2007
 
 #define ID_EDIT_GUTTER          3000
 #define ID_EDIT_CODE            3001
 #define ID_EDIT_OUTPUT          3002
 #define ID_STATUS_BAR           3003
 
-HWND g_hwndGutter = NULL;
 HWND g_hwndEditCode = NULL;
 HWND g_hwndEditOutput = NULL;
 HWND g_hwndLabelCode = NULL;
 HWND g_hwndLabelOutput = NULL;
 HWND g_hwndStatusBar = NULL;
+HWND g_hwndGutter = NULL;
+
 HFONT g_hFontCode = NULL;
+HFONT g_hFontUI = NULL;
 
 HBRUSH g_hbrDarkBg = NULL;
 HBRUSH g_hbrGutterBg = NULL;
@@ -68,100 +71,99 @@ HBRUSH g_hbrConsoleBg = NULL;
 
 bool g_isFormatting = false;
 
-const char* g_sample_hello =
-    "modul HelloGaruda\r\n\r\n"
-    "fungsi utama() ->\r\n"
-    "    Pesan = \"Selamat Belajar Bahasa Pemrograman Garuda!\"\r\n"
-    "    cetak(Pesan)\r\n"
-    "    200\r\n"
-    "rampung\r\n";
+const wchar_t* g_sample_hello_w =
+    L"modul HelloGaruda\r\n\r\n"
+    L"fungsi utama() ->\r\n"
+    L"    Pesan = \"Selamat Belajar Bahasa Pemrograman Garuda!\"\r\n"
+    L"    cetak(Pesan)\r\n"
+    L"    200\r\n"
+    L"rampung\r\n";
 
-const char* g_sample_actor =
-    "modul ActorDemo\r\n\r\n"
-    "fungsi loop_penerima() ->\r\n"
-    "    tampa\r\n"
-    "        {:pesan, IsiPesan} ->\r\n"
-    "            cetak(\"Aktor Menerima Pesan: \" <> IsiPesan)\r\n"
-    "            loop_penerima()\r\n"
-    "        {:selesai} ->\r\n"
-    "            cetak(\"Aktor Selesai Eksekusi.\")\r\n"
-    "            200\r\n"
-    "    rampung\r\n"
-    "rampung\r\n\r\n"
-    "fungsi utama() ->\r\n"
-    "    Pid = spawn(loop_penerima)\r\n"
-    "    cetak(\"Spawned Aktor PID: <0.1.0>\")\r\n"
-    "    kirim(Pid, {:pesan, \"Salam dari Garuda Studio!\"})\r\n"
-    "    kirim(Pid, {:selesai})\r\n"
-    "    200\r\n"
-    "rampung\r\n";
+const wchar_t* g_sample_actor_w =
+    L"modul ActorDemo\r\n\r\n"
+    L"fungsi loop_penerima() ->\r\n"
+    L"    tampa\r\n"
+    L"        {:pesan, IsiPesan} ->\r\n"
+    L"            cetak(\"Aktor Menerima Pesan: \" <> IsiPesan)\r\n"
+    L"            loop_penerima()\r\n"
+    L"        {:selesai} ->\r\n"
+    L"            cetak(\"Aktor Selesai Eksekusi.\")\r\n"
+    L"            200\r\n"
+    L"    rampung\r\n"
+    L"rampung\r\n\r\n"
+    L"fungsi utama() ->\r\n"
+    L"    Pid = spawn(loop_penerima)\r\n"
+    L"    cetak(\"Spawned Aktor PID: <0.1.0>\")\r\n"
+    L"    kirim(Pid, {:pesan, \"Salam dari Garuda Studio!\"})\r\n"
+    L"    kirim(Pid, {:selesai})\r\n"
+    L"    200\r\n"
+    L"rampung\r\n";
 
-const char* g_sample_genserver =
-    "modul ServerStatus\r\n\r\n"
-    "fungsi inisialisasi(StatusAwal) ->\r\n"
-    "    {:ok, StatusAwal}\r\n"
-    "rampung\r\n\r\n"
-    "fungsi tangani_panggilan(:status, _Dari, Status) ->\r\n"
-    "    {:balas, Status, Status}\r\n"
-    "rampung\r\n\r\n"
-    "fungsi utama() ->\r\n"
-    "    {:ok, Pid} = GenServer.mulai(ServerStatus, \"Status Server: Aktif & Normal\")\r\n"
-    "    Status = GenServer.panggil(Pid, :status)\r\n"
-    "    cetak(Status)\r\n"
-    "    200\r\n"
-    "rampung\r\n";
+const wchar_t* g_sample_genserver_w =
+    L"modul ServerStatus\r\n\r\n"
+    L"fungsi inisialisasi(StatusAwal) ->\r\n"
+    L"    {:ok, StatusAwal}\r\n"
+    L"rampung\r\n\r\n"
+    L"fungsi tangani_panggilan(:status, _Dari, Status) ->\r\n"
+    L"    {:balas, Status, Status}\r\n"
+    L"rampung\r\n\r\n"
+    L"fungsi utama() ->\r\n"
+    L"    {:ok, Pid} = GenServer.mulai(ServerStatus, \"Status Server: Aktif & Normal\")\r\n"
+    L"    Status = GenServer.panggil(Pid, :status)\r\n"
+    L"    cetak(Status)\r\n"
+    L"    200\r\n"
+    L"rampung\r\n";
 
-const char* g_sample_supervisor =
-    "modul PengawasAktor\r\n\r\n"
-    "fungsi utama() ->\r\n"
-    "    cetak(\"[SUPERVISOR] Menjalankan Pengawas Aktor Self-Healing...\")\r\n"
-    "    cetak(\"[SUPERVISOR] Aktor Pekerja Crash -> Otomatis Direstart oleh Supervisor!\")\r\n"
-    "    200\r\n"
-    "rampung\r\n";
+const wchar_t* g_sample_supervisor_w =
+    L"modul PengawasAktor\r\n\r\n"
+    L"fungsi utama() ->\r\n"
+    L"    cetak(\"[SUPERVISOR] Menjalankan Pengawas Aktor Self-Healing...\")\r\n"
+    L"    cetak(\"[SUPERVISOR] Aktor Pekerja Crash -> Otomatis Direstart oleh Supervisor!\")\r\n"
+    L"    200\r\n"
+    L"rampung\r\n";
 
-const char* g_sample_api =
-    "modul ServerRestAPI\r\n\r\n"
-    "fungsi utama() ->\r\n"
-    "    cetak(\"Server REST API Todo Garuda Aktif di Port 8080!\")\r\n"
-    "    200\r\n"
-    "rampung\r\n";
+const wchar_t* g_sample_api_w =
+    L"modul ServerRestAPI\r\n\r\n"
+    L"fungsi utama() ->\r\n"
+    L"    cetak(\"Server REST API Todo Garuda Aktif di Port 8080!\")\r\n"
+    L"    200\r\n"
+    L"rampung\r\n";
 
-const char* g_sample_game =
-    "modul GameEngine3D\r\n\r\n"
-    "fungsi utama() ->\r\n"
-    "    Dunia = GameEcsGaruda.buat_dunia()\r\n"
-    "    Kanvas = GarudaCanvas2D.buat_kanvas(800, 600)\r\n"
-    "    cetak(\"Game ECS & 3D Scene Graph Siap Dimainkan!\")\r\n"
-    "    200\r\n"
-    "rampung\r\n";
+const wchar_t* g_sample_game_w =
+    L"modul GameEngine3D\r\n\r\n"
+    L"fungsi utama() ->\r\n"
+    L"    Dunia = GameEcsGaruda.buat_dunia()\r\n"
+    L"    Kanvas = GarudaCanvas2D.buat_kanvas(800, 600)\r\n"
+    L"    cetak(\"Game ECS & 3D Scene Graph Siap Dimainkan!\")\r\n"
+    L"    200\r\n"
+    L"rampung\r\n";
 
-std::string CleanUtf8ForWin32(const std::string& input) {
-    std::string clean;
-    clean.reserve(input.size());
-    for (size_t i = 0; i < input.size(); ++i) {
-        unsigned char c = static_cast<unsigned char>(input[i]);
-        if (c >= 32 && c <= 126) {
-            clean += c;
-        } else if (c == '\n') {
-            clean += "\r\n";
-        } else if (c == '\r') {
-            // Handled
-        } else if (c == '\t') {
-            clean += "\t";
-        }
-    }
-    return clean;
+std::wstring Utf8ToUtf16(const std::string& str) {
+    if (str.empty()) return L"";
+    int size_needed = MultiByteToWideChar(CP_UTF8, 0, &str[0], (int)str.size(), NULL, 0);
+    std::wstring wstrTo(size_needed, 0);
+    MultiByteToWideChar(CP_UTF8, 0, &str[0], (int)str.size(), &wstrTo[0], size_needed);
+    return wstrTo;
+}
+
+std::string Utf16ToUtf8(const std::wstring& wstr) {
+    if (wstr.empty()) return "";
+    int size_needed = WideCharToMultiByte(CP_UTF8, 0, &wstr[0], (int)wstr.size(), NULL, 0, NULL, NULL);
+    std::string strTo(size_needed, 0);
+    WideCharToMultiByte(CP_UTF8, 0, &wstr[0], (int)wstr.size(), &strTo[0], size_needed, NULL, NULL);
+    return strTo;
 }
 
 std::string GetNormalizedCodeFromEditor() {
-    int len = GetWindowTextLengthA(g_hwndEditCode);
-    if (len <= 0) return g_sample_hello;
+    int len = GetWindowTextLengthW(g_hwndEditCode);
+    if (len <= 0) return Utf16ToUtf8(g_sample_hello_w);
 
-    std::string raw;
-    raw.resize(len + 1);
-    GetWindowTextA(g_hwndEditCode, &raw[0], len + 1);
-    raw.resize(len);
+    std::wstring wraw;
+    wraw.resize(len + 1);
+    GetWindowTextW(g_hwndEditCode, &wraw[0], len + 1);
+    wraw.resize(len);
 
+    std::string raw = Utf16ToUtf8(wraw);
     std::string normalized;
     normalized.reserve(raw.size());
     for (size_t i = 0; i < raw.size(); ++i) {
@@ -177,15 +179,15 @@ void UpdateLineNumbersGutter() {
     int line_count = static_cast<int>(SendMessageA(g_hwndEditCode, EM_GETLINECOUNT, 0, 0));
     if (line_count < 1) line_count = 1;
 
-    std::string gutter_text;
+    std::wstring gutter_text;
     gutter_text.reserve(line_count * 6);
     for (int i = 1; i <= line_count; ++i) {
-        if (i < 10) gutter_text += "  " + std::to_string(i) + "\r\n";
-        else if (i < 100) gutter_text += " " + std::to_string(i) + "\r\n";
-        else gutter_text += std::to_string(i) + "\r\n";
+        if (i < 10) gutter_text += L"  " + std::to_wstring(i) + L"\r\n";
+        else if (i < 100) gutter_text += L" " + std::to_wstring(i) + L"\r\n";
+        else gutter_text += std::to_wstring(i) + L"\r\n";
     }
 
-    SetWindowTextA(g_hwndGutter, gutter_text.c_str());
+    SetWindowTextW(g_hwndGutter, gutter_text.c_str());
 
     int first_visible_line = static_cast<int>(SendMessageA(g_hwndEditCode, EM_GETFIRSTVISIBLELINE, 0, 0));
     SendMessageA(g_hwndGutter, EM_LINESCROLL, 0, first_visible_line);
@@ -195,22 +197,19 @@ void ApplySyntaxHighlighting() {
     if (!g_hwndEditCode || g_isFormatting) return;
     g_isFormatting = true;
 
-    // Save current selection / scroll
     CHARRANGE cr_saved;
     SendMessageA(g_hwndEditCode, EM_EXGETSEL, 0, (LPARAM)&cr_saved);
     POINT scroll_pt;
     SendMessageA(g_hwndEditCode, EM_GETSCROLLPOS, 0, (LPARAM)&scroll_pt);
 
-    // Disable redrawing during formatting
     SendMessageA(g_hwndEditCode, WM_SETREDRAW, FALSE, 0);
 
     std::string code = GetNormalizedCodeFromEditor();
 
-    // Default formatting
     CHARFORMAT2A cf_default = {0};
     cf_default.cbSize = sizeof(CHARFORMAT2A);
     cf_default.dwMask = CFM_COLOR | CFM_BOLD;
-    cf_default.crTextColor = RGB(212, 212, 212); // VS Code Light Grey
+    cf_default.crTextColor = RGB(212, 212, 212);
     cf_default.dwEffects = 0;
 
     CHARRANGE cr_all = {0, -1};
@@ -230,14 +229,14 @@ void ApplySyntaxHighlighting() {
                 tok.type == TokenType::Receive || tok.type == TokenType::If ||
                 tok.type == TokenType::Else || tok.type == TokenType::Try ||
                 tok.type == TokenType::Catch) {
-                color = RGB(86, 156, 214); // Cyan Blue
+                color = RGB(86, 156, 214); // Cyan Blue Keyword
                 bold = true;
             } else if (tok.type == TokenType::String) {
                 color = RGB(206, 145, 120); // Amber String
             } else if (tok.type == TokenType::Number || tok.type == TokenType::Float) {
                 color = RGB(181, 206, 168); // Light Green
             } else if (tok.type == TokenType::Identifier) {
-                color = RGB(220, 220, 170); // Light Yellow Function/Var Name
+                color = RGB(220, 220, 170); // Light Yellow Name
             } else if (tok.type == TokenType::Atom) {
                 color = RGB(197, 134, 192); // Purple Atom
             }
@@ -256,15 +255,11 @@ void ApplySyntaxHighlighting() {
             SendMessageA(g_hwndEditCode, EM_EXSETSEL, 0, (LPARAM)&cr);
             SendMessageA(g_hwndEditCode, EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
         }
-    } catch (...) {
-        // Fallback silently if code is mid-typing syntax error
-    }
+    } catch (...) {}
 
-    // Restore selection & scroll position
     SendMessageA(g_hwndEditCode, EM_EXSETSEL, 0, (LPARAM)&cr_saved);
     SendMessageA(g_hwndEditCode, EM_SETSCROLLPOS, 0, (LPARAM)&scroll_pt);
 
-    // Re-enable redraw
     SendMessageA(g_hwndEditCode, WM_SETREDRAW, TRUE, 0);
     InvalidateRect(g_hwndEditCode, NULL, TRUE);
 
@@ -280,9 +275,9 @@ void UpdateStatusBarInfo() {
     int line_index = static_cast<int>(SendMessageA(g_hwndEditCode, EM_LINEINDEX, line - 1, 0));
     int col = static_cast<int>(cr.cpMin - line_index) + 1;
 
-    std::string status = " Baris: " + std::to_string(line) + ", Kolom: " + std::to_string(col) +
-                         " | Encoding: UTF-8 | GVM Actor Runtime v67.0.0 Active";
-    SetWindowTextA(g_hwndStatusBar, status.c_str());
+    std::wstring status = L"  Baris: " + std::to_wstring(line) + L", Kolom: " + std::to_wstring(col) +
+                          L" | Encoding: UTF-8 | GVM Actor Runtime v67.0.0 Active";
+    SetWindowTextW(g_hwndStatusBar, status.c_str());
 
     UpdateLineNumbersGutter();
 }
@@ -310,28 +305,83 @@ void RunGarudaScript(HWND hwnd) {
     auto end_time = std::chrono::high_resolution_clock::now();
     auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
 
-    std::string out;
+    std::wstring out;
     if (!load_ok) {
-        out = "=== ERR: GAGAL KOMPILASI KODE GARUDA ===\r\n";
-        out += "Harap periksa sintaks modul, fungsi, atau kata kunci 'rampung'.\r\n\r\n";
+        out = L"=== ⚠️ ERR: GAGAL KOMPILASI KODE GARUDA ===\r\n";
+        out += L"Harap periksa sintaks modul, fungsi, atau kata kunci 'rampung'.\r\n\r\n";
         if (!captured_output.empty()) {
-            out += "Detail Log:\r\n" + CleanUtf8ForWin32(captured_output);
+            out += L"Detail Log:\r\n" + Utf8ToUtf16(captured_output);
         }
     } else if (!res.has_value()) {
-        out = "=== ERR: FUNGSI 'utama' TIDAK DITEMUKAN ===\r\n";
-        out += "Harap tambahkan 'fungsi utama() -> ... rampung' dalam modul Anda.";
+        out = L"=== ⚠️ ERR: FUNGSI 'utama' TIDAK DITEMUKAN ===\r\n";
+        out += L"Harap tambahkan 'fungsi utama() -> ... rampung' dalam modul Anda.";
     } else {
-        out = "=== GARUDA STUDIO (GVM RUNTIME EXECUTION) ===\r\n";
+        out = L"=== 🚀 GARUDA STUDIO (GVM RUNTIME EXECUTION) ===\r\n";
         if (!captured_output.empty()) {
-            out += "Output Konsol Aktor:\r\n" + CleanUtf8ForWin32(captured_output) + "\r\n";
+            out += L"Output Konsol Aktor:\r\n" + Utf8ToUtf16(captured_output) + L"\r\n";
         }
-        out += "--------------------------------------------------\r\n";
-        out += "Status : OK (Selesai Tanpa Error)\r\n";
-        out += "Respon : " + to_string(*res) + "\r\n";
-        out += "Waktu  : " + std::to_string(elapsed_ms) + " ms\r\n";
+        out += L"--------------------------------------------------\r\n";
+        out += L"Status : OK (Selesai Tanpa Error)\r\n";
+        out += L"Respon : " + Utf8ToUtf16(to_string(*res)) + L"\r\n";
+        out += L"Waktu  : " + std::to_wstring(elapsed_ms) + L" ms\r\n";
     }
 
-    SetWindowTextA(g_hwndEditOutput, out.c_str());
+    SetWindowTextW(g_hwndEditOutput, out.c_str());
+}
+
+void AiFixGarudaScript(HWND hwnd) {
+    (void)hwnd;
+    std::string code = GetNormalizedCodeFromEditor();
+
+    std::string fixed = code;
+    std::vector<std::string> repairs;
+
+    // 1. Ensure modul header exists
+    if (fixed.find("modul ") == std::string::npos) {
+        fixed = "modul ProgramGaruda\n\n" + fixed;
+        repairs.push_back("Menambahkan deklarasi 'modul ProgramGaruda'.");
+    }
+
+    // 2. Ensure fungsi utama exists
+    if (fixed.find("fungsi utama()") == std::string::npos && fixed.find("fungsi ") == std::string::npos) {
+        fixed += "\n\nfungsi utama() ->\n    200\nrampung\n";
+        repairs.push_back("Menambahkan 'fungsi utama() -> ... rampung'.");
+    }
+
+    // 3. Count 'fungsi' vs 'rampung' keywords
+    size_t fungsi_count = 0, rampung_count = 0;
+    size_t pos = 0;
+    while ((pos = fixed.find("fungsi ", pos)) != std::string::npos) { fungsi_count++; pos += 7; }
+    pos = 0;
+    while ((pos = fixed.find("rampung", pos)) != std::string::npos) { rampung_count++; pos += 7; }
+
+    while (rampung_count < fungsi_count) {
+        fixed += "\nrampung";
+        rampung_count++;
+        repairs.push_back("Menambahkan kata kunci 'rampung' penutup fungsi.");
+    }
+
+    // Convert fixed code to CRLF for RichEdit
+    std::wstring crlf_fixed;
+    crlf_fixed.reserve(fixed.size() * 2);
+    for (char c : fixed) {
+        if (c == '\n') crlf_fixed += L"\r\n";
+        else if (c != '\r') crlf_fixed += (wchar_t)c;
+    }
+
+    SetWindowTextW(g_hwndEditCode, crlf_fixed.c_str());
+    ApplySyntaxHighlighting();
+
+    std::wstring log = L"=== 💡 AI CODE FIXER ENGINE ===\r\n";
+    if (repairs.empty()) {
+        log += L"Status : Kode sudah rapi dan tidak memerlukan perbaikan otomatis!\r\n";
+    } else {
+        log += L"Status : BERHASIL MEMPERBAIKI KODE OTOMATIS!\r\nDetail Perbaikan:\r\n";
+        for (const auto& rep : repairs) {
+            log += L"  - " + Utf8ToUtf16(rep) + L"\r\n";
+        }
+    }
+    SetWindowTextW(g_hwndEditOutput, log.c_str());
 }
 
 void FormatGarudaScript(HWND hwnd) {
@@ -346,19 +396,19 @@ void FormatGarudaScript(HWND hwnd) {
         Formatter fmt;
         std::string formatted = fmt.format(module);
 
-        std::string crlf_formatted;
+        std::wstring crlf_formatted;
         crlf_formatted.reserve(formatted.size() * 2);
         for (char c : formatted) {
-            if (c == '\n') crlf_formatted += "\r\n";
-            else if (c != '\r') crlf_formatted += c;
+            if (c == '\n') crlf_formatted += L"\r\n";
+            else if (c != '\r') crlf_formatted += (wchar_t)c;
         }
 
-        SetWindowTextA(g_hwndEditCode, crlf_formatted.c_str());
+        SetWindowTextW(g_hwndEditCode, crlf_formatted.c_str());
         ApplySyntaxHighlighting();
-        SetWindowTextA(g_hwndEditOutput, "=== FORMATTER ===\r\nStatus : Kode Berhasil Diformat Rapi sesuai standar Garuda!");
+        SetWindowTextW(g_hwndEditOutput, L"=== ⚡ FORMATTER ===\r\nStatus : Kode Berhasil Diformat Rapi sesuai standar Garuda!");
     } catch (const std::exception& e) {
-        std::string out = "=== FORMATTER ERR ===\r\nGagal memformat kode: " + std::string(e.what());
-        SetWindowTextA(g_hwndEditOutput, out.c_str());
+        std::wstring out = L"=== ⚡ FORMATTER ERR ===\r\nGagal memformat kode: " + Utf8ToUtf16(e.what());
+        SetWindowTextW(g_hwndEditOutput, out.c_str());
     }
 }
 
@@ -366,7 +416,7 @@ void LintGarudaScript(HWND hwnd) {
     (void)hwnd;
     std::string code = GetNormalizedCodeFromEditor();
 
-    std::string out = "=== HASIL ANALISIS LINTER KODE GARUDA ===\r\n";
+    std::wstring out = L"=== 🔍 HASIL ANALISIS LINTER KODE GARUDA ===\r\n";
     try {
         Lexer lexer(code);
         Parser parser(lexer.tokenize());
@@ -376,20 +426,20 @@ void LintGarudaScript(HWND hwnd) {
         auto warnings = linter.lint(module);
 
         if (warnings.empty()) {
-            out += "Status  : RAPI (0 Peringatan Linter)\r\n";
-            out += "Detail  : Penulisan modul, nama fungsi, dan kata kunci 'rampung' sudah sempurna!";
+            out += L"Status  : RAPI (0 Peringatan Linter)\r\n";
+            out += L"Detail  : Penulisan modul, nama fungsi, dan kata kunci 'rampung' sudah sempurna!";
         } else {
-            out += "Status  : TERDETEKSI " + std::to_string(warnings.size()) + " PERINGATAN\r\n";
+            out += L"Status  : TERDETEKSI " + std::to_wstring(warnings.size()) + L" PERINGATAN\r\n";
             for (const auto& w : warnings) {
-                out += "  - Baris " + std::to_string(w.line) + ":" + std::to_string(w.col) + " -> " + w.message + "\r\n";
+                out += L"  - Baris " + std::to_wstring(w.line) + L":" + std::to_wstring(w.col) + L" -> " + Utf8ToUtf16(w.message) + L"\r\n";
             }
         }
     } catch (const std::exception& e) {
-        out += "Status  : ERR PARSE ERROR\r\n";
-        out += "Detail  : " + std::string(e.what());
+        out += L"Status  : ERR PARSE ERROR\r\n";
+        out += L"Detail  : " + Utf8ToUtf16(e.what());
     }
 
-    SetWindowTextA(g_hwndEditOutput, out.c_str());
+    SetWindowTextW(g_hwndEditOutput, out.c_str());
 }
 
 void GradeGarudaScript(HWND hwnd) {
@@ -397,7 +447,7 @@ void GradeGarudaScript(HWND hwnd) {
     std::string code = GetNormalizedCodeFromEditor();
 
     int score = 0;
-    std::string details;
+    std::wstring details;
 
     bool parse_ok = false;
     std::shared_ptr<ModuleNode> module;
@@ -407,9 +457,9 @@ void GradeGarudaScript(HWND hwnd) {
         module = parser.parse_program();
         parse_ok = true;
         score += 25;
-        details += "  [+25] Sintaks Modul & Parser Valid\r\n";
+        details += L"  [+25] Sintaks Modul & Parser Valid\r\n";
     } catch (...) {
-        details += "  [  0] Sintaks Error (Gagal Parse)\r\n";
+        details += L"  [  0] Sintaks Error (Gagal Parse)\r\n";
     }
 
     if (parse_ok && module) {
@@ -417,10 +467,10 @@ void GradeGarudaScript(HWND hwnd) {
         auto warnings = linter.lint(module);
         if (warnings.empty()) {
             score += 25;
-            details += "  [+25] Linter Bersih (0 Peringatan)\r\n";
+            details += L"  [+25] Linter Bersih (0 Peringatan)\r\n";
         } else {
             score += 10;
-            details += "  [+10] Linter Peringatan (" + std::to_string(warnings.size()) + " warning)\r\n";
+            details += L"  [+10] Linter Peringatan (" + std::to_wstring(warnings.size()) + L" warning)\r\n";
         }
     }
 
@@ -428,34 +478,34 @@ void GradeGarudaScript(HWND hwnd) {
     bool exec_ok = host.load_source(code);
     if (exec_ok) {
         score += 25;
-        details += "  [+25] Kompilasi & Execution Host Valid\r\n";
+        details += L"  [+25] Kompilasi & Execution Host Valid\r\n";
     } else {
-        details += "  [  0] Gagal Kompilasi Bytecode\r\n";
+        details += L"  [  0] Gagal Kompilasi Bytecode\r\n";
     }
 
     if (exec_ok) {
         auto res = host.call_function("utama");
         if (res.has_value()) {
             score += 25;
-            details += "  [+25] Fungsi 'utama' Mengembalikan Nilai: " + to_string(*res) + "\r\n";
+            details += L"  [+25] Fungsi 'utama' Mengembalikan Nilai: " + Utf8ToUtf16(to_string(*res)) + L"\r\n";
         } else {
-            details += "  [  0] Fungsi 'utama' Tidak Mengembalikan Nilai\r\n";
+            details += L"  [  0] Fungsi 'utama' Tidak Mengembalikan Nilai\r\n";
         }
     }
 
-    std::string out = "=== HASIL EVALUASI AUTO-GRADER TRAINING ENGINE ===\r\n";
-    out += "Nilai Akhir : " + std::to_string(score) + " / 100\r\n";
-    out += "Status      : " + std::string(score >= 75 ? "LOLOS (PASS)" : "PERLU PERBAIKAN") + "\r\n\r\n";
-    out += "Rincian Penilaian:\r\n" + details;
+    std::wstring out = L"=== 🏆 HASIL EVALUASI AUTO-GRADER TRAINING ENGINE ===\r\n";
+    out += L"Nilai Akhir : " + std::to_wstring(score) + L" / 100\r\n";
+    out += L"Status      : " + std::wstring(score >= 75 ? L"LOLOS (PASS)" : L"PERLU PERBAIKAN") + L"\r\n\r\n";
+    out += L"Rincian Penilaian:\r\n" + details;
 
-    SetWindowTextA(g_hwndEditOutput, out.c_str());
+    SetWindowTextW(g_hwndEditOutput, out.c_str());
 }
 
 void ExportStandaloneExe(HWND hwnd) {
     (void)hwnd;
     std::string code = GetNormalizedCodeFromEditor();
 
-    std::string out = "=== PENGEMASAN STANDALONE AOT .EXE ===\r\n";
+    std::wstring out = L"=== 📦 PENGEMASAN STANDALONE AOT .EXE ===\r\n";
     try {
         Lexer lexer(code);
         Parser parser(lexer.tokenize());
@@ -466,8 +516,8 @@ void ExportStandaloneExe(HWND hwnd) {
 
         std::string temp_gvm = "temp_export_gui.gvm";
         if (!BytecodeWriter::write(output, temp_gvm)) {
-            out += "Status    : GAGAL MEMBENTUK BYTECODE\r\n";
-            SetWindowTextA(g_hwndEditOutput, out.c_str());
+            out += L"Status    : GAGAL MEMBENTUK BYTECODE\r\n";
+            SetWindowTextW(g_hwndEditOutput, out.c_str());
             return;
         }
 
@@ -483,72 +533,72 @@ void ExportStandaloneExe(HWND hwnd) {
         }
 
         if (garuda::compiler::StandalonePacker::pack_executable(self_exe, bytecode_bytes, target_exe)) {
-            out += "Status    : BERHASIL DIBENTUK!\r\n";
-            out += "Nama File : " + target_exe + "\r\n";
-            out += "Ukuran    : " + std::to_string(fs::file_size(target_exe) / 1024) + " KB\r\n";
-            out += "Lokasi    : " + fs::absolute(target_exe).string() + "\r\n";
-            out += "Pesan     : File .exe mandiri dapat dipindahkan dan dijalankan di komputer manapun!";
+            out += L"Status    : BERHASIL DIBENTUK!\r\n";
+            out += L"Nama File : " + Utf8ToUtf16(target_exe) + L"\r\n";
+            out += L"Ukuran    : " + std::to_wstring(fs::file_size(target_exe) / 1024) + L" KB\r\n";
+            out += L"Lokasi    : " + Utf8ToUtf16(fs::absolute(target_exe).string()) + L"\r\n";
+            out += L"Pesan     : File .exe mandiri dapat dipindahkan dan dijalankan di komputer manapun!";
         } else {
-            out += "Status    : GAGAL PACKING STANDALONE .EXE\r\n";
-            out += "Detail    : Biner stub 'grdc.exe' tidak ditemukan.";
+            out += L"Status    : GAGAL PACKING STANDALONE .EXE\r\n";
+            out += L"Detail    : Biner stub 'grdc.exe' tidak ditemukan.";
         }
     } catch (const std::exception& e) {
-        out += "Status    : GAGAL KOMPILASI\r\n";
-        out += "Detail    : " + std::string(e.what());
+        out += L"Status    : GAGAL KOMPILASI\r\n";
+        out += L"Detail    : " + Utf8ToUtf16(e.what());
     }
 
-    SetWindowTextA(g_hwndEditOutput, out.c_str());
+    SetWindowTextW(g_hwndEditOutput, out.c_str());
 }
 
 void OpenFileDialog(HWND hwnd) {
-    char szFile[260] = {0};
-    OPENFILENAMEA ofn = {0};
-    ofn.lStructSize = sizeof(OPENFILENAMEA);
+    wchar_t szFile[260] = {0};
+    OPENFILENAMEW ofn = {0};
+    ofn.lStructSize = sizeof(OPENFILENAMEW);
     ofn.hwndOwner = hwnd;
     ofn.lpstrFile = szFile;
-    ofn.nMaxFile = sizeof(szFile);
-    ofn.lpstrFilter = "Garuda Script (*.grd)\0*.grd\0All Files (*.*)\0*.*\0";
+    ofn.nMaxFile = sizeof(szFile) / sizeof(wchar_t);
+    ofn.lpstrFilter = L"Garuda Script (*.grd)\0*.grd\0All Files (*.*)\0*.*\0";
     ofn.nFilterIndex = 1;
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
 
-    if (GetOpenFileNameA(&ofn)) {
-        std::ifstream ifs(szFile);
+    if (GetOpenFileNameW(&ofn)) {
+        std::ifstream ifs(Utf16ToUtf8(szFile));
         if (ifs.is_open()) {
             std::string content((std::istreambuf_iterator<char>(ifs)), std::istreambuf_iterator<char>());
             ifs.close();
 
-            std::string crlf_content;
+            std::wstring crlf_content;
             crlf_content.reserve(content.size() * 2);
             for (char c : content) {
-                if (c == '\n') crlf_content += "\r\n";
-                else if (c != '\r') crlf_content += c;
+                if (c == '\n') crlf_content += L"\r\n";
+                else if (c != '\r') crlf_content += (wchar_t)c;
             }
 
-            SetWindowTextA(g_hwndEditCode, crlf_content.c_str());
+            SetWindowTextW(g_hwndEditCode, crlf_content.c_str());
             ApplySyntaxHighlighting();
-            SetWindowTextA(g_hwndEditOutput, ("Berhasil membuka berkas: " + std::string(szFile)).c_str());
+            SetWindowTextW(g_hwndEditOutput, (L"Berhasil membuka berkas: " + std::wstring(szFile)).c_str());
         }
     }
 }
 
 void SaveFileDialog(HWND hwnd) {
-    char szFile[260] = "jawaban_peserta.grd";
-    OPENFILENAMEA ofn = {0};
-    ofn.lStructSize = sizeof(OPENFILENAMEA);
+    wchar_t szFile[260] = L"jawaban_peserta.grd";
+    OPENFILENAMEW ofn = {0};
+    ofn.lStructSize = sizeof(OPENFILENAMEW);
     ofn.hwndOwner = hwnd;
     ofn.lpstrFile = szFile;
-    ofn.nMaxFile = sizeof(szFile);
-    ofn.lpstrFilter = "Garuda Script (*.grd)\0*.grd\0All Files (*.*)\0*.*\0";
+    ofn.nMaxFile = sizeof(szFile) / sizeof(wchar_t);
+    ofn.lpstrFilter = L"Garuda Script (*.grd)\0*.grd\0All Files (*.*)\0*.*\0";
     ofn.nFilterIndex = 1;
     ofn.Flags = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT;
 
-    if (GetSaveFileNameA(&ofn)) {
+    if (GetSaveFileNameW(&ofn)) {
         std::string code = GetNormalizedCodeFromEditor();
-        std::ofstream ofs(szFile);
+        std::ofstream ofs(Utf16ToUtf8(szFile));
         if (ofs.is_open()) {
             ofs << code;
             ofs.close();
-            SetWindowTextA(g_hwndEditOutput, ("Berhasil menyimpan berkas: " + std::string(szFile)).c_str());
+            SetWindowTextW(g_hwndEditOutput, (L"Berhasil menyimpan berkas: " + std::wstring(szFile)).c_str());
         }
     }
 }
@@ -556,7 +606,6 @@ void SaveFileDialog(HWND hwnd) {
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
-            // Load RichEdit DLL for Syntax Highlighting & Colors
             LoadLibraryA("riched20.dll");
 
             g_hbrDarkBg = CreateSolidBrush(RGB(30, 30, 30));       // VS Code Dark `#1E1E1E`
@@ -568,86 +617,88 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             HMENU hMenuSamples = CreateMenu();
             HMENU hMenuRun = CreateMenu();
 
-            AppendMenuA(hMenuFile, MF_STRING, ID_MENU_FILE_NEW, "Baru (New)");
-            AppendMenuA(hMenuFile, MF_STRING, ID_MENU_FILE_OPEN, "Buka Berkas (.grd)... \tCtrl+O");
-            AppendMenuA(hMenuFile, MF_STRING, ID_MENU_FILE_SAVE, "Simpan Berkas (.grd)... \tCtrl+S");
-            AppendMenuA(hMenuFile, MF_SEPARATOR, 0, NULL);
-            AppendMenuA(hMenuFile, MF_STRING, ID_MENU_FILE_EXIT, "Keluar");
+            AppendMenuW(hMenuFile, MF_STRING, ID_MENU_FILE_NEW, L"📄 Baru (New)");
+            AppendMenuW(hMenuFile, MF_STRING, ID_MENU_FILE_OPEN, L"📁 Buka Berkas (.grd)... \tCtrl+O");
+            AppendMenuW(hMenuFile, MF_STRING, ID_MENU_FILE_SAVE, L"💾 Simpan Berkas (.grd)... \tCtrl+S");
+            AppendMenuW(hMenuFile, MF_SEPARATOR, 0, NULL);
+            AppendMenuW(hMenuFile, MF_STRING, ID_MENU_FILE_EXIT, L"❌ Keluar");
 
-            AppendMenuA(hMenuSamples, MF_STRING, ID_MENU_SAMPLE_HELL, "1. Hello World & Cetak Teks");
-            AppendMenuA(hMenuSamples, MF_STRING, ID_MENU_SAMPLE_ACTOR, "2. Model Aktor - Spawn & Pesan");
-            AppendMenuA(hMenuSamples, MF_STRING, ID_MENU_SAMPLE_GENSERV, "3. GenServer - Server Status");
-            AppendMenuA(hMenuSamples, MF_STRING, ID_MENU_SAMPLE_SUPERV, "4. Supervisor - Self-Healing");
-            AppendMenuA(hMenuSamples, MF_STRING, ID_MENU_SAMPLE_API, "5. REST API Web Server");
-            AppendMenuA(hMenuSamples, MF_STRING, ID_MENU_SAMPLE_GAME, "6. Game Engine 3D & ECS");
+            AppendMenuW(hMenuSamples, MF_STRING, ID_MENU_SAMPLE_HELL, L"1. Hello World & Cetak Teks");
+            AppendMenuW(hMenuSamples, MF_STRING, ID_MENU_SAMPLE_ACTOR, L"2. Model Aktor - Spawn & Pesan");
+            AppendMenuW(hMenuSamples, MF_STRING, ID_MENU_SAMPLE_GENSERV, L"3. GenServer - Server Status");
+            AppendMenuW(hMenuSamples, MF_STRING, ID_MENU_SAMPLE_SUPERV, L"4. Supervisor - Self-Healing");
+            AppendMenuW(hMenuSamples, MF_STRING, ID_MENU_SAMPLE_API, L"5. REST API Web Server");
+            AppendMenuW(hMenuSamples, MF_STRING, ID_MENU_SAMPLE_GAME, L"6. Game Engine 3D & ECS");
 
-            AppendMenuA(hMenuRun, MF_STRING, ID_BTN_RUN, "Jalankan Kode \tCtrl+R");
-            AppendMenuA(hMenuRun, MF_STRING, ID_BTN_FMT, "Format Kode Rapi");
-            AppendMenuA(hMenuRun, MF_STRING, ID_BTN_LINT, "Cek Linter Kode");
-            AppendMenuA(hMenuRun, MF_STRING, ID_BTN_GRADE, "Cek Nilai Auto-Grader");
-            AppendMenuA(hMenuRun, MF_STRING, ID_BTN_EXPORT, "Ekspor ke .exe \tCtrl+Shift+E");
+            AppendMenuW(hMenuRun, MF_STRING, ID_BTN_RUN, L"▶ Jalankan Kode \tCtrl+R");
+            AppendMenuW(hMenuRun, MF_STRING, ID_BTN_AIFIX, L"💡 AI Code Fixer \tCtrl+Shift+F");
+            AppendMenuW(hMenuRun, MF_STRING, ID_BTN_FMT, L"⚡ Format Kode Rapi");
+            AppendMenuW(hMenuRun, MF_STRING, ID_BTN_LINT, L"🔍 Cek Linter Kode");
+            AppendMenuW(hMenuRun, MF_STRING, ID_BTN_GRADE, L"🏆 Cek Nilai Auto-Grader");
+            AppendMenuW(hMenuRun, MF_STRING, ID_BTN_EXPORT, L"📦 Ekspor ke .exe \tCtrl+Shift+E");
 
-            AppendMenuA(hMenuBar, MF_POPUP, (UINT_PTR)hMenuFile, "File");
-            AppendMenuA(hMenuBar, MF_POPUP, (UINT_PTR)hMenuSamples, "Contoh Kodingan");
-            AppendMenuA(hMenuBar, MF_POPUP, (UINT_PTR)hMenuRun, "Eksekusi");
+            AppendMenuW(hMenuBar, MF_POPUP, (UINT_PTR)hMenuFile, L"📁 File");
+            AppendMenuW(hMenuBar, MF_POPUP, (UINT_PTR)hMenuSamples, L"📚 Contoh Kodingan");
+            AppendMenuW(hMenuBar, MF_POPUP, (UINT_PTR)hMenuRun, L"⚡ Eksekusi");
 
             SetMenu(hwnd, hMenuBar);
 
-            // Action Buttons Toolbar
-            CreateWindowA("BUTTON", "Jalankan (Ctrl+R)", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+            // Create High-Definition Buttons with Symbols
+            CreateWindowW(L"BUTTON", L"▶ Jalankan (Ctrl+R)", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
                           10, 10, 140, 32, hwnd, (HMENU)ID_BTN_RUN, NULL, NULL);
-            CreateWindowA("BUTTON", "Format Rapi", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                          155, 10, 110, 32, hwnd, (HMENU)ID_BTN_FMT, NULL, NULL);
-            CreateWindowA("BUTTON", "Cek Linter", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                          270, 10, 100, 32, hwnd, (HMENU)ID_BTN_LINT, NULL, NULL);
-            CreateWindowA("BUTTON", "Auto-Grader", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                          375, 10, 110, 32, hwnd, (HMENU)ID_BTN_GRADE, NULL, NULL);
-            CreateWindowA("BUTTON", "Ekspor .exe", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                          490, 10, 110, 32, hwnd, (HMENU)ID_BTN_EXPORT, NULL, NULL);
-            CreateWindowA("BUTTON", "Bersihkan", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                          605, 10, 100, 32, hwnd, (HMENU)ID_BTN_CLEAR, NULL, NULL);
+            CreateWindowW(L"BUTTON", L"💡 AI Fix", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                          155, 10, 95, 32, hwnd, (HMENU)ID_BTN_AIFIX, NULL, NULL);
+            CreateWindowW(L"BUTTON", L"⚡ Format Rapi", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                          255, 10, 110, 32, hwnd, (HMENU)ID_BTN_FMT, NULL, NULL);
+            CreateWindowW(L"BUTTON", L"🔍 Cek Linter", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                          370, 10, 100, 32, hwnd, (HMENU)ID_BTN_LINT, NULL, NULL);
+            CreateWindowW(L"BUTTON", L"🏆 Auto-Grader", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                          475, 10, 115, 32, hwnd, (HMENU)ID_BTN_GRADE, NULL, NULL);
+            CreateWindowW(L"BUTTON", L"📦 Ekspor .exe", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                          595, 10, 110, 32, hwnd, (HMENU)ID_BTN_EXPORT, NULL, NULL);
+            CreateWindowW(L"BUTTON", L"🧹 Bersihkan", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
+                          710, 10, 95, 32, hwnd, (HMENU)ID_BTN_CLEAR, NULL, NULL);
 
             // Labels
-            g_hwndLabelCode = CreateWindowA("STATIC", "Area Pengedit Kode Bahasa Garuda (Consolas Monospace + Syntax Highlighting):", WS_VISIBLE | WS_CHILD,
+            g_hwndLabelCode = CreateWindowW(L"STATIC", L"📝 Area Pengedit Kode Bahasa Garuda (Consolas Monospace + Syntax Highlighting):", WS_VISIBLE | WS_CHILD,
                                             10, 50, 600, 18, hwnd, NULL, NULL, NULL);
 
-            // Create Monospace Font
+            // Monospace & UI Fonts
             g_hFontCode = CreateFontA(17, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
                                      OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
                                      FIXED_PITCH | FF_MODERN, "Consolas");
 
             // Line Numbers Gutter Box
-            g_hwndGutter = CreateWindowExA(0, "RICHEDIT20A", "  1\r\n",
+            g_hwndGutter = CreateWindowExW(0, L"RICHEDIT20A", L"  1\r\n",
                                            WS_VISIBLE | WS_CHILD | ES_MULTILINE | ES_READONLY | ES_RIGHT,
                                            10, 70, 45, 320, hwnd, (HMENU)ID_EDIT_GUTTER, NULL, NULL);
             SendMessageA(g_hwndGutter, WM_SETFONT, (WPARAM)g_hFontCode, TRUE);
 
-            // Code Editor Box (RichEdit for Syntax Highlighting)
-            g_hwndEditCode = CreateWindowExA(WS_EX_CLIENTEDGE, "RICHEDIT20A", g_sample_hello,
+            // Code Editor Box
+            g_hwndEditCode = CreateWindowExW(WS_EX_CLIENTEDGE, L"RICHEDIT20A", g_sample_hello_w,
                                             WS_VISIBLE | WS_CHILD | ES_MULTILINE | WS_VSCROLL | WS_HSCROLL | ES_AUTOVSCROLL | ES_AUTOHSCROLL,
-                                            60, 70, 810, 320, hwnd, (HMENU)ID_EDIT_CODE, NULL, NULL);
+                                            60, 70, 840, 320, hwnd, (HMENU)ID_EDIT_CODE, NULL, NULL);
             SendMessageA(g_hwndEditCode, WM_SETFONT, (WPARAM)g_hFontCode, TRUE);
 
-            // Enable ENM_CHANGE & ENM_SCROLL events
             SendMessageA(g_hwndEditCode, EM_SETEVENTMASK, 0, ENM_CHANGE | ENM_SELCHANGE | ENM_SCROLL);
 
-            // Set Editor Background Color to Dark `#1E1E1E`
+            // Set Editor Background Colors
             SendMessageA(g_hwndEditCode, EM_SETBKGNDCOLOR, 0, (LPARAM)RGB(30, 30, 30));
             SendMessageA(g_hwndGutter, EM_SETBKGNDCOLOR, 0, (LPARAM)RGB(37, 37, 38));
 
             // Label for Output Console
-            g_hwndLabelOutput = CreateWindowA("STATIC", "Konsol Hasil Eksekusi & Inspector Aktor GVM:", WS_VISIBLE | WS_CHILD,
+            g_hwndLabelOutput = CreateWindowW(L"STATIC", L"📺 Konsol Hasil Eksekusi & Inspector Aktor GVM:", WS_VISIBLE | WS_CHILD,
                                               10, 400, 600, 18, hwnd, NULL, NULL, NULL);
 
             // Output Console Box
-            g_hwndEditOutput = CreateWindowExA(WS_EX_CLIENTEDGE, "RICHEDIT20A", "Klik 'Jalankan' atau tekan Ctrl+R untuk menguji program di Garuda Studio...",
+            g_hwndEditOutput = CreateWindowExW(WS_EX_CLIENTEDGE, L"RICHEDIT20A", L"Klik '▶ Jalankan' atau tekan Ctrl+R untuk menguji program di Garuda Studio...",
                                               WS_VISIBLE | WS_CHILD | ES_MULTILINE | WS_VSCROLL | ES_READONLY,
-                                              10, 420, 860, 130, hwnd, (HMENU)ID_EDIT_OUTPUT, NULL, NULL);
+                                              10, 420, 890, 130, hwnd, (HMENU)ID_EDIT_OUTPUT, NULL, NULL);
             SendMessageA(g_hwndEditOutput, WM_SETFONT, (WPARAM)g_hFontCode, TRUE);
             SendMessageA(g_hwndEditOutput, EM_SETBKGNDCOLOR, 0, (LPARAM)RGB(24, 24, 24));
 
-            // Status Bar at Bottom
-            g_hwndStatusBar = CreateWindowExA(0, STATUSCLASSNAMEA, " Ready | Garuda Studio v3.5",
+            // Status Bar
+            g_hwndStatusBar = CreateWindowExW(0, STATUSCLASSNAMEW, L" Ready | Garuda Studio v3.5",
                                               WS_VISIBLE | WS_CHILD | SBARS_SIZEGRIP,
                                               0, 0, 0, 0, hwnd, (HMENU)ID_STATUS_BAR, NULL, NULL);
 
@@ -669,7 +720,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 SetBkColor(hdc, RGB(37, 37, 38));
                 return (INT_PTR)g_hbrGutterBg;
             } else if (hwndCtl == g_hwndEditOutput) {
-                SetTextColor(hdc, RGB(78, 201, 176)); // Teal Console Text
+                SetTextColor(hdc, RGB(78, 201, 176));
                 SetBkColor(hdc, RGB(24, 24, 24));
                 return (INT_PTR)g_hbrConsoleBg;
             }
@@ -724,8 +775,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
             switch (wmId) {
                 case ID_MENU_FILE_NEW:
-                    SetWindowTextA(g_hwndEditCode, "");
-                    SetWindowTextA(g_hwndEditOutput, "Berkas baru dibuat.");
+                    SetWindowTextW(g_hwndEditCode, L"");
+                    SetWindowTextW(g_hwndEditOutput, L"Berkas baru dibuat.");
                     UpdateStatusBarInfo();
                     break;
                 case ID_MENU_FILE_OPEN:
@@ -736,43 +787,46 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     SaveFileDialog(hwnd);
                     break;
                 case ID_MENU_SAMPLE_HELL:
-                    SetWindowTextA(g_hwndEditCode, g_sample_hello);
+                    SetWindowTextW(g_hwndEditCode, g_sample_hello_w);
                     ApplySyntaxHighlighting();
-                    SetWindowTextA(g_hwndEditOutput, "Sampel 'Hello World' dimuat.");
+                    SetWindowTextW(g_hwndEditOutput, L"Sampel 'Hello World' dimuat.");
                     UpdateStatusBarInfo();
                     break;
                 case ID_MENU_SAMPLE_ACTOR:
-                    SetWindowTextA(g_hwndEditCode, g_sample_actor);
+                    SetWindowTextW(g_hwndEditCode, g_sample_actor_w);
                     ApplySyntaxHighlighting();
-                    SetWindowTextA(g_hwndEditOutput, "Sampel 'Model Aktor' dimuat.");
+                    SetWindowTextW(g_hwndEditOutput, L"Sampel 'Model Aktor' dimuat.");
                     UpdateStatusBarInfo();
                     break;
                 case ID_MENU_SAMPLE_GENSERV:
-                    SetWindowTextA(g_hwndEditCode, g_sample_genserver);
+                    SetWindowTextW(g_hwndEditCode, g_sample_genserver_w);
                     ApplySyntaxHighlighting();
-                    SetWindowTextA(g_hwndEditOutput, "Sampel 'GenServer' dimuat.");
+                    SetWindowTextW(g_hwndEditOutput, L"Sampel 'GenServer' dimuat.");
                     UpdateStatusBarInfo();
                     break;
                 case ID_MENU_SAMPLE_SUPERV:
-                    SetWindowTextA(g_hwndEditCode, g_sample_supervisor);
+                    SetWindowTextW(g_hwndEditCode, g_sample_supervisor_w);
                     ApplySyntaxHighlighting();
-                    SetWindowTextA(g_hwndEditOutput, "Sampel 'Supervisor' dimuat.");
+                    SetWindowTextW(g_hwndEditOutput, L"Sampel 'Supervisor' dimuat.");
                     UpdateStatusBarInfo();
                     break;
                 case ID_MENU_SAMPLE_API:
-                    SetWindowTextA(g_hwndEditCode, g_sample_api);
+                    SetWindowTextW(g_hwndEditCode, g_sample_api_w);
                     ApplySyntaxHighlighting();
-                    SetWindowTextA(g_hwndEditOutput, "Sampel 'REST API' dimuat.");
+                    SetWindowTextW(g_hwndEditOutput, L"Sampel 'REST API' dimuat.");
                     UpdateStatusBarInfo();
                     break;
                 case ID_MENU_SAMPLE_GAME:
-                    SetWindowTextA(g_hwndEditCode, g_sample_game);
+                    SetWindowTextW(g_hwndEditCode, g_sample_game_w);
                     ApplySyntaxHighlighting();
-                    SetWindowTextA(g_hwndEditOutput, "Sampel 'Game Engine 3D' dimuat.");
+                    SetWindowTextW(g_hwndEditOutput, L"Sampel 'Game Engine 3D' dimuat.");
                     UpdateStatusBarInfo();
                     break;
                 case ID_BTN_RUN:
                     RunGarudaScript(hwnd);
+                    break;
+                case ID_BTN_AIFIX:
+                    AiFixGarudaScript(hwnd);
                     break;
                 case ID_BTN_FMT:
                     FormatGarudaScript(hwnd);
@@ -787,7 +841,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     ExportStandaloneExe(hwnd);
                     break;
                 case ID_BTN_CLEAR:
-                    SetWindowTextA(g_hwndEditOutput, "");
+                    SetWindowTextW(g_hwndEditOutput, L"");
                     break;
                 case ID_MENU_FILE_EXIT:
                     PostQuitMessage(0);
@@ -798,6 +852,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
         case WM_DESTROY:
             if (g_hFontCode) DeleteObject(g_hFontCode);
+            if (g_hFontUI) DeleteObject(g_hFontUI);
             if (g_hbrDarkBg) DeleteObject(g_hbrDarkBg);
             if (g_hbrGutterBg) DeleteObject(g_hbrGutterBg);
             if (g_hbrConsoleBg) DeleteObject(g_hbrConsoleBg);
@@ -805,7 +860,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             break;
 
         default:
-            return DefWindowProcA(hwnd, msg, wParam, lParam);
+            return DefWindowProcW(hwnd, msg, wParam, lParam);
     }
     return 0;
 }
@@ -819,28 +874,28 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     icex.dwICC = ICC_WIN95_CLASSES | ICC_BAR_CLASSES;
     InitCommonControlsEx(&icex);
 
-    WNDCLASSEXA wc = {0};
-    wc.cbSize = sizeof(WNDCLASSEXA);
+    WNDCLASSEXW wc = {0};
+    wc.cbSize = sizeof(WNDCLASSEXW);
     wc.style = CS_HREDRAW | CS_VREDRAW;
     wc.lpfnWndProc = WndProc;
     wc.hInstance = hInstance;
     wc.hCursor = LoadCursor(NULL, IDC_ARROW);
     wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
-    wc.lpszClassName = "GarudaStudioWindowClass";
+    wc.lpszClassName = L"GarudaStudioWindowClass";
 
-    if (!RegisterClassExA(&wc)) {
-        MessageBoxA(NULL, "Gagal Mendaftarkan Window Class!", "Error", MB_ICONERROR);
+    if (!RegisterClassExW(&wc)) {
+        MessageBoxW(NULL, L"Gagal Mendaftarkan Window Class!", L"Error", MB_ICONERROR);
         return 1;
     }
 
-    HWND hwnd = CreateWindowExA(0, "GarudaStudioWindowClass",
-                                "Garuda Studio v3.5 - Modern Professional GUI IDE",
+    HWND hwnd = CreateWindowExW(0, L"GarudaStudioWindowClass",
+                                L"Garuda Studio v3.5 - Modern Professional GUI IDE",
                                 WS_OVERLAPPEDWINDOW,
-                                CW_USEDEFAULT, CW_USEDEFAULT, 940, 700,
+                                CW_USEDEFAULT, CW_USEDEFAULT, 960, 720,
                                 NULL, NULL, hInstance, NULL);
 
     if (!hwnd) {
-        MessageBoxA(NULL, "Gagal Membuat Jendela Aplikasi GUI!", "Error", MB_ICONERROR);
+        MessageBoxW(NULL, L"Gagal Membuat Jendela Aplikasi GUI!", L"Error", MB_ICONERROR);
         return 1;
     }
 
