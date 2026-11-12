@@ -159,11 +159,18 @@ void SetConsoleOutputText(const std::wstring& text) {
 
     SetWindowTextW(g_hwndEditOutput, text.c_str());
 
-    // Apply bright white/grey text color so text is 100% crisp & visible on dark background
+    // Determine smart status text color (Error Red / Success Green / Bright White)
+    COLORREF text_color = RGB(220, 220, 220); // Default Bright White
+    if (text.find(L"ERR:") != std::wstring::npos || text.find(L"GAGAL") != std::wstring::npos || text.find(L"PERLU PERBAIKAN") != std::wstring::npos) {
+        text_color = RGB(255, 110, 110); // Crimson Red Error
+    } else if (text.find(L"BERHASIL") != std::wstring::npos || text.find(L"LOLOS") != std::wstring::npos || text.find(L"Status  : OK") != std::wstring::npos || text.find(L"Status : OK") != std::wstring::npos) {
+        text_color = RGB(110, 240, 160); // Emerald Green Success
+    }
+
     CHARFORMAT2A cf = {0};
     cf.cbSize = sizeof(CHARFORMAT2A);
     cf.dwMask = CFM_COLOR;
-    cf.crTextColor = RGB(220, 220, 220); // Bright White / Crisp Light Grey
+    cf.crTextColor = text_color;
 
     CHARRANGE cr_all = {0, -1};
     SendMessageA(g_hwndEditOutput, EM_EXSETSEL, 0, (LPARAM)&cr_all);
@@ -207,6 +214,19 @@ void UpdateLineNumbersGutter() {
     }
 
     SetWindowTextW(g_hwndGutter, gutter_text.c_str());
+
+    // Apply bright light grey/cyan text color to line numbers
+    CHARFORMAT2A cf = {0};
+    cf.cbSize = sizeof(CHARFORMAT2A);
+    cf.dwMask = CFM_COLOR;
+    cf.crTextColor = RGB(175, 185, 200); // Bright Visible Slate/Grey Line Numbers
+
+    CHARRANGE cr_all = {0, -1};
+    SendMessageA(g_hwndGutter, EM_EXSETSEL, 0, (LPARAM)&cr_all);
+    SendMessageA(g_hwndGutter, EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
+
+    CHARRANGE cr_start = {0, 0};
+    SendMessageA(g_hwndGutter, EM_EXSETSEL, 0, (LPARAM)&cr_start);
 
     int first_visible_line = static_cast<int>(SendMessageA(g_hwndEditCode, EM_GETFIRSTVISIBLELINE, 0, 0));
     SendMessageA(g_hwndGutter, EM_LINESCROLL, 0, first_visible_line);
