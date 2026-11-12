@@ -3,6 +3,7 @@
 #endif
 
 #include <windows.h>
+#include <richedit.h>
 #include <commctrl.h>
 #include <commdlg.h>
 
@@ -48,16 +49,24 @@ using namespace garuda::beam;
 #define ID_BTN_EXPORT           2005
 #define ID_BTN_CLEAR            2006
 
+#define ID_EDIT_GUTTER          3000
 #define ID_EDIT_CODE            3001
 #define ID_EDIT_OUTPUT          3002
 #define ID_STATUS_BAR           3003
 
+HWND g_hwndGutter = NULL;
 HWND g_hwndEditCode = NULL;
 HWND g_hwndEditOutput = NULL;
 HWND g_hwndLabelCode = NULL;
 HWND g_hwndLabelOutput = NULL;
 HWND g_hwndStatusBar = NULL;
 HFONT g_hFontCode = NULL;
+
+HBRUSH g_hbrDarkBg = NULL;
+HBRUSH g_hbrGutterBg = NULL;
+HBRUSH g_hbrConsoleBg = NULL;
+
+bool g_isFormatting = false;
 
 const char* g_sample_hello =
     "modul HelloGaruda\r\n\r\n"
@@ -162,18 +171,120 @@ std::string GetNormalizedCodeFromEditor() {
     return normalized;
 }
 
+void UpdateLineNumbersGutter() {
+    if (!g_hwndEditCode || !g_hwndGutter) return;
+
+    int line_count = static_cast<int>(SendMessageA(g_hwndEditCode, EM_GETLINECOUNT, 0, 0));
+    if (line_count < 1) line_count = 1;
+
+    std::string gutter_text;
+    gutter_text.reserve(line_count * 6);
+    for (int i = 1; i <= line_count; ++i) {
+        if (i < 10) gutter_text += "  " + std::to_string(i) + "\r\n";
+        else if (i < 100) gutter_text += " " + std::to_string(i) + "\r\n";
+        else gutter_text += std::to_string(i) + "\r\n";
+    }
+
+    SetWindowTextA(g_hwndGutter, gutter_text.c_str());
+
+    int first_visible_line = static_cast<int>(SendMessageA(g_hwndEditCode, EM_GETFIRSTVISIBLELINE, 0, 0));
+    SendMessageA(g_hwndGutter, EM_LINESCROLL, 0, first_visible_line);
+}
+
+void ApplySyntaxHighlighting() {
+    if (!g_hwndEditCode || g_isFormatting) return;
+    g_isFormatting = true;
+
+    // Save current selection / scroll
+    CHARRANGE cr_saved;
+    SendMessageA(g_hwndEditCode, EM_EXGETSEL, 0, (LPARAM)&cr_saved);
+    POINT scroll_pt;
+    SendMessageA(g_hwndEditCode, EM_GETSCROLLPOS, 0, (LPARAM)&scroll_pt);
+
+    // Disable redrawing during formatting
+    SendMessageA(g_hwndEditCode, WM_SETREDRAW, FALSE, 0);
+
+    std::string code = GetNormalizedCodeFromEditor();
+
+    // Default formatting
+    CHARFORMAT2A cf_default = {0};
+    cf_default.cbSize = sizeof(CHARFORMAT2A);
+    cf_default.dwMask = CFM_COLOR | CFM_BOLD;
+    cf_default.crTextColor = RGB(212, 212, 212); // VS Code Light Grey
+    cf_default.dwEffects = 0;
+
+    CHARRANGE cr_all = {0, -1};
+    SendMessageA(g_hwndEditCode, EM_EXSETSEL, 0, (LPARAM)&cr_all);
+    SendMessageA(g_hwndEditCode, EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf_default);
+
+    try {
+        Lexer lexer(code);
+        auto tokens = lexer.tokenize();
+
+        for (const auto& tok : tokens) {
+            COLORREF color = RGB(212, 212, 212);
+            bool bold = false;
+
+            if (tok.type == TokenType::DefModule || tok.type == TokenType::DefFunc ||
+                tok.type == TokenType::End || tok.type == TokenType::Spawn ||
+                tok.type == TokenType::Receive || tok.type == TokenType::If ||
+                tok.type == TokenType::Else || tok.type == TokenType::Try ||
+                tok.type == TokenType::Catch) {
+                color = RGB(86, 156, 214); // Cyan Blue
+                bold = true;
+            } else if (tok.type == TokenType::String) {
+                color = RGB(206, 145, 120); // Amber String
+            } else if (tok.type == TokenType::Number || tok.type == TokenType::Float) {
+                color = RGB(181, 206, 168); // Light Green
+            } else if (tok.type == TokenType::Identifier) {
+                color = RGB(220, 220, 170); // Light Yellow Function/Var Name
+            } else if (tok.type == TokenType::Atom) {
+                color = RGB(197, 134, 192); // Purple Atom
+            }
+
+            CHARFORMAT2A cf = {0};
+            cf.cbSize = sizeof(CHARFORMAT2A);
+            cf.dwMask = CFM_COLOR | (bold ? CFM_BOLD : 0);
+            cf.crTextColor = color;
+            cf.dwEffects = bold ? CFE_BOLD : 0;
+
+            int pos = static_cast<int>(SendMessageA(g_hwndEditCode, EM_LINEINDEX, tok.line - 1, 0)) + (static_cast<int>(tok.column) - 1);
+            CHARRANGE cr;
+            cr.cpMin = pos;
+            cr.cpMax = pos + static_cast<int>(tok.text.size());
+
+            SendMessageA(g_hwndEditCode, EM_EXSETSEL, 0, (LPARAM)&cr);
+            SendMessageA(g_hwndEditCode, EM_SETCHARFORMAT, SCF_SELECTION, (LPARAM)&cf);
+        }
+    } catch (...) {
+        // Fallback silently if code is mid-typing syntax error
+    }
+
+    // Restore selection & scroll position
+    SendMessageA(g_hwndEditCode, EM_EXSETSEL, 0, (LPARAM)&cr_saved);
+    SendMessageA(g_hwndEditCode, EM_SETSCROLLPOS, 0, (LPARAM)&scroll_pt);
+
+    // Re-enable redraw
+    SendMessageA(g_hwndEditCode, WM_SETREDRAW, TRUE, 0);
+    InvalidateRect(g_hwndEditCode, NULL, TRUE);
+
+    g_isFormatting = false;
+}
+
 void UpdateStatusBarInfo() {
     if (!g_hwndEditCode || !g_hwndStatusBar) return;
 
-    DWORD start = 0, end = 0;
-    SendMessageA(g_hwndEditCode, EM_GETSEL, (WPARAM)&start, (LPARAM)&end);
-    int line = static_cast<int>(SendMessageA(g_hwndEditCode, EM_LINEFROMCHAR, start, 0)) + 1;
+    CHARRANGE cr;
+    SendMessageA(g_hwndEditCode, EM_EXGETSEL, 0, (LPARAM)&cr);
+    int line = static_cast<int>(SendMessageA(g_hwndEditCode, EM_LINEFROMCHAR, cr.cpMin, 0)) + 1;
     int line_index = static_cast<int>(SendMessageA(g_hwndEditCode, EM_LINEINDEX, line - 1, 0));
-    int col = static_cast<int>(start - line_index) + 1;
+    int col = static_cast<int>(cr.cpMin - line_index) + 1;
 
     std::string status = " Baris: " + std::to_string(line) + ", Kolom: " + std::to_string(col) +
-                         " | Encoding: UTF-8 | GVM Actor Runtime v67.0.0 Ready";
+                         " | Encoding: UTF-8 | GVM Actor Runtime v67.0.0 Active";
     SetWindowTextA(g_hwndStatusBar, status.c_str());
+
+    UpdateLineNumbersGutter();
 }
 
 void RunGarudaScript(HWND hwnd) {
@@ -210,7 +321,7 @@ void RunGarudaScript(HWND hwnd) {
         out = "=== ERR: FUNGSI 'utama' TIDAK DITEMUKAN ===\r\n";
         out += "Harap tambahkan 'fungsi utama() -> ... rampung' dalam modul Anda.";
     } else {
-        out = "=== GARUDA CODING STUDIO (GVM RUNTIME EXECUTION) ===\r\n";
+        out = "=== GARUDA STUDIO (GVM RUNTIME EXECUTION) ===\r\n";
         if (!captured_output.empty()) {
             out += "Output Konsol Aktor:\r\n" + CleanUtf8ForWin32(captured_output) + "\r\n";
         }
@@ -243,6 +354,7 @@ void FormatGarudaScript(HWND hwnd) {
         }
 
         SetWindowTextA(g_hwndEditCode, crlf_formatted.c_str());
+        ApplySyntaxHighlighting();
         SetWindowTextA(g_hwndEditOutput, "=== FORMATTER ===\r\nStatus : Kode Berhasil Diformat Rapi sesuai standar Garuda!");
     } catch (const std::exception& e) {
         std::string out = "=== FORMATTER ERR ===\r\nGagal memformat kode: " + std::string(e.what());
@@ -413,6 +525,7 @@ void OpenFileDialog(HWND hwnd) {
             }
 
             SetWindowTextA(g_hwndEditCode, crlf_content.c_str());
+            ApplySyntaxHighlighting();
             SetWindowTextA(g_hwndEditOutput, ("Berhasil membuka berkas: " + std::string(szFile)).c_str());
         }
     }
@@ -443,6 +556,13 @@ void SaveFileDialog(HWND hwnd) {
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
         case WM_CREATE: {
+            // Load RichEdit DLL for Syntax Highlighting & Colors
+            LoadLibraryA("riched20.dll");
+
+            g_hbrDarkBg = CreateSolidBrush(RGB(30, 30, 30));       // VS Code Dark `#1E1E1E`
+            g_hbrGutterBg = CreateSolidBrush(RGB(37, 37, 38));     // Gutter `#252526`
+            g_hbrConsoleBg = CreateSolidBrush(RGB(24, 24, 24));    // Console `#181818`
+
             HMENU hMenuBar = CreateMenu();
             HMENU hMenuFile = CreateMenu();
             HMENU hMenuSamples = CreateMenu();
@@ -487,8 +607,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             CreateWindowA("BUTTON", "Bersihkan", WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
                           605, 10, 100, 32, hwnd, (HMENU)ID_BTN_CLEAR, NULL, NULL);
 
-            // Label for Code Editor
-            g_hwndLabelCode = CreateWindowA("STATIC", "Area Pengedit Kode Bahasa Garuda (Consolas Monospace Editor):", WS_VISIBLE | WS_CHILD,
+            // Labels
+            g_hwndLabelCode = CreateWindowA("STATIC", "Area Pengedit Kode Bahasa Garuda (Consolas Monospace + Syntax Highlighting):", WS_VISIBLE | WS_CHILD,
                                             10, 50, 600, 18, hwnd, NULL, NULL, NULL);
 
             // Create Monospace Font
@@ -496,28 +616,63 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                                      OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY,
                                      FIXED_PITCH | FF_MODERN, "Consolas");
 
-            // Code Editor Box
-            g_hwndEditCode = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", g_sample_hello,
+            // Line Numbers Gutter Box
+            g_hwndGutter = CreateWindowExA(0, "RICHEDIT20A", "  1\r\n",
+                                           WS_VISIBLE | WS_CHILD | ES_MULTILINE | ES_READONLY | ES_RIGHT,
+                                           10, 70, 45, 320, hwnd, (HMENU)ID_EDIT_GUTTER, NULL, NULL);
+            SendMessageA(g_hwndGutter, WM_SETFONT, (WPARAM)g_hFontCode, TRUE);
+
+            // Code Editor Box (RichEdit for Syntax Highlighting)
+            g_hwndEditCode = CreateWindowExA(WS_EX_CLIENTEDGE, "RICHEDIT20A", g_sample_hello,
                                             WS_VISIBLE | WS_CHILD | ES_MULTILINE | WS_VSCROLL | WS_HSCROLL | ES_AUTOVSCROLL | ES_AUTOHSCROLL,
-                                            10, 70, 860, 320, hwnd, (HMENU)ID_EDIT_CODE, NULL, NULL);
+                                            60, 70, 810, 320, hwnd, (HMENU)ID_EDIT_CODE, NULL, NULL);
             SendMessageA(g_hwndEditCode, WM_SETFONT, (WPARAM)g_hFontCode, TRUE);
+
+            // Enable ENM_CHANGE & ENM_SCROLL events
+            SendMessageA(g_hwndEditCode, EM_SETEVENTMASK, 0, ENM_CHANGE | ENM_SELCHANGE | ENM_SCROLL);
+
+            // Set Editor Background Color to Dark `#1E1E1E`
+            SendMessageA(g_hwndEditCode, EM_SETBKGNDCOLOR, 0, (LPARAM)RGB(30, 30, 30));
+            SendMessageA(g_hwndGutter, EM_SETBKGNDCOLOR, 0, (LPARAM)RGB(37, 37, 38));
 
             // Label for Output Console
             g_hwndLabelOutput = CreateWindowA("STATIC", "Konsol Hasil Eksekusi & Inspector Aktor GVM:", WS_VISIBLE | WS_CHILD,
                                               10, 400, 600, 18, hwnd, NULL, NULL, NULL);
 
             // Output Console Box
-            g_hwndEditOutput = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", "Klik 'Jalankan' atau tekan Ctrl+R untuk menguji program di Garuda Studio...",
+            g_hwndEditOutput = CreateWindowExA(WS_EX_CLIENTEDGE, "RICHEDIT20A", "Klik 'Jalankan' atau tekan Ctrl+R untuk menguji program di Garuda Studio...",
                                               WS_VISIBLE | WS_CHILD | ES_MULTILINE | WS_VSCROLL | ES_READONLY,
                                               10, 420, 860, 130, hwnd, (HMENU)ID_EDIT_OUTPUT, NULL, NULL);
             SendMessageA(g_hwndEditOutput, WM_SETFONT, (WPARAM)g_hFontCode, TRUE);
+            SendMessageA(g_hwndEditOutput, EM_SETBKGNDCOLOR, 0, (LPARAM)RGB(24, 24, 24));
 
             // Status Bar at Bottom
             g_hwndStatusBar = CreateWindowExA(0, STATUSCLASSNAMEA, " Ready | Garuda Studio v3.5",
                                               WS_VISIBLE | WS_CHILD | SBARS_SIZEGRIP,
                                               0, 0, 0, 0, hwnd, (HMENU)ID_STATUS_BAR, NULL, NULL);
 
+            ApplySyntaxHighlighting();
             UpdateStatusBarInfo();
+            break;
+        }
+
+        case WM_CTLCOLORSTATIC:
+        case WM_CTLCOLOREDIT: {
+            HDC hdc = (HDC)wParam;
+            HWND hwndCtl = (HWND)lParam;
+            if (hwndCtl == g_hwndEditCode) {
+                SetTextColor(hdc, RGB(212, 212, 212));
+                SetBkColor(hdc, RGB(30, 30, 30));
+                return (INT_PTR)g_hbrDarkBg;
+            } else if (hwndCtl == g_hwndGutter) {
+                SetTextColor(hdc, RGB(133, 133, 133));
+                SetBkColor(hdc, RGB(37, 37, 38));
+                return (INT_PTR)g_hbrGutterBg;
+            } else if (hwndCtl == g_hwndEditOutput) {
+                SetTextColor(hdc, RGB(78, 201, 176)); // Teal Console Text
+                SetBkColor(hdc, RGB(24, 24, 24));
+                return (INT_PTR)g_hbrConsoleBg;
+            }
             break;
         }
 
@@ -530,6 +685,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 int toolbar_h = 42;
                 int label_h = 18;
                 int statusbar_h = 24;
+                int gutter_w = 48;
 
                 int avail_h = height - toolbar_h - (label_h * 2) - statusbar_h - (margin * 4);
                 if (avail_h < 100) avail_h = 100;
@@ -542,10 +698,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 int output_y = label_out_y + label_h;
 
                 MoveWindow(g_hwndLabelCode, margin, toolbar_h + margin, width - (margin * 2), label_h, TRUE);
-                MoveWindow(g_hwndEditCode, margin, code_y, width - (margin * 2), code_h, TRUE);
+                MoveWindow(g_hwndGutter, margin, code_y, gutter_w, code_h, TRUE);
+                MoveWindow(g_hwndEditCode, margin + gutter_w + 5, code_y, width - (margin * 2) - gutter_w - 5, code_h, TRUE);
                 MoveWindow(g_hwndLabelOutput, margin, label_out_y, width - (margin * 2), label_h, TRUE);
                 MoveWindow(g_hwndEditOutput, margin, output_y, width - (margin * 2), output_h, TRUE);
                 MoveWindow(g_hwndStatusBar, 0, height - statusbar_h, width, statusbar_h, TRUE);
+
+                UpdateLineNumbersGutter();
             }
             break;
         }
@@ -554,8 +713,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int wmId = LOWORD(wParam);
             int wmEvent = HIWORD(wParam);
 
-            if (wmId == ID_EDIT_CODE && wmEvent == EN_CHANGE) {
-                UpdateStatusBarInfo();
+            if (wmId == ID_EDIT_CODE) {
+                if (wmEvent == EN_CHANGE) {
+                    ApplySyntaxHighlighting();
+                    UpdateStatusBarInfo();
+                } else if (wmEvent == EN_SELCHANGE || wmEvent == EN_VSCROLL) {
+                    UpdateStatusBarInfo();
+                }
             }
 
             switch (wmId) {
@@ -573,31 +737,37 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                     break;
                 case ID_MENU_SAMPLE_HELL:
                     SetWindowTextA(g_hwndEditCode, g_sample_hello);
+                    ApplySyntaxHighlighting();
                     SetWindowTextA(g_hwndEditOutput, "Sampel 'Hello World' dimuat.");
                     UpdateStatusBarInfo();
                     break;
                 case ID_MENU_SAMPLE_ACTOR:
                     SetWindowTextA(g_hwndEditCode, g_sample_actor);
+                    ApplySyntaxHighlighting();
                     SetWindowTextA(g_hwndEditOutput, "Sampel 'Model Aktor' dimuat.");
                     UpdateStatusBarInfo();
                     break;
                 case ID_MENU_SAMPLE_GENSERV:
                     SetWindowTextA(g_hwndEditCode, g_sample_genserver);
+                    ApplySyntaxHighlighting();
                     SetWindowTextA(g_hwndEditOutput, "Sampel 'GenServer' dimuat.");
                     UpdateStatusBarInfo();
                     break;
                 case ID_MENU_SAMPLE_SUPERV:
                     SetWindowTextA(g_hwndEditCode, g_sample_supervisor);
+                    ApplySyntaxHighlighting();
                     SetWindowTextA(g_hwndEditOutput, "Sampel 'Supervisor' dimuat.");
                     UpdateStatusBarInfo();
                     break;
                 case ID_MENU_SAMPLE_API:
                     SetWindowTextA(g_hwndEditCode, g_sample_api);
+                    ApplySyntaxHighlighting();
                     SetWindowTextA(g_hwndEditOutput, "Sampel 'REST API' dimuat.");
                     UpdateStatusBarInfo();
                     break;
                 case ID_MENU_SAMPLE_GAME:
                     SetWindowTextA(g_hwndEditCode, g_sample_game);
+                    ApplySyntaxHighlighting();
                     SetWindowTextA(g_hwndEditOutput, "Sampel 'Game Engine 3D' dimuat.");
                     UpdateStatusBarInfo();
                     break;
@@ -628,6 +798,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
         case WM_DESTROY:
             if (g_hFontCode) DeleteObject(g_hFontCode);
+            if (g_hbrDarkBg) DeleteObject(g_hbrDarkBg);
+            if (g_hbrGutterBg) DeleteObject(g_hbrGutterBg);
+            if (g_hbrConsoleBg) DeleteObject(g_hbrConsoleBg);
             PostQuitMessage(0);
             break;
 
@@ -661,9 +834,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     }
 
     HWND hwnd = CreateWindowExA(0, "GarudaStudioWindowClass",
-                                "Garuda Studio Playground v3.5 - Erlang/BEAM Interactive IDE",
+                                "Garuda Studio v3.5 - Modern Professional GUI IDE",
                                 WS_OVERLAPPEDWINDOW,
-                                CW_USEDEFAULT, CW_USEDEFAULT, 920, 680,
+                                CW_USEDEFAULT, CW_USEDEFAULT, 940, 700,
                                 NULL, NULL, hInstance, NULL);
 
     if (!hwnd) {
