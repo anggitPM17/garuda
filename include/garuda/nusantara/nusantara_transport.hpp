@@ -1152,10 +1152,22 @@ public:
                 }
             }
 
-            std::string body_str = raw_conn.read_body_bytes(content_len);
-            std::string full_req = body_str;
+            std::string body_str;
+            auto body_pos = req_buf.find("\r\n\r\n");
+            if (body_pos != std::string::npos) {
+                body_str = req_buf.substr(body_pos + 4);
+            } else {
+                body_pos = req_buf.find("\n\n");
+                if (body_pos != std::string::npos) {
+                    body_str = req_buf.substr(body_pos + 2);
+                }
+            }
+            if (content_len > body_str.size()) {
+                body_str += raw_conn.read_body_bytes(content_len - body_str.size());
+            }
+
+            std::string full_req = req_buf + "\n" + body_str;
             auto parse_val = [&](const std::string& key) {
-                // 1. Quoted key: "key" : "value" or "key":"value"
                 std::string k1 = "\"" + key + "\"";
                 auto p1 = full_req.find(k1);
                 if (p1 != std::string::npos) {
@@ -1170,7 +1182,6 @@ public:
                         }
                     }
                 }
-                // 2. Unquoted or Form key: key:value or key=value
                 std::string k2 = key + ":";
                 auto p2 = full_req.find(k2);
                 if (p2 == std::string::npos) {
@@ -1190,6 +1201,7 @@ public:
             };
 
             std::string user = parse_val("username");
+            if (user.empty()) user = parse_val("email");
             std::string pass = parse_val("password");
 
             garuda::sys::JsonLogger::info("PARSED REGISTER USER: '" + user + "' PASS: '" + pass + "' | BODY: " + body_str);
@@ -1223,10 +1235,22 @@ public:
                 }
             }
 
-            std::string body_str = raw_conn.read_body_bytes(content_len);
-            std::string full_req = body_str;
+            std::string body_str;
+            auto body_pos = req_buf.find("\r\n\r\n");
+            if (body_pos != std::string::npos) {
+                body_str = req_buf.substr(body_pos + 4);
+            } else {
+                body_pos = req_buf.find("\n\n");
+                if (body_pos != std::string::npos) {
+                    body_str = req_buf.substr(body_pos + 2);
+                }
+            }
+            if (content_len > body_str.size()) {
+                body_str += raw_conn.read_body_bytes(content_len - body_str.size());
+            }
+
+            std::string full_req = req_buf + "\n" + body_str;
             auto parse_val = [&](const std::string& key) {
-                // 1. Quoted key: "key" : "value" or "key":"value"
                 std::string k1 = "\"" + key + "\"";
                 auto p1 = full_req.find(k1);
                 if (p1 != std::string::npos) {
@@ -1241,7 +1265,6 @@ public:
                         }
                     }
                 }
-                // 2. Unquoted or Form key: key:value or key=value
                 std::string k2 = key + ":";
                 auto p2 = full_req.find(k2);
                 if (p2 == std::string::npos) {
@@ -1261,6 +1284,7 @@ public:
             };
 
             std::string user = parse_val("username");
+            if (user.empty()) user = parse_val("email");
             std::string pass = parse_val("password");
 
             auto [ok, token_or_err] = garuda::auth::AuthManager::get_instance().login_user(user, pass);
