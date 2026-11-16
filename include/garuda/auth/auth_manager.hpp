@@ -82,8 +82,8 @@ public:
         if (username.empty() || password.empty()) {
             return {false, "Username dan password tidak boleh kosong"};
         }
-        if (username.length() < 3 || username.length() > 20) {
-            return {false, "Username harus 3-20 karakter"};
+        if (username.length() < 3 || username.length() > 100) {
+            return {false, "Username/Email harus 3-100 karakter"};
         }
 
         init_db();
