@@ -263,6 +263,20 @@ private:
                 continue;
             }
 
+            // RICHAT REAL-TIME ROUTING & BROADCAST FOR ALL CHAT, CALL & CONTACT EVENTS
+            if (text->find("\"send_chat\"") != std::string::npos ||
+                text->find("\"type\":\"chat\"") != std::string::npos ||
+                text->find("\"type\":\"call_offer\"") != std::string::npos ||
+                text->find("\"type\":\"call_answer\"") != std::string::npos ||
+                text->find("\"type\":\"call_reject\"") != std::string::npos ||
+                text->find("\"type\":\"call_end\"") != std::string::npos ||
+                text->find("\"type\":\"ice_candidate\"") != std::string::npos ||
+                text->find("\"type\":\"contact_invite\"") != std::string::npos ||
+                text->find("\"type\":\"contact_accept\"") != std::string::npos) {
+                broadcast_ws_text(*text);
+                continue;
+            }
+
             if (text->find("\"action\":\"chat\"") != std::string::npos || text->find("\"action\": \"chat\"") != std::string::npos) {
                 std::string chat_msg = "";
                 auto msg_pos = text->find("\"msg\":\"");
@@ -329,6 +343,20 @@ private:
 
             if (text->find("\"type\":\"ping\"") != std::string::npos || *text == "ping" || text->find("\"action\":\"ping\"") != std::string::npos) {
                 client->send_text("{\"type\":\"pong\"}");
+                continue;
+            }
+
+            // RICHAT REAL-TIME ROUTING & BROADCAST FOR ALL CHAT, CALL & CONTACT EVENTS
+            if (text->find("\"send_chat\"") != std::string::npos ||
+                text->find("\"type\":\"chat\"") != std::string::npos ||
+                text->find("\"type\":\"call_offer\"") != std::string::npos ||
+                text->find("\"type\":\"call_answer\"") != std::string::npos ||
+                text->find("\"type\":\"call_reject\"") != std::string::npos ||
+                text->find("\"type\":\"call_end\"") != std::string::npos ||
+                text->find("\"type\":\"ice_candidate\"") != std::string::npos ||
+                text->find("\"type\":\"contact_invite\"") != std::string::npos ||
+                text->find("\"type\":\"contact_accept\"") != std::string::npos) {
+                broadcast_ws_text(*text);
                 continue;
             }
 
